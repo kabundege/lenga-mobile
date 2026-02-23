@@ -8,7 +8,7 @@ const colors = {
   error: '#D35050',
   danger: {
     primary: '#DF1F07',
-    light: '#C01048',
+    light: '#DF1F0730',
     tertiary: '#DF1F0740',
   },
   success: {
@@ -25,11 +25,23 @@ const colors = {
     secondary: '#282829',
     tertiary: '#4C4B4D55',
   },
+  overlays: {
+    white_90: "rgba(255, 255, 255, 0.9)",
+    white_80: "rgba(255, 255, 255, 0.8)",
+    white_70: "rgba(255, 255, 255, 0.7)",
+    white_0: "rgba(255, 255, 255, 0)",
+    black_50: "rgba(0, 0, 0, 0.5)",
+    black_80: "rgba(0, 0, 0, 0.8)",
+    black_90: "rgba(0, 0, 0, 0.9)",
+    black_10: "rgba(0, 0, 0, 0.1)",
+  },
   text: {
-    danger: '#20E0F8',
+    danger: '#DF1F07',
     default: '#000000',
+    inverted: '#FFFFFF',
     primary: primaryColor,
     secondary: '#575757',
+    tertiary: '#7C7B7D',
   },
   background: {
     // primary: '#1F1D1C',
@@ -45,6 +57,8 @@ const colors = {
   },
   border: {
     primary: '#4C4B4D',
+    secondary: '#EBEBEB',
+    tertiary: '#4C4B4D',
   },
   modalGestureIndicator: '#4C4B4D',
   tabBar: '#282829',

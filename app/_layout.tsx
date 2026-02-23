@@ -7,6 +7,7 @@ import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 
+import { AppProviders } from '@/components/providers/AppProviders';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import globalStyles from '@/utils/styles/globalstyles.style';
 import colors from '@/utils/theme/colors';
@@ -47,12 +48,21 @@ const AppShell = ({ children }: { children: React.ReactNode }) => (
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   return (
-    <AppShell>
-      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Stack initialRouteName='splash'>
-          <Stack.Screen name="splash" options={{ headerShown: false }} />
-        </Stack>
-      </ThemeProvider>
-    </AppShell>
+    <AppProviders>
+      <AppShell>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+          <Stack initialRouteName="splash">
+            <Stack.Screen name="splash" options={{ headerShown: false }} />
+            <Stack.Screen name="login" options={{ headerShown: false }} />
+            <Stack.Screen name="register" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="course/[documentId]"
+              options={{ headerShown: false }}
+            />
+          </Stack>
+        </ThemeProvider>
+      </AppShell>
+    </AppProviders>
   );
 }

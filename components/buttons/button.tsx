@@ -1,5 +1,6 @@
 import Loader from '@/components/loader';
 import { TextBody } from '@/components/typography/textBody';
+import globalStyles from '@/utils/styles/globalstyles.style';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
 import { SizeVariants } from '@/utils/types/theme';
@@ -55,7 +56,7 @@ const Button = ({ size = 'md', numberOfLines, customIconSize, rounded = false, .
         ? colors.danger.primary
         : props.type === 'success'
           ? colors.success.primary
-          : colors.default.primary),
+          : props.type === "outlined" ? colors.text.default : colors.text.inverted),
     [props.type, props.textColor]
   );
 
@@ -90,9 +91,11 @@ const Button = ({ size = 'md', numberOfLines, customIconSize, rounded = false, .
           {props?.label && (
             <TextBody
               strong
+              center
+              color="default"
               variant={textSize[size]}
               numberOfLines={numberOfLines}
-              style={[textColor ? { color: textColor } : undefined]}
+              style={[textColor ? { color: textColor } : undefined, globalStyles.uppercase, globalStyles.w_full]}
             >
               {props.label}
             </TextBody>

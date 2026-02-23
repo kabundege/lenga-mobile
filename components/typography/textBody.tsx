@@ -2,7 +2,7 @@ import { ReactNode, isValidElement, useEffect, useMemo, useRef, useState } from 
 import { Animated, Pressable, StyleSheet, Text, TextProps, TextStyle } from 'react-native';
 import { Easing } from 'react-native-reanimated';
 
-import { FontWeight, getFontFamily } from '@/hooks/useAppFont';
+import { FontWeight } from '@/hooks/useAppFont';
 import { BUTTON_HIT_SLOP } from '@/utils/constants';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
@@ -21,6 +21,17 @@ export type TextBodyProps = {
   readMoreVariant?: 'collapsible' | 'modal';
   readMoreModalTitle?: string;
 } & TextProps;
+
+// Map FontWeight to RN fontWeight string (aligned with themed-text.tsx)
+const fontWeightMap: Record<FontWeight, TextStyle['fontWeight']> = {
+  extraLight: '200',
+  light: '300',
+  normal: '400',
+  medium: '500',
+  semiBold: '600',
+  bold: '700',
+  extra: '800',
+};
 
 export const TextBody = ({
   variant = 'body1',
@@ -85,13 +96,14 @@ export const TextBody = ({
     });
   }, [isExpanded, readMoreVariant]);
 
+  const fontSize = themeToken.fontSizes.normal[variant];
   const baseTextStyle: TextStyle = {
     textAlign: center ? 'center' : 'left',
     color: colors.text[color],
-    fontSize: themeToken.fontSizes.normal[variant],
-    lineHeight: 21,
+    fontSize,
+    lineHeight: Math.round(fontSize * (24 / 16)), // Match themed-text default (24/16)
     textDecorationLine: underline ? 'underline' : undefined,
-    fontFamily: strong ? getFontFamily('semiBold') : getFontFamily(fontWeight),
+    fontWeight: strong ? '600' : fontWeightMap[fontWeight], // themed-text: defaultSemiBold = '600'
   };
 
   const ReadMoreText = () =>

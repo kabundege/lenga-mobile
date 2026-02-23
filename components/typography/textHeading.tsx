@@ -1,4 +1,3 @@
-import { getFontFamily } from '@/hooks/useAppFont';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
 import { TextColorVariants } from '@/utils/types/theme';
@@ -10,17 +9,19 @@ type Props = Omit<
     center?: boolean;
     color?: TextColorVariants;
   } & TextProps,
-  'fontWeight' // Infavour of using our custom URBANIST font family weight
+  'fontWeight' // Use fontWeight in style (aligned with themed-text title/subtitle)
 >;
 
 export const TextHeading = (props: Props) => {
   const { variant, color = 'default' } = props;
+  const fontSize = themeToken.fontSizes.heading[variant];
 
   const dynamicStyles: TextStyle = {
     textAlign: props.center ? 'center' : 'left',
-    fontSize: themeToken.fontSizes.heading[variant],
+    fontSize,
+    lineHeight: Math.round(fontSize * 1.2), // Match themed-text title (proportional)
     color: colors.text[color],
-    fontFamily: getFontFamily('bold'),
+    fontWeight: 'bold', // Align with themed-text title/subtitle
   };
 
   return (
