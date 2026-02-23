@@ -49,17 +49,18 @@ export default function LoginScreen() {
               placeholder="urugero@mail.com"
               autoCapitalize="none"
               name="identifier"
+              key="identifier"
               label="Imeyili"
               icon="email"
             />
             <ControlledInput<LoginFormValues>
               control={control}
               name="password"
-              label="Ijambobanga"
-              placeholder="********"
-              keyboardType='email-address'
+              key="password"
               secureTextEntry
               icon="lock-open"
+              label="Ijambobanga"
+              placeholder="********"
             />
           </View>
           <View style={globalStyles.gap_sm}>

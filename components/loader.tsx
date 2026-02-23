@@ -6,7 +6,7 @@ type Props = {
   color?: TextColorVariants;
 } & ActivityIndicatorProps;
 
-const Loader = ({ color = 'default', ...props }: Props) => {
+const Loader = ({ color = 'inverted', ...props }: Props) => {
   return <ActivityIndicator {...props} color={colors.text[color]} />;
 };
 

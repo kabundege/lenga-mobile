@@ -1,10 +1,12 @@
 import { TextBody } from '@/components/typography/textBody';
+import { BUTTON_HIT_SLOP } from '@/utils/constants';
 import dimensionsStyle from '@/utils/styles/dimensions.style';
 import globalStyles from '@/utils/styles/globalstyles.style';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
 import MT_Icons from '@expo/vector-icons/MaterialCommunityIcons';
-import React, { useMemo } from 'react';
+import { PressableScale } from 'pressto';
+import React, { useMemo, useState } from 'react';
 import {
   Control,
   Controller,
@@ -40,8 +42,12 @@ export function ControlledInput<T extends FieldValues>({
   icon,
   ...inputProps
 }: ControlledInputProps<T>) {
+  const [securedTextEntry, setSecuredTextEntry] = useState<boolean>(secureTextEntry ?? false);
   const { fieldState: { error } } = useController({ control, name });
   const hasError = useMemo(() => !!(errorMessage || error), [errorMessage, error]);
+
+
+  const toggleSecuredTextEntryVisibility = () => setSecuredTextEntry((prev) => !prev);
 
   return (
     <View style={[globalStyles.gap_xs, containerStyle]}>
@@ -58,16 +64,23 @@ export function ControlledInput<T extends FieldValues>({
           name={name}
           render={({ field: { onChange, onBlur, value } }) => (
             <TextInput
+              value={value}
               onBlur={onBlur}
               onChangeText={onChange}
-              value={value ?? ''}
               style={globalStyles.flex_1}
+              secureTextEntry={securedTextEntry}
               placeholderTextColor={hasError ? colors.danger.primary : colors.text.secondary}
-              secureTextEntry={secureTextEntry}
               {...inputProps}
             />
           )}
         />
+        {
+          secureTextEntry && (
+            <PressableScale hitSlop={BUTTON_HIT_SLOP} onPress={toggleSecuredTextEntryVisibility}>
+              <MT_Icons name={!securedTextEntry ? "eye" : "eye-off"} size={dimensionsStyle.FONT_SIZE_L} color={hasError ? colors.danger.primary : colors.text.primary} />
+            </PressableScale>
+          )
+        }
       </ShakeErrorWrapper>
       <View style={globalStyles.px_xs}>
         {hasError ? (
