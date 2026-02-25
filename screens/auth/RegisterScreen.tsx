@@ -34,8 +34,8 @@ export default function RegisterScreen() {
   const handleRegister = handleSubmit((data) => registerMutation.mutate(data));
 
   return (
-    <ThemedView style={styles.container}>
-      <WithKeyboardScrollView style={globalStyles.pt_3xl}>
+    <ThemedView style={globalStyles.flex_1}>
+      <WithKeyboardScrollView style={styles.container}>
         <View style={[centered, globalStyles.mb_xl]}>
           <ThemedText type="title" style={[globalStyles.text_primary, globalStyles.line_height_4xl]}>
             Iyandikishe
@@ -114,7 +114,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    ...globalStyles.pt_3xl,
     padding: themeToken.paddingLg,
-    justifyContent: 'center',
   },
 });

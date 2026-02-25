@@ -1,3 +1,4 @@
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { Stack } from 'expo-router';
@@ -12,10 +13,6 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import globalStyles from '@/utils/styles/globalstyles.style';
 import colors from '@/utils/theme/colors';
 import { PressablesConfig } from 'pressto';
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
 
 const PressablesProvider = ({ children }: { children: React.ReactNode }) => (
   <PressablesConfig
@@ -37,13 +34,22 @@ const AppShell = ({ children }: { children: React.ReactNode }) => (
     <KeyboardProvider>
       <PressablesProvider>
         <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-          <StatusBar style="light" backgroundColor={colors.background.primary} translucent={false} />
-          {children}
+          <BottomSheetModalProvider>
+            <StatusBar style="light" backgroundColor={colors.primary} />
+            {children}
+          </BottomSheetModalProvider>
         </SafeAreaProvider>
       </PressablesProvider>
     </KeyboardProvider>
   </GestureHandlerRootView>
 );
+
+export const routes = {
+  register: 'register',
+  courses: 'courses',
+  splash: 'splash',
+  login: 'login',
+}
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -52,14 +58,11 @@ export default function RootLayout() {
       <AppShell>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack initialRouteName="splash">
-            <Stack.Screen name="splash" options={{ headerShown: false }} />
-            <Stack.Screen name="login" options={{ headerShown: false }} />
-            <Stack.Screen name="register" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen
-              name="course/[documentId]"
-              options={{ headerShown: false }}
-            />
+            {
+              Object.entries(routes).map(([name]) => (
+                <Stack.Screen key={name} name={name} options={{ headerShown: false }} />
+              ))
+            }
           </Stack>
         </ThemeProvider>
       </AppShell>

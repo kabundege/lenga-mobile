@@ -1,9 +1,11 @@
 import { TextBody } from '@/components/typography/textBody';
 import { BUTTON_HIT_SLOP } from '@/utils/constants';
-import dimensionsStyle from '@/utils/styles/dimensions.style';
+import { Dimensions, flexBetween } from '@/utils/styles';
 import globalStyles from '@/utils/styles/globalstyles.style';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
+import Antd_Icons from '@expo/vector-icons/AntDesign';
+import FR_Icons from '@expo/vector-icons/Feather';
 import MT_Icons from '@expo/vector-icons/MaterialCommunityIcons';
 import { PressableScale } from 'pressto';
 import React, { useMemo, useState } from 'react';
@@ -21,7 +23,11 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import IconButton from '../buttons/iconButton';
 import { ShakeErrorWrapper } from '../ui/shakeErrorWrapper';
+
+export type IconName = keyof typeof MT_Icons.glyphMap | keyof typeof Antd_Icons.glyphMap | keyof typeof FR_Icons.glyphMap;
+export type IconType = 'material' | 'antd' | 'feather';
 
 type ControlledInputProps<T extends FieldValues> = {
   control: Control<T>;
@@ -29,7 +35,9 @@ type ControlledInputProps<T extends FieldValues> = {
   label?: string;
   containerStyle?: ViewStyle;
   errorMessage?: string;
-  icon?: keyof typeof MT_Icons.glyphMap;
+  icon?: IconName;
+  iconType?: IconType;
+  isClearable?: boolean;
 } & Omit<TextInputProps, 'value' | 'onChangeText'>;
 
 export function ControlledInput<T extends FieldValues>({
@@ -40,14 +48,26 @@ export function ControlledInput<T extends FieldValues>({
   errorMessage,
   secureTextEntry,
   icon,
+  isClearable = false,
+  iconType = 'material',
   ...inputProps
 }: ControlledInputProps<T>) {
   const [securedTextEntry, setSecuredTextEntry] = useState<boolean>(secureTextEntry ?? false);
   const { fieldState: { error } } = useController({ control, name });
   const hasError = useMemo(() => !!(errorMessage || error), [errorMessage, error]);
 
-
   const toggleSecuredTextEntryVisibility = () => setSecuredTextEntry((prev) => !prev);
+
+  const conditionalIcon = useMemo(() => {
+    if (iconType === 'material' && icon) {
+      return <MT_Icons name={icon as keyof typeof MT_Icons.glyphMap} size={Dimensions.FONT_SIZE_L} color={hasError ? colors.danger.primary : colors.text.primary} />;
+    } else if (iconType === 'antd' && icon) {
+      return <Antd_Icons name={icon as keyof typeof Antd_Icons.glyphMap} size={Dimensions.FONT_SIZE_L} color={hasError ? colors.danger.primary : colors.text.primary} />;
+    } else if (iconType === 'feather' && icon) {
+      return <FR_Icons name={icon as keyof typeof FR_Icons.glyphMap} size={Dimensions.FONT_SIZE_L} color={hasError ? colors.danger.primary : colors.text.primary} />;
+    }
+    return null;
+  }, [icon, iconType, hasError]);
 
   return (
     <View style={[globalStyles.gap_xs, containerStyle]}>
@@ -57,27 +77,35 @@ export function ControlledInput<T extends FieldValues>({
         </TextBody>
       ) : null}
       <ShakeErrorWrapper error={errorMessage || error?.message}
-        style={[styles.input, hasError ? styles.inputError : undefined]}>
-        <MT_Icons name={icon} size={dimensionsStyle.FONT_SIZE_L} color={hasError ? colors.danger.primary : colors.text.primary} />
+        style={[styles.input, globalStyles.gap_xs, hasError ? styles.inputError : undefined]}>
+        {conditionalIcon}
         <Controller
           control={control}
           name={name}
           render={({ field: { onChange, onBlur, value } }) => (
-            <TextInput
-              value={value}
-              onBlur={onBlur}
-              onChangeText={onChange}
-              style={globalStyles.flex_1}
-              secureTextEntry={securedTextEntry}
-              placeholderTextColor={hasError ? colors.danger.primary : colors.text.secondary}
-              {...inputProps}
-            />
+            <View
+              style={[globalStyles.flex_1, globalStyles.gap_xs, flexBetween]}>
+              <TextInput
+                value={value}
+                onBlur={onBlur}
+                onChangeText={onChange}
+                style={globalStyles.flex_1}
+                secureTextEntry={securedTextEntry}
+                placeholderTextColor={hasError ? colors.danger.primary : colors.text.secondary}
+                {...inputProps}
+              />
+              {
+                isClearable && value ? (
+                  <IconButton icon="close" onPress={() => onChange('')} size="sm" backgroundColor={colors.text.inverted} style={globalStyles.p_xs} iconType="antd" />
+                ) : null
+              }
+            </View>
           )}
         />
         {
           secureTextEntry && (
             <PressableScale hitSlop={BUTTON_HIT_SLOP} onPress={toggleSecuredTextEntryVisibility}>
-              <MT_Icons name={!securedTextEntry ? "eye" : "eye-off"} size={dimensionsStyle.FONT_SIZE_L} color={hasError ? colors.danger.primary : colors.text.primary} />
+              <MT_Icons name={!securedTextEntry ? "eye" : "eye-off"} size={Dimensions.FONT_SIZE_L} color={hasError ? colors.danger.primary : colors.text.primary} />
             </PressableScale>
           )
         }
@@ -97,13 +125,12 @@ const styles = StyleSheet.create({
   input: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: themeToken.spacingSm,
+    color: colors.text.default,
     borderRadius: themeToken.borderRadius,
     paddingHorizontal: themeToken.padding,
-    fontSize: dimensionsStyle.FONT_SIZE_M,
-    color: colors.text.default,
-    minHeight: dimensionsStyle.INPUT_HEIGHT,
-    backgroundColor: colors.background.secondary,
+    fontSize: Dimensions.FONT_SIZE_M,
+    backgroundColor: colors.primary_light,
+    minHeight: Dimensions.INPUT_HEIGHT,
   },
   inputError: {
     borderColor: colors.error,

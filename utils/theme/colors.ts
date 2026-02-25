@@ -2,9 +2,10 @@ const primaryColor = '#3D4E93';
 
 const colors = {
   primary: primaryColor,
+  primary_light: '#3D4E9320',
   pink: '#E34A86',
-  secondary: '#EAF8FE',
-  tertiary: '#EAF8FF',
+  secondary: '#222B4F',
+  tertiary: '#1A2035',
   error: '#D35050',
   danger: {
     primary: '#DF1F07',

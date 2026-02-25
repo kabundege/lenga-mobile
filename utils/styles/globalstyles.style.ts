@@ -61,6 +61,13 @@ const globalStyles = StyleSheet.create({
   justify_around: { justifyContent: "space-around" },
   justify_between: { justifyContent: "space-between" },
 
+  //elevation
+  elevation_xs: { elevation: Dimensions.SIZE_XS },
+  elevation_sm: { elevation: Dimensions.SIZE_SM },
+  elevation_md: { elevation: Dimensions.SIZE_M },
+  elevation_lg: { elevation: Dimensions.SIZE_L },
+  elevation_xl: { elevation: Dimensions.SIZE_XL },
+
   // ================== Alignment ==================
   center: { justifyContent: "center", alignItems: "center" },
   center_row: {
@@ -401,7 +408,8 @@ const globalStyles = StyleSheet.create({
   border_tertiary: { borderWidth: 0.5, borderColor: colors.text.tertiary },
 
   border_light: { borderWidth: 0.5, borderColor: colors.border.primary },
-  border_default: { borderWidth: 0.5, borderColor: colors.border.primary },
+  border_default: { borderWidth: 1, borderColor: colors.text.default },
+  border_primary: { borderWidth: 0.5, borderColor: colors.primary },
   border_black: { borderWidth: 0.5, borderColor: colors.black },
   border_darkSilver: { borderWidth: 0.5, borderColor: colors.border.primary },
   border_dotted: {
