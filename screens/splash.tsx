@@ -45,7 +45,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         alignItems: 'center',
-        gap: themeToken.spacingLg,
+        gap: themeToken.spacing,
         justifyContent: 'center',
         padding: themeToken.spacing,
     },

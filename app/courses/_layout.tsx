@@ -1,9 +1,13 @@
+import colors from "@/utils/theme/colors";
 import { Stack } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 
-export default function CoursesLayout() {
-    return (
-        <Stack>
-            <Stack.Screen name="index" options={{ headerShown: false }} />
-        </Stack>
-    );
-}
+const CoursesLayout = () => (
+    <Stack>
+        <StatusBar style="light" backgroundColor={colors.primary} />
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="[courseId]" options={{ headerShown: false }} />
+    </Stack>
+);
+
+export default CoursesLayout;

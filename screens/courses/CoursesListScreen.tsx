@@ -16,7 +16,8 @@ import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
 import { useCallback, useMemo } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
-import { FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { ListRenderItemInfo, Pressable, StyleSheet, View } from 'react-native';
+import Animated, { CurvedTransition } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CoursesListScreen = () => {
@@ -91,8 +92,8 @@ const CoursesListScreen = () => {
     );
   }
 
-  const renderCourse = useCallback(({ item }: { item: StrapiCourse }) => (
-    <CourseCard course={item} />
+  const renderCourse = useCallback(({ item, index }: ListRenderItemInfo<StrapiCourse>) => (
+    <CourseCard course={item} index={index} style={index ? globalStyles.mt_sm : null} />
   ), []);
 
   const renderEmptyComponent = useCallback(() => (
@@ -109,9 +110,10 @@ const CoursesListScreen = () => {
   ), [control]);
 
   return (
-    <FlatList
+    <Animated.FlatList
       onRefresh={refetch}
       data={filteredCourses}
+      layout={CurvedTransition}
       renderItem={renderCourse}
       refreshing={isRefetching}
       ListHeaderComponent={renderHeader}

@@ -175,6 +175,7 @@ const globalStyles = StyleSheet.create({
   h_60: { height: "60%" },
   h_70: { height: "70%" },
   h_80: { height: "80%" },
+  h_input: { height: Dimensions.INPUT_HEIGHT },
   hs_100: { height: Dimensions.SCREEN_HEIGHT },
   hs_90: { height: Dimensions.SCREEN_HEIGHT * 0.9 },
   hs_80: { height: Dimensions.SCREEN_HEIGHT * 0.8 },

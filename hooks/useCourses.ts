@@ -1,6 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
 import * as coursesService from '@/services/courses.service';
 import type { StrapiCourse, StrapiCourseDetail } from '@/types/api';
+import { useQuery } from '@tanstack/react-query';
 
 export const COURSE_KEYS = {
   LIST: 'courses',
@@ -12,7 +12,7 @@ export function getCourseListKeys(locale: string) {
 }
 
 export function getCourseDetailKeys(documentId: string, locale: string) {
-  return [COURSE_KEYS.DETAIL, documentId, locale] as const;
+  return [COURSE_KEYS.DETAIL, { documentId, locale }] as const;
 }
 
 export function useCourses(locale: string) {
@@ -27,6 +27,8 @@ export function useCourses(locale: string) {
 
 export function useCourseByDocumentId(documentId: string, locale: string, enabled = true) {
   const request = useQuery({
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 60 * 24, // 1 day
     queryKey: getCourseDetailKeys(documentId, locale),
     queryFn: () => coursesService.getCourseByDocumentId(documentId, locale),
     enabled: enabled && !!documentId,

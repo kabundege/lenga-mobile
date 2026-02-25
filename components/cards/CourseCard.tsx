@@ -5,16 +5,24 @@ import { flexBetween, flexEnd, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { router } from 'expo-router';
 import { PressableScale } from 'pressto';
-import { StyleSheet, View } from 'react-native';
+import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { FadeInDown } from 'react-native-reanimated';
 import { TextBody, TextHeading } from '../typography';
 
-const CourseCard = ({ course }: { course: StrapiCourse }) => {
+interface CourseCardProps {
+  index: number;
+  course: StrapiCourse;
+  style?: StyleProp<ViewStyle>;
+}
+
+const CourseCard = ({ index, course, style }: CourseCardProps) => {
   const locale = useAppSelector((s) => s.preferences.locale);
 
   return (
     <PressableScale
       onPress={() => router.push(`/courses/${course.documentId}`)}
-      style={styles.card}
+      style={[styles.card, style]}
+      entering={FadeInDown.delay(index * 100)}
     >
       <View style={globalStyles.p_md}>
         <TextHeading variant='title' numberOfLines={2}>{course.title}</TextHeading>
@@ -22,13 +30,13 @@ const CourseCard = ({ course }: { course: StrapiCourse }) => {
       </View>
 
       <View style={[flexBetween, styles.footer]}>
-        <View>
+        <View style={[globalStyles.flex_1]}>
           <TextBody variant='caption' color='tertiary' strong>Authors</TextBody>
-          <TextBody variant='body2' strong>
-            {course.authors?.map((author) => author.full_name).join(', ')}
+          <TextBody variant='body2' strong numberOfLines={1}>
+            {Array(5).fill(course.authors).flat().map((author) => author?.full_name).join(', ')}
           </TextBody>
         </View>
-        <View style={[flexEnd, globalStyles.flex_col]}>
+        <View style={[flexEnd, globalStyles.flex_col, globalStyles.w_50]}>
           <TextBody strong variant='overline' color='tertiary'>Ryakozwe</TextBody>
           <TextBody variant='caption'>
             {formatToDateWithLocale(course.createdAt, DATE_FORMAT, locale)}

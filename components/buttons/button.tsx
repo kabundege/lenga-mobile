@@ -9,7 +9,7 @@ import React, { ReactNode, useMemo } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { scale } from 'react-native-size-matters';
 
-export type ButtonType = 'primary' | 'secondary' | 'tertiary' | 'outlined' | 'danger' | 'success';
+export type ButtonType = 'primary' | 'secondary' | 'tertiary' | 'outlined' | 'danger' | 'success' | 'light';
 
 export type ButtonProps = {
   type: ButtonType;
@@ -56,7 +56,7 @@ const Button = ({ size = 'md', numberOfLines, customIconSize, rounded = false, .
         ? colors.danger.primary
         : props.type === 'success'
           ? colors.success.primary
-          : props.type === "outlined" ? colors.text.default : colors.text.inverted),
+          : props.type === 'light' ? colors.text.primary : props.type === "outlined" ? colors.text.default : colors.text.inverted),
     [props.type, props.textColor]
   );
 
@@ -116,6 +116,9 @@ const styles = StyleSheet.create({
   },
   primary: {
     backgroundColor: colors.primary,
+  },
+  light: {
+    backgroundColor: colors.primary_light,
   },
   secondary: {
     backgroundColor: colors.background.secondary,
