@@ -2,7 +2,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export type Locale = 'en' | 'fr' | 'rw';
 
-type PreferencesState = {
+export type PreferencesState = {
   locale: Locale;
 };
 

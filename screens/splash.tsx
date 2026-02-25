@@ -12,7 +12,7 @@ import Animated, { BounceIn, BounceOut, FadeInDown, FadeOut } from 'react-native
 const AnimatedText = Animated.createAnimatedComponent(ThemedText);
 const AnimatedBody = Animated.createAnimatedComponent(TextBody);
 
-const RedirectionDelay = 1000;
+const RedirectionDelay = 1400;
 const TextEnteringDelay = 700;
 
 export default function SplashScreen() {

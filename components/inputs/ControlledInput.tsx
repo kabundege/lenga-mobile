@@ -126,11 +126,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     color: colors.text.default,
+    fontSize: Dimensions.FONT_SIZE_M,
+    minHeight: Dimensions.INPUT_HEIGHT,
     borderRadius: themeToken.borderRadius,
     paddingHorizontal: themeToken.padding,
-    fontSize: Dimensions.FONT_SIZE_M,
     backgroundColor: colors.primary_light,
-    minHeight: Dimensions.INPUT_HEIGHT,
   },
   inputError: {
     borderColor: colors.error,

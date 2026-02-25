@@ -7,6 +7,7 @@ const colors = {
   secondary: '#222B4F',
   tertiary: '#1A2035',
   error: '#D35050',
+  transparent: 'transparent',
   danger: {
     primary: '#DF1F07',
     light: '#DF1F0730',

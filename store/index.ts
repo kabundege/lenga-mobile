@@ -1,33 +1,37 @@
-import { configureStore } from '@reduxjs/toolkit';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import {
-  persistStore,
-  persistReducer,
   FLUSH,
-  REHYDRATE,
   PAUSE,
   PERSIST,
+  PersistConfig,
+  persistReducer,
+  persistStore,
   PURGE,
   REGISTER,
+  REHYDRATE,
 } from 'redux-persist';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { authReducer } from './slices/authSlice';
-import { preferencesReducer } from './slices/preferencesSlice';
+import { authReducer, AuthState } from './slices/authSlice';
+import { preferencesReducer, PreferencesState } from './slices/preferencesSlice';
 
-const authPersistConfig = {
+const authPersistConfig: PersistConfig<AuthState> = {
   key: 'lenga:auth',
   storage: AsyncStorage,
 };
 
-const preferencesPersistConfig = {
+const preferencesPersistConfig: PersistConfig<PreferencesState> = {
   key: 'lenga:preferences',
   storage: AsyncStorage,
 };
 
+
+const Reducers = combineReducers({
+  auth: persistReducer(authPersistConfig, authReducer),
+  preferences: persistReducer(preferencesPersistConfig, preferencesReducer),
+});
+
 export const store = configureStore({
-  reducer: {
-    auth: persistReducer(authPersistConfig, authReducer),
-    preferences: persistReducer(preferencesPersistConfig, preferencesReducer),
-  },
+  reducer: Reducers,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {

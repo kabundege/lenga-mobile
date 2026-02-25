@@ -58,11 +58,11 @@ const IconButton = ({
 
   const conditionalIcon = useMemo(() => {
     if (iconType === 'material' && icon) {
-      return <MT_Icons name={icon as keyof typeof MT_Icons.glyphMap} size={iconSize} color={colors.text.primary} />;
+      return <MT_Icons name={icon as keyof typeof MT_Icons.glyphMap} size={iconSize} color={iconFill ?? colors.text.primary} />;
     } else if (iconType === 'antd' && icon) {
-      return <Antd_Icons name={icon as keyof typeof Antd_Icons.glyphMap} size={iconSize} color={colors.text.primary} />;
+      return <Antd_Icons name={icon as keyof typeof Antd_Icons.glyphMap} size={iconSize} color={iconFill ?? colors.text.primary} />;
     } else if (iconType === 'feather' && icon) {
-      return <FR_Icons name={icon as keyof typeof FR_Icons.glyphMap} size={iconSize} color={colors.text.primary} />;
+      return <FR_Icons name={icon as keyof typeof FR_Icons.glyphMap} size={iconSize} color={iconFill ?? colors.text.primary} />;
     }
     return null;
   }, [icon, iconType, iconSize]);

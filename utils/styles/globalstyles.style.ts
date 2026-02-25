@@ -458,7 +458,12 @@ const globalStyles = StyleSheet.create({
   rounded_none: { borderRadius: 0 },
   rounded_l_none: { borderTopLeftRadius: 0, borderBottomLeftRadius: 0 },
   rounded_r_none: { borderTopRightRadius: 0, borderBottomRightRadius: 0 },
+
   rounded_b_none: { borderBottomLeftRadius: 0, borderBottomRightRadius: 0 },
+  rounded_b_sm: { borderBottomLeftRadius: Dimensions.SIZE_SM, borderBottomRightRadius: Dimensions.SIZE_SM },
+  rounded_b_md: { borderBottomLeftRadius: Dimensions.SIZE_M, borderBottomRightRadius: Dimensions.SIZE_M },
+  rounded_b_lg: { borderBottomLeftRadius: Dimensions.SIZE_L, borderBottomRightRadius: Dimensions.SIZE_L },
+  rounded_b_xl: { borderBottomLeftRadius: Dimensions.SIZE_XL, borderBottomRightRadius: Dimensions.SIZE_XL },
 
   // ================== Effects ==================
   shadow: {

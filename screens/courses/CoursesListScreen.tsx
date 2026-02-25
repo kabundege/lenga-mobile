@@ -6,6 +6,7 @@ import LogoutModal from '@/components/modals/LogoutModal';
 import { CoursesListSkeleton } from '@/components/skeletons';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { TextHeading } from '@/components/typography';
 import { TextBody } from '@/components/typography/textBody';
 import { useCourses } from '@/hooks/useCourses';
 import { useAppSelector } from '@/hooks/useRedux';
@@ -19,6 +20,7 @@ import { FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CoursesListScreen = () => {
+  const user = useAppSelector((s) => s.auth.user);
   const locale = useAppSelector((s) => s.preferences.locale);
   const { courses, isLoading, isRefetching, error, refetch } = useCourses(locale);
 
@@ -34,8 +36,6 @@ const CoursesListScreen = () => {
     return courses.filter((course) => course.title.toLowerCase().includes(search?.toLowerCase() ?? ''));
   }, [courses, search]);
 
-
-
   if (error) {
     return (
       <ThemedView style={styles.centered}>
@@ -47,14 +47,15 @@ const CoursesListScreen = () => {
     );
   }
 
-  if (isLoading && courses.length === 0) {
-    return (
-      <ThemedView style={styles.container}>
-        <SafeAreaView style={styles.header}>
-          <View style={flexBetween}>
-            <ThemedText type="title" numberOfLines={2} style={[globalStyles.line_height_4xl, globalStyles.text_secondary, globalStyles.w_60]}>
-              Shakisha
-            </ThemedText>
+  const renderHeader = useCallback(({ editable = true }: { editable?: boolean }) => (
+    <SafeAreaView style={[globalStyles.py_sm, globalStyles.gap_sm]}>
+      {
+        user ? (
+          <View style={[flexBetween, globalStyles.gap_sm]}>
+            <View>
+              <TextBody strong color='tertiary'>Muraho,</TextBody>
+              <TextHeading variant="subTitle">{user?.full_name}</TextHeading>
+            </View>
             <LogoutModal
               toggleBtn={({ onPress }) => (
                 <IconButton
@@ -62,14 +63,29 @@ const CoursesListScreen = () => {
                   icon="user"
                   iconType="antd"
                   onPress={onPress}
-                  style={globalStyles.border_primary}
-                  backgroundColor={colors.primary_light}
+                  iconFill={colors.text.inverted}
+                  backgroundColor={colors.primary}
+                  style={[globalStyles.border_primary, globalStyles.p_sm]}
                 />
               )}
             />
           </View>
-          <ControlledInput control={control} placeholder='Amasono akunogeye' name="search" icon="search" iconType="antd" isClearable />
-        </SafeAreaView>
+        ) : null
+      }
+
+      <View>
+        <ThemedText type="title" numberOfLines={2} style={[globalStyles.line_height_4xl, globalStyles.text_secondary, globalStyles.w_60]}>
+          Shakisha
+        </ThemedText>
+        <ControlledInput control={control} editable={editable} placeholder='Amasono akunogeye' name="search" icon="search" iconType="antd" isClearable />
+      </View>
+    </SafeAreaView>
+  ), [control, user]);
+
+  if (isLoading && courses.length === 0) {
+    return (
+      <ThemedView style={styles.list}>
+        {renderHeader({ editable: false })}
         <CoursesListSkeleton />
       </ThemedView>
     );
@@ -93,53 +109,26 @@ const CoursesListScreen = () => {
   ), [control]);
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.header}>
-        <View style={flexBetween}>
-          <ThemedText type="title" numberOfLines={2} style={[globalStyles.line_height_4xl, globalStyles.text_secondary, globalStyles.w_60]}>
-            Shakisha
-          </ThemedText>
-          <LogoutModal
-            toggleBtn={({ onPress }) => (
-              <IconButton
-                size="sm"
-                icon="user"
-                iconType="antd"
-                onPress={onPress}
-                style={globalStyles.border_primary}
-                backgroundColor={colors.primary_light}
-              />
-            )}
-          />
-        </View>
-        <ControlledInput control={control} placeholder='Amasono akunogeye' name="search" icon="search" iconType="antd" isClearable />
-      </SafeAreaView>
-      <FlatList
-        onRefresh={refetch}
-        data={filteredCourses}
-        renderItem={renderCourse}
-        refreshing={isRefetching}
-        contentContainerStyle={styles.list}
-        keyExtractor={(item) => item.documentId}
-        ListEmptyComponent={renderEmptyComponent}
-      />
-    </ThemedView>
+    <FlatList
+      onRefresh={refetch}
+      data={filteredCourses}
+      renderItem={renderCourse}
+      refreshing={isRefetching}
+      ListHeaderComponent={renderHeader}
+      contentContainerStyle={styles.list}
+      keyExtractor={(item) => item.documentId}
+      ListEmptyComponent={renderEmptyComponent}
+    />
   );
 };
 
 export default CoursesListScreen;
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    ...globalStyles.gap_xs,
-    padding: themeToken.paddingLg,
-    paddingBottom: 0,
-  },
   list: {
+    flex: 1,
     paddingHorizontal: themeToken.paddingLg,
+    backgroundColor: colors.background.primary,
   },
   centered: {
     flex: 1,

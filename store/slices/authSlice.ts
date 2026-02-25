@@ -1,8 +1,8 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { StrapiUser } from '@/types/api';
 import { setAuthToken } from '@/utils/api';
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-type AuthState = {
+export type AuthState = {
   jwt: string | null;
   user: StrapiUser | null;
 };
