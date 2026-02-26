@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
+import { Toaster } from 'sonner-native';
 
 import { AppProviders } from '@/components/providers/AppProviders';
 import { useColorScheme } from '@/hooks/use-color-scheme';
@@ -37,6 +38,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => (
           <BottomSheetModalProvider>
             <StatusBar style="light" backgroundColor={colors.primary} />
             {children}
+            <Toaster position="bottom-center" />
           </BottomSheetModalProvider>
         </SafeAreaProvider>
       </PressablesProvider>

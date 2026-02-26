@@ -1,5 +1,5 @@
-import api from '@/utils/api';
 import type { StrapiCourse, StrapiCourseDetail, StrapiListResponse } from '@/types/api';
+import api from '@/utils/api';
 
 export function getCoursesList(locale: string) {
   return api.get<StrapiListResponse<StrapiCourse>>('/api/courses', {

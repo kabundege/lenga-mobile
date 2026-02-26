@@ -5,7 +5,6 @@ import { themeToken } from '@/utils/theme/styles';
 import { useMemo } from 'react';
 import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useCourseDetail } from './useCourseDetail';
 import {
   CourseDetailErrorState,
   CourseDetailHeader,
@@ -14,6 +13,7 @@ import {
   CourseNotFoundMessage,
   CourseTopicsList,
 } from './components';
+import { useCourseDetail } from './useCourseDetail';
 
 const NOT_FOUND_MESSAGE = 'Isomo ntabwo ryabonetse.';
 

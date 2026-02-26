@@ -1,24 +1,29 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAppDispatch } from '@/hooks/useRedux';
-import { setCredentials, setUser } from '@/store/slices/authSlice';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import * as authService from '@/services/auth.service';
-import type { LoginPayload, RegisterPayload, UpdateProfilePayload } from '@/types/api';
+import { setCredentials, setUser } from '@/store/slices/authSlice';
+import type { UpdateProfilePayload } from '@/types/api';
 import { handleAxiosError } from '@/utils/error.util';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner-native';
 
+/** Query keys for auth; use getMeKeys() for invalidation. */
 export const AUTH_KEYS = {
   ME: ['auth', 'me'] as const,
 };
+
+export const getMeKeys = (email?: string) => [...AUTH_KEYS.ME, { email }];
 
 export function useLogin(options?: { onSuccess?: () => void }) {
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: LoginPayload) => authService.login(payload),
+    mutationFn: authService.login,
     onSuccess: (res) => {
       const { jwt, user } = res.data;
       dispatch(setCredentials({ jwt, user }));
       queryClient.setQueryData(AUTH_KEYS.ME, user);
+      toast.success('Login successful');
       options?.onSuccess?.();
     },
     onError: handleAxiosError,
@@ -30,24 +35,27 @@ export function useRegister(options?: { onSuccess?: () => void }) {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (payload: RegisterPayload) => authService.register(payload),
+    mutationFn: authService.register,
     onSuccess: (res) => {
       const { jwt, user } = res.data;
       dispatch(setCredentials({ jwt, user }));
       queryClient.setQueryData(AUTH_KEYS.ME, user);
+      toast.success('Registration successful');
       options?.onSuccess?.();
     },
     onError: handleAxiosError,
   });
 }
 
+/** Logged-in user profile (GET /api/auth/users/me). */
 export function useMe(enabled = true) {
+  const storedUser = useAppSelector((s) => s.auth.user);
   const request = useQuery({
-    queryKey: AUTH_KEYS.ME,
-    queryFn: () => authService.getMe(),
+    queryKey: getMeKeys(storedUser?.email),
+    queryFn: authService.getMe,
     enabled,
   });
-  const user = request.data?.data ?? null;
+  const user = (request.data?.data ?? null)
   return { ...request, user };
 }
 
@@ -62,6 +70,7 @@ export function useUpdateProfile(options?: { onSuccess?: () => void }) {
       const user = res.data;
       dispatch(setUser(user));
       queryClient.setQueryData(AUTH_KEYS.ME, user);
+      toast.success('Profile updated');
       options?.onSuccess?.();
     },
     onError: handleAxiosError,

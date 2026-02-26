@@ -8,7 +8,7 @@ export const COURSE_KEYS = {
 } as const;
 
 export function getCourseListKeys(locale: string) {
-  return [COURSE_KEYS.LIST, locale] as const;
+  return [COURSE_KEYS.LIST, { locale }] as const;
 }
 
 export function getCourseDetailKeys(documentId: string, locale: string) {

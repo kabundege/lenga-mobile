@@ -1,9 +1,8 @@
 import { useCourseByDocumentId } from '@/hooks/useCourses';
 import { useEnrollCourse } from '@/hooks/useEnrollments';
 import { useAppSelector } from '@/hooks/useRedux';
-import type { StrapiCourseDetail, StrapiTopicWithLessons } from '@/types/api';
-import { useCallback } from 'react';
 import { useLocalSearchParams } from 'expo-router';
+import { useCallback, useMemo } from 'react';
 
 export function useCourseDetail() {
   const params = useLocalSearchParams<{ courseId: string }>();
@@ -18,11 +17,12 @@ export function useCourseDetail() {
   );
   const enrollMutation = useEnrollCourse();
 
-  const topics = (course?.topics ?? []) as StrapiTopicWithLessons[];
-  const isEnrolled =
-    user?.enrollments?.some((e) =>
-      (course as StrapiCourseDetail)?.enrollments?.some((ce) => ce.id === e.id)
+  const topics = useMemo(() => course?.topics ?? [], [course]);
+  const isEnrolled = useMemo(() => {
+    return user?.enrollments?.some((e) =>
+      course?.enrollments?.some((ce) => ce.id === e.id)
     ) ?? false;
+  }, [user, course]);
 
   const handleEnroll = useCallback(() => {
     if (!user || !course) return;

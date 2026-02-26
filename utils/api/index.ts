@@ -3,18 +3,9 @@
  * baseURL from utils/functions/env. Attach JWT from store when available.
  */
 
-import axios, { AxiosInstance } from 'axios';
+import { store } from '@/store';
 import { API_URL } from '@/utils/functions/env';
-
-let authToken: string | null = null;
-
-export function setAuthToken(token: string | null) {
-  authToken = token;
-}
-
-export function getAuthToken(): string | null {
-  return authToken;
-}
+import axios, { AxiosInstance } from 'axios';
 
 function createApi(): AxiosInstance {
   const instance = axios.create({
@@ -26,6 +17,7 @@ function createApi(): AxiosInstance {
   });
 
   instance.interceptors.request.use((config) => {
+    const authToken = store.getState().auth.jwt;
     if (authToken) {
       config.headers.Authorization = `Bearer ${authToken}`;
     }

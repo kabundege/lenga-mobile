@@ -1,12 +1,10 @@
+import { Icon, type IconName, type IconType } from '@/components/common/icon';
 import { TextBody } from '@/components/typography/textBody';
 import { BUTTON_HIT_SLOP } from '@/utils/constants';
 import { Dimensions, flexBetween } from '@/utils/styles';
 import globalStyles from '@/utils/styles/globalstyles.style';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
-import Antd_Icons from '@expo/vector-icons/AntDesign';
-import FR_Icons from '@expo/vector-icons/Feather';
-import MT_Icons from '@expo/vector-icons/MaterialCommunityIcons';
 import { PressableScale } from 'pressto';
 import React, { useMemo, useState } from 'react';
 import {
@@ -26,8 +24,7 @@ import {
 import IconButton from '../buttons/iconButton';
 import { ShakeErrorWrapper } from '../ui/shakeErrorWrapper';
 
-export type IconName = keyof typeof MT_Icons.glyphMap | keyof typeof Antd_Icons.glyphMap | keyof typeof FR_Icons.glyphMap;
-export type IconType = 'material' | 'antd' | 'feather';
+export type { IconName, IconType };
 
 type ControlledInputProps<T extends FieldValues> = {
   control: Control<T>;
@@ -58,16 +55,19 @@ export function ControlledInput<T extends FieldValues>({
 
   const toggleSecuredTextEntryVisibility = () => setSecuredTextEntry((prev) => !prev);
 
-  const conditionalIcon = useMemo(() => {
-    if (iconType === 'material' && icon) {
-      return <MT_Icons name={icon as keyof typeof MT_Icons.glyphMap} size={Dimensions.FONT_SIZE_L} color={hasError ? colors.danger.primary : colors.text.primary} />;
-    } else if (iconType === 'antd' && icon) {
-      return <Antd_Icons name={icon as keyof typeof Antd_Icons.glyphMap} size={Dimensions.FONT_SIZE_L} color={hasError ? colors.danger.primary : colors.text.primary} />;
-    } else if (iconType === 'feather' && icon) {
-      return <FR_Icons name={icon as keyof typeof FR_Icons.glyphMap} size={Dimensions.FONT_SIZE_L} color={hasError ? colors.danger.primary : colors.text.primary} />;
-    }
-    return null;
-  }, [icon, iconType, hasError]);
+  const iconColor = hasError ? colors.danger.primary : colors.text.primary;
+  const conditionalIcon = useMemo(
+    () =>
+      icon ? (
+        <Icon
+          name={icon}
+          type={iconType}
+          size={Dimensions.FONT_SIZE_L}
+          color={iconColor}
+        />
+      ) : null,
+    [icon, iconType, iconColor]
+  );
 
   return (
     <View style={[globalStyles.gap_xs, containerStyle]}>
@@ -105,7 +105,12 @@ export function ControlledInput<T extends FieldValues>({
         {
           secureTextEntry && (
             <PressableScale hitSlop={BUTTON_HIT_SLOP} onPress={toggleSecuredTextEntryVisibility}>
-              <MT_Icons name={!securedTextEntry ? "eye" : "eye-off"} size={Dimensions.FONT_SIZE_L} color={hasError ? colors.danger.primary : colors.text.primary} />
+              <Icon
+                name={securedTextEntry ? 'eye-off' : 'eye'}
+                type="material"
+                size={Dimensions.FONT_SIZE_L}
+                color={iconColor}
+              />
             </PressableScale>
           )
         }

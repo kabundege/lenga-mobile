@@ -1,15 +1,11 @@
-
+import { Icon, type IconName, type IconType } from "@/components/common/icon";
 import { Dimensions } from "@/utils/styles";
 import colors from "@/utils/theme/colors";
 import { themeToken } from "@/utils/theme/styles";
 import { SizeVariants } from "@/utils/types/theme";
-import Antd_Icons from '@expo/vector-icons/AntDesign';
-import FR_Icons from '@expo/vector-icons/Feather';
-import MT_Icons from '@expo/vector-icons/MaterialCommunityIcons';
 import { CustomPressableProps, PressableScale } from "pressto";
 import React, { useMemo } from "react";
 import { StyleProp, StyleSheet, ViewStyle } from "react-native";
-import { IconName, IconType } from "../inputs/ControlledInput";
 
 export type IconButtonProps = {
   icon: IconName;
@@ -56,16 +52,17 @@ const IconButton = ({
     }
   }, [size]);
 
-  const conditionalIcon = useMemo(() => {
-    if (iconType === 'material' && icon) {
-      return <MT_Icons name={icon as keyof typeof MT_Icons.glyphMap} size={iconSize} color={iconFill ?? colors.text.primary} />;
-    } else if (iconType === 'antd' && icon) {
-      return <Antd_Icons name={icon as keyof typeof Antd_Icons.glyphMap} size={iconSize} color={iconFill ?? colors.text.primary} />;
-    } else if (iconType === 'feather' && icon) {
-      return <FR_Icons name={icon as keyof typeof FR_Icons.glyphMap} size={iconSize} color={iconFill ?? colors.text.primary} />;
-    }
-    return null;
-  }, [icon, iconType, iconSize]);
+  const conditionalIcon = useMemo(
+    () => (
+      <Icon
+        name={icon}
+        type={iconType}
+        size={iconSize}
+        color={iconStroke ?? iconFill ?? colors.text.primary}
+      />
+    ),
+    [icon, iconType, iconSize, iconFill, iconStroke]
+  );
 
   return (
     <PressableScale {...props} onPress={onPress} style={[styles.base, dynamicStyles, customStyles]}>

@@ -1,3 +1,4 @@
+import { useMe } from '@/hooks/useAuth';
 import { useAppSelector } from '@/hooks/useRedux';
 import type { StrapiCourse } from '@/types/api';
 import { DATE_FORMAT, formatToDateWithLocale } from '@/utils/functions/date';
@@ -5,6 +6,7 @@ import { flexBetween, flexEnd, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { router } from 'expo-router';
 import { PressableScale } from 'pressto';
+import { useMemo } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { FadeInDown } from 'react-native-reanimated';
 import { TextBody, TextHeading } from '../typography';
@@ -16,7 +18,9 @@ interface CourseCardProps {
 }
 
 const CourseCard = ({ index, course, style }: CourseCardProps) => {
+  const { user } = useMe();
   const locale = useAppSelector((s) => s.preferences.locale);
+  const isEnrolled = useMemo(() => course.documentId === user?.documentId, [user, course]);
 
   return (
     <PressableScale
@@ -25,7 +29,14 @@ const CourseCard = ({ index, course, style }: CourseCardProps) => {
       entering={FadeInDown.delay(index * 100)}
     >
       <View style={globalStyles.p_md}>
-        <TextHeading variant='title' numberOfLines={2}>{course.title}</TextHeading>
+        <View style={globalStyles.flex_row}>
+          <TextHeading variant='title' numberOfLines={2}>{course.title}</TextHeading>
+          {isEnrolled && (
+            <View style={globalStyles.p_xs}>
+              <TextBody variant='caption' color='tertiary' strong>Enrolled</TextBody>
+            </View>
+          )}
+        </View>
         <TextBody variant="body1" color='secondary' numberOfLines={2}>{course.description}</TextBody>
       </View>
 

@@ -19,7 +19,7 @@ import { StyleSheet, View } from 'react-native';
 
 export default function RegisterScreen() {
   const registerMutation = useRegister({
-    onSuccess: () => router.replace('/(tabs)'),
+    onSuccess: () => router.replace('/login'),
   });
 
   const {

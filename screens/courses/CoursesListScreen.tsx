@@ -6,8 +6,8 @@ import LogoutModal from '@/components/modals/LogoutModal';
 import { CoursesListSkeleton } from '@/components/skeletons';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
-import { TextHeading } from '@/components/typography';
 import { TextBody } from '@/components/typography/textBody';
+import { useMe } from '@/hooks/useAuth';
 import { useCourses } from '@/hooks/useCourses';
 import { useAppSelector } from '@/hooks/useRedux';
 import { StrapiCourse } from '@/types/api';
@@ -21,7 +21,7 @@ import Animated, { CurvedTransition } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const CoursesListScreen = () => {
-  const user = useAppSelector((s) => s.auth.user);
+  const { user } = useMe();
   const locale = useAppSelector((s) => s.preferences.locale);
   const { courses, isLoading, isRefetching, error, refetch } = useCourses(locale);
 
@@ -50,29 +50,25 @@ const CoursesListScreen = () => {
 
   const renderHeader = useCallback(({ editable = true }: { editable?: boolean }) => (
     <SafeAreaView style={[globalStyles.py_sm, globalStyles.gap_sm]}>
-      {
-        user ? (
-          <View style={[flexBetween, globalStyles.gap_sm]}>
-            <View>
-              <TextBody strong color='tertiary'>Muraho,</TextBody>
-              <TextHeading variant="subTitle">{user?.full_name}</TextHeading>
-            </View>
-            <LogoutModal
-              toggleBtn={({ onPress }) => (
-                <IconButton
-                  size="sm"
-                  icon="user"
-                  iconType="antd"
-                  onPress={onPress}
-                  iconFill={colors.text.inverted}
-                  backgroundColor={colors.primary}
-                  style={[globalStyles.border_primary, globalStyles.p_sm]}
-                />
-              )}
+      <View style={[flexBetween, globalStyles.gap_sm]}>
+        <View style={[globalStyles.flex_row, globalStyles.gap_2xs, globalStyles.flex_wrap, globalStyles.w_40]}>
+          <TextBody strong color='tertiary'>Muraho,</TextBody>
+          <TextBody strong numberOfLines={1} style={globalStyles.capitalize}>{user?.full_name || user?.username || user?.email || 'Guest'}</TextBody>
+        </View>
+        <LogoutModal
+          toggleBtn={({ onPress }) => (
+            <IconButton
+              size="sm"
+              icon="user"
+              iconType="antd"
+              onPress={onPress}
+              iconFill={colors.text.inverted}
+              backgroundColor={colors.primary}
+              style={[globalStyles.border_primary, globalStyles.p_sm]}
             />
-          </View>
-        ) : null
-      }
+          )}
+        />
+      </View>
 
       <View>
         <ThemedText type="title" numberOfLines={2} style={[globalStyles.line_height_4xl, globalStyles.text_secondary, globalStyles.w_60]}>

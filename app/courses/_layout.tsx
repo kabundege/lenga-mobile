@@ -1,13 +1,16 @@
 import colors from "@/utils/theme/colors";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
+import { Fragment } from "react";
 
 const CoursesLayout = () => (
-    <Stack>
+    <Fragment>
         <StatusBar style="light" backgroundColor={colors.primary} />
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="[courseId]" options={{ headerShown: false }} />
-    </Stack>
+        <Stack>
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="[courseId]" options={{ headerShown: false }} />
+        </Stack>
+    </Fragment>
 );
 
 export default CoursesLayout;

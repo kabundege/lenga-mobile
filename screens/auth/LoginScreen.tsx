@@ -18,7 +18,7 @@ import { StyleSheet, View } from 'react-native';
 
 export default function LoginScreen() {
   const loginMutation = useLogin({
-    onSuccess: () => router.replace('/(tabs)'),
+    onSuccess: () => router.replace('/courses'),
   });
 
   const {

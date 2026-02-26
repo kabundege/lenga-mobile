@@ -1,5 +1,4 @@
 import type { StrapiUser } from '@/types/api';
-import { setAuthToken } from '@/utils/api';
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 export type AuthState = {
@@ -22,7 +21,6 @@ export const authSlice = createSlice({
     ) => {
       state.jwt = action.payload.jwt;
       state.user = action.payload.user;
-      setAuthToken(action.payload.jwt);
     },
     setUser: (state, action: PayloadAction<StrapiUser>) => {
       state.user = action.payload;
@@ -30,7 +28,6 @@ export const authSlice = createSlice({
     logout: (state) => {
       state.jwt = null;
       state.user = null;
-      setAuthToken(null);
     },
   },
 });
