@@ -42,6 +42,7 @@ const BaseModal = forwardRef<BottomSheetModal, BaseModalProps>(
       children,
       toggleBtn,
       snapPoints,
+      onClose,
       detached = false,
       toggleBtnStyle,
       backgroundStyle,
@@ -99,6 +100,7 @@ const BaseModal = forwardRef<BottomSheetModal, BaseModalProps>(
           maxDynamicContentSize={Dimensions.SCREEN_HEIGHT * 0.9}
           enablePanDownToClose={canSwipeToClose}
           backdropComponent={renderBackdrop}
+          onDismiss={onClose}
           index={useSnapPointStrict ? 1 : 0}
           snapPoints={currSnapPoints}
           ref={bottomSheetModalRef}

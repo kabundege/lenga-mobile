@@ -1,6 +1,5 @@
-import Spacer from '@/components/common/spacer';
 import { ThemedView } from '@/components/themed-view';
-import { Dimensions, globalStyles } from '@/utils/styles';
+import { globalStyles } from '@/utils/styles';
 import { themeToken } from '@/utils/theme/styles';
 import { useMemo } from 'react';
 import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
@@ -69,7 +68,6 @@ export default function CourseDetailScreen() {
           refreshControl={refreshControl}
         >
           <CourseDetailHeader />
-          <Spacer height={Dimensions.SPACING} />
           <CourseDetailHero
             course={course}
             topicCount={topicCount}

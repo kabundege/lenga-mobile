@@ -4,6 +4,7 @@ import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import React from 'react';
 import { StyleProp, TextStyle } from 'react-native';
 
@@ -26,6 +27,7 @@ const ICON_REGISTRY = {
     Component: Feather,
     glyphMap: Feather.glyphMap,
   },
+  materialIcons: { Component: MaterialIcons, glyphMap: MaterialIcons.glyphMap },
   // Example: add more sets:
   // ionicons: { Component: Ionicons, glyphMap: Ionicons.glyphMap },
   // materialIcons: { Component: MaterialIcons, glyphMap: MaterialIcons.glyphMap },

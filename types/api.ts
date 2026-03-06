@@ -142,9 +142,9 @@ export type StrapiLessonMinimal = {
   lesson_type: string;
   topic?: StrapiTopicMinimal;
   /** Populated when using populate[lessons][populate][lesson_details] */
-  lesson_details?: StrapiVideoLessonDetail[];
+  lesson_details?: StrapiVideoLessonDetail;
   /** Populated when using populate[lessons][populate][video_lesson_details] (matches admin API) */
-  video_lesson_details?: StrapiVideoLessonDetail[];
+  video_lesson_details?: StrapiVideoLessonDetail;
 };
 
 export type StrapiTopicWithLessons = StrapiTopicMinimal & {

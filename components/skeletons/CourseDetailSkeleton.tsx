@@ -11,7 +11,9 @@ export const CourseDetailSkeleton = () => (
       <View style={styles.categoryLine} />
       <View style={styles.buttonBlock} />
     </AnimatedSkeleton>
-    <AnimatedSkeleton style={[styles.block, styles.sectionTitle]} children={<View style={styles.sectionTitle} />} />
+    <AnimatedSkeleton style={[styles.block, styles.sectionTitle]}>
+      <View style={styles.sectionTitle} />
+    </AnimatedSkeleton>
     {[1, 2, 3].map((i) => (
       <AnimatedSkeleton key={i} style={styles.topicBlock}>
         <View style={styles.topicTitle} />

@@ -5,7 +5,7 @@ import { themeToken } from "@/utils/theme/styles";
 import { SizeVariants } from "@/utils/types/theme";
 import { CustomPressableProps, PressableScale } from "pressto";
 import React, { useMemo } from "react";
-import { StyleProp, StyleSheet, ViewStyle } from "react-native";
+import { StyleProp, StyleSheet, View, ViewProps, ViewStyle } from "react-native";
 
 export type IconButtonProps = {
   icon: IconName;
@@ -18,7 +18,8 @@ export type IconButtonProps = {
   padding?: number;
   styles?: StyleProp<ViewStyle>;
   iconType?: IconType;
-} & CustomPressableProps;
+  disabled?: boolean;
+} & CustomPressableProps & ViewProps;
 
 const IconButton = ({
   icon,
@@ -31,6 +32,7 @@ const IconButton = ({
   padding = Dimensions.SIZE_SM,
   style: customStyles,
   iconType,
+  disabled = false,
   ...props
 }: IconButtonProps) => {
   const dynamicStyles: ViewStyle = {
@@ -64,10 +66,13 @@ const IconButton = ({
     [icon, iconType, iconSize, iconFill, iconStroke]
   );
 
+  const Wrapper = disabled ? View : PressableScale;
+  const WrapperProps = disabled ? {} : { onPress };
+
   return (
-    <PressableScale {...props} onPress={onPress} style={[styles.base, dynamicStyles, customStyles]}>
+    <Wrapper {...WrapperProps} {...props} style={[styles.base, dynamicStyles, customStyles]}>
       {conditionalIcon}
-    </PressableScale>
+    </Wrapper>
   );
 };
 
