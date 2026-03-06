@@ -28,6 +28,7 @@ export interface ChipProps {
   /** Verified */
   isVerified?: boolean;
   iconProps?: IconProps;
+  sub?: string;
 }
 
 // Size-based dimensions (moved outside component to prevent recreation on every render)
@@ -52,6 +53,11 @@ const dimensions: {
     minHeight: scale(30),
     borderRadius: Dimensions.SIZE_M,
   },
+  xs: {
+    paddingVertical: Dimensions.SIZE_XS / 2,
+    paddingHorizontal: Dimensions.SIZE_SM,
+    borderRadius: Dimensions.SIZE_M,
+  },
 };
 
 // Size-based text variants (moved outside component to prevent recreation on every render)
@@ -61,6 +67,7 @@ const textSize: {
   lg: "body1",
   md: "body2",
   sm: "body2",
+  xs: "caption",
 };
 
 const Chip: React.FC<ChipProps> = ({
@@ -73,6 +80,7 @@ const Chip: React.FC<ChipProps> = ({
   isVerified,
   variant = "default",
   iconProps,
+  sub,
 }) => {
   // Variant-based styles
   const getVariantStyle = useMemo(() => {
@@ -93,6 +101,7 @@ const Chip: React.FC<ChipProps> = ({
       dimensions[size],
       getVariantStyle,
       disabled && styles.chipDisabled,
+      sub && globalStyles.flex_col,
       style,
     ],
     [size, getVariantStyle, disabled, style]
@@ -109,13 +118,20 @@ const Chip: React.FC<ChipProps> = ({
 
   return (
     <Wrapper onPress={onPress} style={chipStyle}>
-      <TextBody
-        strong={selected}
-        variant={textSize[size]}
-        style={{ color: textColor }}
-      >
-        {label}
-      </TextBody>
+      <View>
+        <TextBody
+          strong={selected}
+          variant={textSize[size]}
+          style={{ color: textColor }}
+        >
+          {label}
+        </TextBody>
+        {sub && (
+          <TextBody strong color="primary" center style={globalStyles.text_sm}>
+            {sub}
+          </TextBody>
+        )}
+      </View>
       {isVerified && iconProps ? <Icon {...iconProps} /> : null}
     </Wrapper>
   );

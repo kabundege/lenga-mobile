@@ -6,7 +6,7 @@ import { View } from 'react-native';
 
 export function CourseDetailHeader() {
   return (
-    <View style={flexBetween}>
+    <View style={[flexBetween, globalStyles.m_lg]}>
       <IconButton
         icon="chevron-left"
         iconType="feather"

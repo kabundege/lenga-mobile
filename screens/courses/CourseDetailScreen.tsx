@@ -19,17 +19,15 @@ const NOT_FOUND_MESSAGE = 'Isomo ntabwo ryabonetse.';
 
 export default function CourseDetailScreen() {
   const {
-    user,
     error,
     course,
     topics,
     refetch,
     courseId,
     isLoading,
-    isEnrolled,
+    topicCount,
+    lessonCount,
     isRefetching,
-    handleEnroll,
-    enrollMutation,
   } = useCourseDetail();
 
   const refreshControl = useMemo(
@@ -64,22 +62,18 @@ export default function CourseDetailScreen() {
     );
   }
 
-  const showEnrollButton = Boolean(user && !isEnrolled);
-
   return (
     <ThemedView style={[styles.container, globalStyles.bg_background]}>
       <SafeAreaView style={globalStyles.flex_1}>
         <ScrollView
-          contentContainerStyle={styles.scroll}
           refreshControl={refreshControl}
         >
           <CourseDetailHeader />
           <Spacer height={Dimensions.SPACING} />
           <CourseDetailHero
             course={course}
-            showEnrollButton={showEnrollButton}
-            isEnrolling={enrollMutation.isPending}
-            onEnroll={handleEnroll}
+            topicCount={topicCount}
+            lessonCount={lessonCount}
           />
           <CourseTopicsList topics={topics} />
         </ScrollView>
@@ -91,9 +85,6 @@ export default function CourseDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  scroll: {
-    padding: themeToken.paddingLg,
   },
   centered: {
     flex: 1,

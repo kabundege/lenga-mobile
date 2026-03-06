@@ -1,51 +1,35 @@
 import { useCourseByDocumentId } from '@/hooks/useCourses';
-import { useEnrollCourse } from '@/hooks/useEnrollments';
 import { useAppSelector } from '@/hooks/useRedux';
 import { useLocalSearchParams } from 'expo-router';
-import { useCallback, useMemo } from 'react';
+import { useMemo } from 'react';
 
 export function useCourseDetail() {
   const params = useLocalSearchParams<{ courseId: string }>();
   const courseId =
     typeof params.courseId === 'string' ? params.courseId : params.courseId?.[0] ?? '';
   const locale = useAppSelector((s) => s.preferences.locale);
-  const user = useAppSelector((s) => s.auth.user);
 
   const { course, isLoading, isRefetching, error, refetch } = useCourseByDocumentId(
     courseId,
     locale
   );
-  const enrollMutation = useEnrollCourse();
 
   const topics = useMemo(() => course?.topics ?? [], [course]);
-  const isEnrolled = useMemo(() => {
-    return user?.enrollments?.some((e) =>
-      course?.enrollments?.some((ce) => ce.id === e.id)
-    ) ?? false;
-  }, [user, course]);
 
-  const handleEnroll = useCallback(() => {
-    if (!user || !course) return;
-    enrollMutation.mutate({
-      locale,
-      course: course.id,
-      enrollment_status: 'Enrolled',
-      users_permissions_user: user.id,
-    });
-  }, [user, course, locale, enrollMutation]);
+  const topicCount = useMemo(() => course?.topics?.length ?? 0, [course]);
+  const lessonCount = useMemo(() => course?.topics?.reduce((acc, topic) => acc + (topic.lessons?.length ?? 0), 0) ?? 0, [course]);
+
 
   return {
     courseId,
     course,
-    user,
     locale,
     topics,
-    isEnrolled,
+    topicCount,
+    lessonCount,
     isLoading,
     isRefetching,
     error,
     refetch,
-    enrollMutation,
-    handleEnroll,
   };
 }

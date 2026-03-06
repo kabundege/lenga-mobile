@@ -1,7 +1,10 @@
-import React from 'react';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import Feather from '@expo/vector-icons/Feather';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
+import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import React from 'react';
 import { StyleProp, TextStyle } from 'react-native';
 
 /**
@@ -26,7 +29,9 @@ const ICON_REGISTRY = {
   // Example: add more sets:
   // ionicons: { Component: Ionicons, glyphMap: Ionicons.glyphMap },
   // materialIcons: { Component: MaterialIcons, glyphMap: MaterialIcons.glyphMap },
-  // fontAwesome: { Component: FontAwesome, glyphMap: FontAwesome.glyphMap },
+  ionicons: { Component: Ionicons, glyphMap: Ionicons.glyphMap },
+  fontAwesome: { Component: FontAwesome, glyphMap: FontAwesome.glyphMap },
+  fontAwesome6: { Component: FontAwesome6, glyphMap: FontAwesome6.glyphMap },
 } as const;
 
 export type IconType = keyof typeof ICON_REGISTRY;

@@ -14,6 +14,7 @@ export const themeToken = {
     lg: scale(50),
     md: scale(45),
     sm: scale(35),
+    xs: scale(25),
   },
   fontSizes: {
     heading: {
