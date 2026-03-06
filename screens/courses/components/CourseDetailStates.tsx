@@ -4,6 +4,7 @@ import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { globalStyles } from '@/utils/styles';
 import { themeToken } from '@/utils/theme/styles';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CourseDetailHeader } from './CourseDetailHeader';
@@ -33,19 +34,20 @@ export function CourseNotFoundMessage({ message, messageStyle }: NotFoundMessage
 }
 
 export function CourseDetailErrorState({ onRetry }: { onRetry: () => void }) {
+  const { t } = useTranslation();
   return (
     <ThemedView style={globalStyles.flex_1}>
       <SafeAreaView style={[globalStyles.flex_1, globalStyles.p_lg]}>
         <CourseDetailHeader />
         <View style={[centeredStyles.centered, globalStyles.center]}>
           <ThemedText type="defaultSemiBold" style={globalStyles.text_center}>
-            Hari ikitagenze neza mu kubona isomo.
+            {t('courses.errorMessage')}
           </ThemedText>
           <Button
             type="light"
             overRiddingStyles={[[globalStyles.border_none, globalStyles.bg_transparent]]}
             size="lg"
-            label="Subiramo"
+            label={t('courses.retry')}
             onPress={onRetry}
           />
         </View>

@@ -6,6 +6,7 @@ import colors from '@/utils/theme/colors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { PressableOpacity } from 'pressto';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, { CurvedTransition, FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import type { TopicBlockProps } from './CourseTopicsList.types';
@@ -43,6 +44,7 @@ const styles = StyleSheet.create({
 });
 
 export function TopicBlock({ topic, index }: TopicBlockProps) {
+  const { t } = useTranslation();
   const [isCollapsed, setIsCollapsed] = useState(true);
   const toggleCollapsed = useCallback(() => setIsCollapsed((prev) => !prev), []);
 
@@ -102,7 +104,7 @@ export function TopicBlock({ topic, index }: TopicBlockProps) {
                 style={[globalStyles.absolute, globalStyles.w_full, globalStyles.h_full]}
               />
               <TextBody center variant="body2" color="primary" style={styles.showMoreText}>
-                {isCollapsed ? `Show more (${hiddenCount} more)` : 'Show less'}
+                {isCollapsed ? t('courses.showMore', { count: hiddenCount }) : t('courses.showLess')}
               </TextBody>
             </PressableOpacity>
           </>

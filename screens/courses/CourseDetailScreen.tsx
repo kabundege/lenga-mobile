@@ -2,6 +2,7 @@ import { ThemedView } from '@/components/themed-view';
 import { globalStyles } from '@/utils/styles';
 import { themeToken } from '@/utils/theme/styles';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RefreshControl, ScrollView, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -14,9 +15,8 @@ import {
 } from './components';
 import { useCourseDetail } from './useCourseDetail';
 
-const NOT_FOUND_MESSAGE = 'Isomo ntabwo ryabonetse.';
-
 export default function CourseDetailScreen() {
+  const { t } = useTranslation();
   const {
     error,
     course,
@@ -37,7 +37,7 @@ export default function CourseDetailScreen() {
   if (!courseId) {
     return (
       <ThemedView style={[styles.centered, globalStyles.center]}>
-        <CourseNotFoundMessage message={NOT_FOUND_MESSAGE} />
+        <CourseNotFoundMessage message={t('courses.notFound')} />
       </ThemedView>
     );
   }
@@ -54,7 +54,7 @@ export default function CourseDetailScreen() {
     return (
       <ThemedView style={[styles.centered, globalStyles.center]}>
         <CourseNotFoundMessage
-          message={NOT_FOUND_MESSAGE}
+          message={t('courses.notFound')}
           messageStyle={globalStyles.w_80}
         />
       </ThemedView>

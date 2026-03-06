@@ -1,0 +1,22 @@
+{
+  "notFound": "Course not found.",
+  "errorMessage": "Something went wrong loading the course.",
+  "retry": "Retry",
+  "instructor": "Instructor",
+  "category": "Category",
+  "instructorProvider": "Instructor Provider",
+  "topicsCount": "{{count}} Topics",
+  "lessonsCount": "{{count}} Lessons",
+  "description": "Description",
+  "topics": "Topics",
+  "searchPlaceholder": "Search topics and lessons...",
+  "lessonNoMedia": "This lesson does not have a playable media yet.",
+  "showMore": "Show more ({{count}} more)",
+  "showLess": "Show less",
+  "courseSaved": "Course saved",
+  "courseNotSaved": "Course not saved",
+  "emptyTopicsTitle": "No topics found",
+  "emptyTopicsDescription": "This course has no topics yet. Check back soon.",
+  "searchEmptyTitle": "No results",
+  "searchEmptyDescription": "No topics or lessons match your search. Try different keywords."
+}

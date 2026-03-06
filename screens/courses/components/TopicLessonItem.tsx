@@ -6,12 +6,14 @@ import { flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { PressableOpacity } from 'pressto';
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { CurvedTransition, FadeInDown, FadeOutUp } from 'react-native-reanimated';
 import type { TopicLessonItemProps } from './CourseTopicsList.types';
 import { getLessonMediaUrl } from './courseLessonUtils';
 
 export function TopicLessonItem({ lesson, index }: TopicLessonItemProps) {
+  const { t } = useTranslation();
   const isDownloaded = false;
   const mediaUrl = useMemo(() => getLessonMediaUrl(lesson), [lesson]);
 
@@ -48,7 +50,7 @@ export function TopicLessonItem({ lesson, index }: TopicLessonItemProps) {
                   {lesson.lesson_type} &middot; {lesson.locale}
                 </TextBody>
                 <Chip
-                  label={isDownloaded ? 'Course saved' : 'Course not saved'}
+                  label={isDownloaded ? t('courses.courseSaved') : t('courses.courseNotSaved')}
                   size="xs"
                   variant="filled"
                 />

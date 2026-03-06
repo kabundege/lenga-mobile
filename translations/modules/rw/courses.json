@@ -1,0 +1,22 @@
+{
+  "notFound": "Isomo ntabwo ryabonetse.",
+  "errorMessage": "Hari ikitagenze neza mu kubona isomo.",
+  "retry": "Subiramo",
+  "instructor": "Umwarimu",
+  "category": "Ikiciro",
+  "instructorProvider": "Umuvugizi w'isomo",
+  "topicsCount": "{{count}} Bigice",
+  "lessonsCount": "{{count}} Amasomo",
+  "description": "Ibisobanuro",
+  "topics": "Bigice",
+  "searchPlaceholder": "Shakisha bigice n'amasomo...",
+  "lessonNoMedia": "Iri somo nta media iriho kuri iki gihe.",
+  "showMore": "Reba byinshi ({{count}} byinshi)",
+  "showLess": "Reba bike",
+  "courseSaved": "Isomo rirakosowe",
+  "courseNotSaved": "Isomo ntarakosowe",
+  "emptyTopicsTitle": "Nta bigice byabonetse",
+  "emptyTopicsDescription": "Iyi somo nta bigice bifite kuri iki gihe. Reba vuba.",
+  "searchEmptyTitle": "Nta bimenyetso",
+  "searchEmptyDescription": "Nta bigice cyangwa amasomo bihuye n'ishakisha. Gerageza andi majambo."
+}
