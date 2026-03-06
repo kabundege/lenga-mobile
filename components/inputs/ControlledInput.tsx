@@ -26,7 +26,7 @@ import { ShakeErrorWrapper } from '../ui/shakeErrorWrapper';
 
 export type { IconName, IconType };
 
-type ControlledInputProps<T extends FieldValues> = {
+export type ControlledInputProps<T extends FieldValues> = {
   control: Control<T>;
   name: FieldPath<T>;
   label?: string;
@@ -84,7 +84,7 @@ export function ControlledInput<T extends FieldValues>({
           name={name}
           render={({ field: { onChange, onBlur, value } }) => (
             <View
-              style={[globalStyles.flex_1, globalStyles.gap_xs, flexBetween]}>
+              style={[globalStyles.flex_9, globalStyles.gap_xs, flexBetween]}>
               <TextInput
                 value={value}
                 onBlur={onBlur}

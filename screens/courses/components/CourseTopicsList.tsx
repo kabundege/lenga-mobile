@@ -1,121 +1,80 @@
 import IconButton from '@/components/buttons/iconButton';
-import Chip from '@/components/common/chip';
-import LessonPlayerModal from '@/components/modals/LessonPlayerModal';
-import { ThemedText } from '@/components/themed-text';
-import { TextBody, TextHeading } from '@/components/typography';
+import { AnimatedSearchBar } from '@/components/inputs/animatedSearchBar';
+import { TextHeading } from '@/components/typography';
 import type { StrapiLessonMinimal, StrapiTopicWithLessons } from '@/types/api';
 import { flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
 import type { LessonPlayerModalRef } from '@/utils/types/modals';
-import { PressableOpacity } from 'pressto';
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { FieldValues, useForm, useWatch } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
-import Animated, { CurvedTransition, FadeInDown, FadeOutUp } from 'react-native-reanimated';
+import Animated, { CurvedTransition } from 'react-native-reanimated';
 import { toast } from 'sonner-native';
+import { getLessonMediaUrl } from './courseLessonUtils';
+import type { CourseTopicsListProps } from './CourseTopicsList.types';
 import { EmptyTopicsMessage } from './EmptyTopicsMessage';
+import { TopicBlock } from './TopicBlock';
 
-type CourseTopicsListProps = {
-  topics: StrapiTopicWithLessons[];
-};
+const styles = StyleSheet.create({
+  headerRow: {
+    alignItems: 'center',
+  },
+  sectionTitle: {
+    marginVertical: themeToken.spacing,
+  },
+});
 
-interface TopicLessonItemProps {
-  lesson: StrapiLessonMinimal;
-  index: number;
-  onPressLesson: (lesson: StrapiLessonMinimal) => void;
-}
-
-function getLessonMediaUrl(lesson: StrapiLessonMinimal) {
-  return (
-    lesson.video_lesson_details?.video_url ??
-    lesson.lesson_details?.video_url ??
-    ''
+function filterTopicsWithLessons(
+  topics: CourseTopicsListProps['topics']
+): CourseTopicsListProps['topics'] {
+  return topics.filter(
+    (topic) =>
+      topic.lessons?.length &&
+      topic.lessons.length > 0 &&
+      topic.title &&
+      topic.description
   );
 }
 
-const TopicLessonItem = ({ lesson, index, onPressLesson }: TopicLessonItemProps) => {
-  const isDownloaded = false;
-
-  const mediaUrl = useMemo(() => getLessonMediaUrl(lesson), [lesson]);
-  const onPress = useCallback(() => onPressLesson(lesson), [lesson, onPressLesson]);
-
-  return (
-    <PressableOpacity
-      onPress={onPress}
-      entering={FadeInDown.delay(index * 100)} exiting={FadeOutUp.delay(index * 100)} layout={CurvedTransition}
-      style={[flexBetween, globalStyles.p_sm, globalStyles.bg_background]}
-    >
-      <View>
-        <TextBody variant="body2">{lesson.title}</TextBody>
-        <View style={[globalStyles.flex_row, globalStyles.gap_xs, globalStyles.items_center, globalStyles.flex_wrap]}>
-          <TextBody style={[globalStyles.uppercase, globalStyles.font_500]} variant="caption" color="primary">
-            {lesson.lesson_type} &middot; {lesson.locale}
-          </TextBody>
-          <Chip label={isDownloaded ? 'Course saved' : 'Course not saved'} size='xs' variant='filled' />
-        </View>
-      </View>
-      <IconButton
-        icon={!mediaUrl ? 'error' : isDownloaded ? 'download' : 'play'}
-        iconType={!mediaUrl ? 'materialIcons' : isDownloaded ? 'material' : 'ionicons'}
-        backgroundColor={colors.primary_light}
-        iconFill={colors.primary}
-      />
-    </PressableOpacity>
-  )
-};
-
-interface TopicBlockProps {
-  index: number;
-  topic: StrapiTopicWithLessons;
-  onPressLesson: (lesson: StrapiLessonMinimal) => void;
-}
-
-const TopicBlock = ({ topic, index, onPressLesson }: TopicBlockProps) => (
-  <Animated.View
-    entering={FadeInDown.delay(index * 100)}
-    exiting={FadeOutUp.delay(index * 100)}
-    layout={CurvedTransition}
-    style={styles.topicBlock}
-  >
-    <View style={[globalStyles.py_sm, globalStyles.px_md]}>
-      <ThemedText type="defaultSemiBold" style={globalStyles.text_primary}>{topic.title}</ThemedText>
-      {topic.description ? (
-        <TextBody variant="body2" color="secondary">
-          {topic.description}
-        </TextBody>
-      ) : null}
-    </View>
-    {
-      topic.lessons && topic.lessons.length > 0 ? (
-        <Animated.View
-          entering={FadeInDown.delay(index * 100)}
-          exiting={FadeOutUp.delay(index * 100)}
-          style={styles.lessonsList}
-          layout={CurvedTransition}
-        >
-          {topic.lessons?.map((lesson, index) => (
-            <TopicLessonItem
-              index={index}
-              lesson={lesson}
-              key={lesson.documentId}
-              onPressLesson={onPressLesson}
-            />
-          ))}
-        </Animated.View>
-      ) : null
-    }
-  </Animated.View>
-);
-
-export const CourseTopicsList = ({ topics }: CourseTopicsListProps) => {
-  if (topics.length === 0) {
-    return <EmptyTopicsMessage />;
-  }
-
-  const topicsWithLessons = useMemo(() => topics.filter((topic) => topic.lessons && topic.lessons.length > 0 && topic.title && topic.description), [topics]);
-
-  const lessonPlayerModalRef = useRef<LessonPlayerModalRef>(null);
+export function CourseTopicsList({ topics }: CourseTopicsListProps) {
+  const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<StrapiLessonMinimal | null>(null);
+  const lessonPlayerModalRef = useRef<LessonPlayerModalRef>(null);
+
+  const { control } = useForm<FieldValues>({
+    defaultValues: {
+      search: '',
+    },
+  });
+
+  const search = useWatch({ control, name: 'search' });
+
+  const topicsWithLessons = useMemo(
+    () => filterTopicsWithLessons(topics),
+    [topics]
+  );
+
+  const filteredTopics = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return topicsWithLessons;
+    return topicsWithLessons
+      .map((topic): StrapiTopicWithLessons | null => {
+        const topicMatches =
+          topic.title?.toLowerCase().includes(q) ||
+          topic.description?.toLowerCase().includes(q);
+        const lessonsFiltered = (topic.lessons ?? []).filter((l) =>
+          l.title?.toLowerCase().includes(q)
+        );
+        const includeTopic = topicMatches || lessonsFiltered.length > 0;
+        if (!includeTopic) return null;
+        return {
+          ...topic,
+          lessons: topicMatches ? (topic.lessons ?? []) : lessonsFiltered,
+        };
+      })
+      .filter((t): t is StrapiTopicWithLessons => t != null);
+  }, [topicsWithLessons, search]);
 
   const openLesson = useCallback((lesson: StrapiLessonMinimal) => {
     const mediaUrl = getLessonMediaUrl(lesson);
@@ -127,42 +86,52 @@ export const CourseTopicsList = ({ topics }: CourseTopicsListProps) => {
     lessonPlayerModalRef.current?.present();
   }, []);
 
-  const handleClose = useCallback(() => {
+  const closeLessonModal = useCallback(() => {
     setSelectedLesson(null);
   }, []);
 
+  if (topics.length === 0) {
+    return <EmptyTopicsMessage />;
+  }
+
   return (
     <View style={globalStyles.px_lg}>
-      <TextHeading variant="title" style={styles.sectionTitle}>
-        Topics
-      </TextHeading>
+      <View>
+        <View style={[flexBetween, globalStyles.flex_row, styles.headerRow]}>
+          <TextHeading variant="title" style={styles.sectionTitle}>
+            Topics
+          </TextHeading>
+          <IconButton
+            size="sm"
+            iconType="antd"
+            iconFill={colors.primary}
+            backgroundColor={colors.primary_light}
+            icon={isSearchVisible ? "close" : "search"}
+            onPress={() => setIsSearchVisible((v) => !v)}
+          />
+        </View>
+        <AnimatedSearchBar
+          name="search"
+          isClearable
+          marginBottom={0}
+          control={control}
+          visible={isSearchVisible}
+          onVisibilityChange={setIsSearchVisible}
+          placeholder="Search topics and lessons..."
+        />
+      </View>
+
       <Animated.View layout={CurvedTransition} style={globalStyles.gap_md}>
-        {topicsWithLessons.map((topic, index) => (
-          <TopicBlock key={topic.documentId} index={index} topic={topic} onPressLesson={openLesson} />
+        {filteredTopics.map((topic, index) => (
+          <TopicBlock
+            index={index}
+            topic={topic}
+            key={topic.documentId}
+          />
         ))}
       </Animated.View>
 
-      <LessonPlayerModal
-        ref={lessonPlayerModalRef}
-        lesson={selectedLesson}
-        onClose={handleClose}
-      />
+
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  sectionTitle: {
-    marginVertical: themeToken.spacing,
-  },
-  topicBlock: {
-    ...globalStyles.rounded_sm,
-    backgroundColor: colors.background.secondary,
-  },
-  lessonsList: {
-    ...StyleSheet.flatten([globalStyles.gap_2xs, globalStyles.m_xs, globalStyles.mt_0, globalStyles.rounded_sm, globalStyles.overflow_hidden]),
-  },
-  disabledLesson: {
-    opacity: 0.6,
-  },
-});

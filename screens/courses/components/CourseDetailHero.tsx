@@ -39,7 +39,7 @@ export function CourseDetailHero({
   return (
     <View style={globalStyles.gap_md}>
       <View style={globalStyles.px_lg}>
-        <ThemedText type="title" style={globalStyles.text_primary}>
+        <ThemedText type="title" style={[globalStyles.text_primary, globalStyles.line_height_4xl]}>
           {course.title}
         </ThemedText>
         <View style={globalStyles.gap_sm}>
