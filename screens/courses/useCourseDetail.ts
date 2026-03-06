@@ -27,10 +27,10 @@ export function useCourseDetail() {
   const handleEnroll = useCallback(() => {
     if (!user || !course) return;
     enrollMutation.mutate({
-      users_permissions_user: user.id,
-      course: course.id,
       locale,
+      course: course.id,
       enrollment_status: 'Enrolled',
+      users_permissions_user: user.id,
     });
   }, [user, course, locale, enrollMutation]);
 

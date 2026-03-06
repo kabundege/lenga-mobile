@@ -19,17 +19,17 @@ const NOT_FOUND_MESSAGE = 'Isomo ntabwo ryabonetse.';
 
 export default function CourseDetailScreen() {
   const {
-    courseId,
-    course,
     user,
-    topics,
-    isEnrolled,
-    isLoading,
-    isRefetching,
     error,
+    course,
+    topics,
     refetch,
-    enrollMutation,
+    courseId,
+    isLoading,
+    isEnrolled,
+    isRefetching,
     handleEnroll,
+    enrollMutation,
   } = useCourseDetail();
 
   const refreshControl = useMemo(

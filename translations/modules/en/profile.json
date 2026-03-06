@@ -1,0 +1,7 @@
+{
+  "logout": {
+    "title": "Log out",
+    "message": "Are you sure you want to stop your lessons and switch the account you're using?",
+    "confirmButton": "Confirm"
+  }
+}

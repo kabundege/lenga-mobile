@@ -10,6 +10,7 @@ import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-c
 import { Toaster } from 'sonner-native';
 
 import { AppProviders } from '@/components/providers/AppProviders';
+import '@/translations/i18n';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import globalStyles from '@/utils/styles/globalstyles.style';
 import colors from '@/utils/theme/colors';

@@ -1,0 +1,11 @@
+{
+  "buttons": {
+    "confirm": "Emeza",
+    "cancel": "Kureka",
+    "close": "Funga"
+  },
+  "language": {
+    "hint": "Language",
+    "label": "Use the App in English"
+  }
+}
