@@ -371,7 +371,7 @@ const globalStyles = StyleSheet.create({
   bg_background: { backgroundColor: colors.background.primary },
   bg_secondary: { backgroundColor: colors.background.secondary },
   bg_tertiary: { backgroundColor: colors.background.tertiary },
-  bg_green_light: { backgroundColor: colors.success.primary },
+  bg_green_light: { backgroundColor: colors.success.tertiary },
   bg_danger: { backgroundColor: colors.danger.primary },
   bg_transparent: { backgroundColor: "transparent" },
   bg_gray: { backgroundColor: colors.background.tertiary },

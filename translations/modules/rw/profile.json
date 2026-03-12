@@ -3,5 +3,9 @@
     "title": "Gusohoka",
     "message": "Mbese urashaka guhagarika amasomo uguhindura konti urimo gukoresha",
     "confirmButton": "Emeza"
+  },
+  "offlineStorage": {
+    "title": "Ububiko bwakoreshejwe",
+    "stats": "{{count}} byabitswe · {{storage}} bikoreshwa"
   }
 }

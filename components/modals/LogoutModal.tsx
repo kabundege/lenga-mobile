@@ -1,9 +1,10 @@
 import { ThemedText } from '@/components/themed-text';
 import { TextBody } from '@/components/typography/textBody';
 import { useLanguageSwitch } from '@/hooks/useLanguageSwitch';
-import { useAppDispatch } from '@/hooks/useRedux';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import { logout } from '@/store/slices/authSlice';
-import { globalStyles } from '@/utils/styles';
+import type { OfflineMediaEntry } from '@/store/slices/offlineMediaSlice';
+import { flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
 import type { LogoutModalRef } from '@/utils/types/modals';
@@ -20,12 +21,35 @@ import BaseModal, { BaseModalProps } from './BaseModal';
 
 export type LogoutModalProps = Omit<BaseModalProps, 'children'>;
 
+function formatBytes(bytes: number) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let v = bytes;
+  let i = 0;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i += 1;
+  }
+  const digits = i === 0 ? 0 : v >= 100 ? 0 : v >= 10 ? 1 : 2;
+  return `${v.toFixed(digits)} ${units[i]}`;
+}
+
 const LogoutModal = forwardRef<LogoutModalRef, LogoutModalProps>(
   function LogoutModal(props, ref) {
     const modalRef = useRef<BottomSheetModal>(null);
     const dispatch = useAppDispatch();
     const { dismiss } = useBottomSheetModal();
     const { t, currentLanguage, setLanguage } = useLanguageSwitch();
+    const savedEntries = useAppSelector((s) =>
+      Object.values(s.offlineMedia.byLessonId).filter(
+        (e): e is OfflineMediaEntry => e != null && e.status === 'saved'
+      )
+    );
+    const savedCount = savedEntries.length;
+    const totalStorageBytes = useMemo(
+      () => savedEntries.reduce((sum, e) => sum + (e.fileSize ?? 0), 0),
+      [savedEntries]
+    );
 
     useImperativeHandle(ref, () => ({
       present: () => modalRef.current?.present(),
@@ -63,18 +87,33 @@ const LogoutModal = forwardRef<LogoutModalRef, LogoutModalProps>(
           </View>
 
 
+
+
           <View style={styles.languageSection}>
-            <View>
-              <TextHeading variant="subTitle" color='primary'>
-                {
-                  t('global.language.hint')
-                }
+            <View style={[flexBetween, globalStyles.w_full]}>
+              <View>
+                <TextHeading variant="subTitle" color='primary'>
+                  {
+                    t('global.language.hint')
+                  }
+                </TextHeading>
+                <TextBody variant="body2" color="secondary" style={styles.languageLabel}>
+                  {t('global.language.label')}
+                </TextBody>
+              </View>
+              <Switch value={isEnglish} onValueChange={handleToggleLanguage} trackColor={{ true: colors.primary, false: colors.background.secondary }} thumbColor={colors.text.inverted} />
+            </View>
+            <View style={[globalStyles.w_full, globalStyles.border_t, globalStyles.pt_sm]}>
+              <TextHeading variant="subTitle" color="primary">
+                {t('profile.offlineStorage.title')}
               </TextHeading>
-              <TextBody variant="body2" color="secondary" style={styles.languageLabel}>
-                {t('global.language.label')}
+              <TextBody variant="body2" color="secondary">
+                {t('profile.offlineStorage.stats', {
+                  count: savedCount,
+                  storage: formatBytes(totalStorageBytes),
+                })}
               </TextBody>
             </View>
-            <Switch value={isEnglish} onValueChange={handleToggleLanguage} trackColor={{ true: colors.primary, false: colors.background.secondary }} thumbColor={colors.text.inverted} />
           </View>
 
         </BottomSheetView>
@@ -93,9 +132,6 @@ const styles = StyleSheet.create({
   },
   languageSection: {
     width: '100%',
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     marginVertical: themeToken.spacingLg,
     backgroundColor: colors.primary_light,
     ...globalStyles.rounded_sm,

@@ -2,7 +2,11 @@ import IconButton from '@/components/buttons/iconButton';
 import Spacer from '@/components/common/spacer';
 import { ThemedView } from '@/components/themed-view';
 import { TextBody, TextHeading } from '@/components/typography';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
+import { downloadLessonMedia, markNotSaved, removeSavedLesson } from '@/store/slices/offlineMediaSlice';
 import type { StrapiLessonMinimal } from '@/types/api';
+import { confirm } from '@/utils/functions/confirm';
+import { fileExists } from '@/utils/offlineMedia';
 import { flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
@@ -11,6 +15,7 @@ import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { BottomSheetView, useBottomSheetModal } from '@gorhom/bottom-sheet';
 import { Audio, ResizeMode, Video, type AVPlaybackStatus } from 'expo-av';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { toast } from 'sonner-native';
 import BaseModal, { BaseModalProps } from './BaseModal';
@@ -26,6 +31,19 @@ function formatTime(seconds: number) {
   return `${mins}:${String(secs).padStart(2, '0')}`;
 }
 
+function formatBytes(bytes: number) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let v = bytes;
+  let i = 0;
+  while (v >= 1024 && i < units.length - 1) {
+    v /= 1024;
+    i += 1;
+  }
+  const digits = i === 0 ? 0 : v >= 100 ? 0 : v >= 10 ? 1 : 2;
+  return `${v.toFixed(digits)} ${units[i]}`;
+}
+
 function getLessonMediaUrl(lesson: StrapiLessonMinimal | null) {
   if (!lesson) return '';
   return (
@@ -37,8 +55,10 @@ function getLessonMediaUrl(lesson: StrapiLessonMinimal | null) {
 
 const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProps>(
   function LessonPlayerModal({ lesson, onClose, ...props }, ref) {
+    const { t } = useTranslation();
     const modalRef = useRef<BottomSheetModal>(null);
     const { dismiss } = useBottomSheetModal();
+    const dispatch = useAppDispatch();
 
     const videoRef = useRef<Video>(null);
 
@@ -51,6 +71,24 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
 
     const mediaUrl = useMemo(() => getLessonMediaUrl(lesson), [lesson]);
     const lessonType = lesson?.lesson_type ?? '';
+    const lessonId = lesson?.documentId ?? '';
+    const savedEntry = useAppSelector((s) =>
+      lessonId ? s.offlineMedia.byLessonId[lessonId] : undefined
+    );
+    const isSaved = savedEntry?.status === 'saved' && !!savedEntry.localUri;
+    const isSaving = savedEntry?.status === 'saving';
+    const bytesWritten = savedEntry?.bytesWritten ?? 0;
+    const totalBytes = savedEntry?.totalBytes ?? null;
+    const percent = useMemo(() => {
+      if (!isSaving) return null;
+      if (!totalBytes || totalBytes <= 0) return null;
+      return Math.max(0, Math.min(100, Math.round((bytesWritten / totalBytes) * 100)));
+    }, [isSaving, bytesWritten, totalBytes]);
+
+    const playableUri = useMemo(() => {
+      if (isSaved && savedEntry?.localUri) return savedEntry.localUri;
+      return mediaUrl;
+    }, [isSaved, savedEntry?.localUri, mediaUrl]);
 
     const isAudio = useMemo(() => {
       const t = lessonType.toLowerCase();
@@ -58,6 +96,20 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       if (t.includes('video')) return false;
       return /\.(mp3|m4a|aac|wav|ogg)(\?.*)?$/i.test(mediaUrl);
     }, [lessonType, mediaUrl]);
+
+    useEffect(() => {
+      if (!lessonId) return;
+      const localUri = savedEntry?.localUri;
+      if (!localUri) return;
+      try {
+        const exists = fileExists(localUri);
+        if (!exists) {
+          dispatch(markNotSaved({ lessonId }));
+        }
+      } catch {
+        // If we can't verify, don't block playback.
+      }
+    }, [dispatch, lessonId, savedEntry?.localUri]);
 
     React.useImperativeHandle(ref, () => ({
       present: () => modalRef.current?.present(),
@@ -93,7 +145,7 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
     useEffect(() => {
       // Ensure previous audio is torn down when switching lessons/types.
       unloadAudio().catch(() => null);
-      if (!lesson || !mediaUrl || !isAudio) return;
+      if (!lesson || !playableUri || !isAudio) return;
 
       let cancelled = false;
 
@@ -105,7 +157,7 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
           });
 
           const { sound: created } = await Audio.Sound.createAsync(
-            { uri: mediaUrl },
+            { uri: playableUri },
             { shouldPlay: true },
             (status: AVPlaybackStatus) => {
               if (!status.isLoaded) return;
@@ -123,7 +175,7 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
 
           soundRef.current = created;
         } catch {
-          toast.error('Unable to play this lesson.');
+          toast.error(t('courses.playbackError'));
         }
       })();
 
@@ -131,7 +183,7 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
         cancelled = true;
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [lesson?.documentId, mediaUrl, isAudio]);
+    }, [lesson?.documentId, playableUri, isAudio]);
 
     const toggleAudio = async () => {
       const s = soundRef.current;
@@ -145,43 +197,123 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       }
     };
 
+    const onSaveOffline = async () => {
+      if (!lessonId || !mediaUrl) return;
+      const confirmed = await confirm({
+        title: t('courses.saveOfflineConfirmTitle'),
+        message: t('courses.saveOfflineConfirmMessage'),
+        confirmText: t('global.buttons.confirm'),
+        cancelText: t('global.buttons.cancel'),
+      });
+      if (!confirmed) return;
+      const toastId = toast.loading(t('courses.downloading'));
+      try {
+        await dispatch(downloadLessonMedia({ lessonId, remoteUrl: mediaUrl })).unwrap();
+        toast.dismiss(toastId);
+        toast.success(t('courses.savedForOffline'));
+      } catch {
+        toast.dismiss(toastId);
+        toast.error(t('courses.downloadFailed'));
+      }
+    };
+
+    const onRemoveSaved = async () => {
+      if (!lessonId) return;
+      const confirmed = await confirm({
+        title: t('courses.removeOfflineConfirmTitle'),
+        message: t('courses.removeOfflineConfirmMessage'),
+        confirmText: t('global.buttons.confirm'),
+        cancelText: t('global.buttons.cancel'),
+      });
+      if (!confirmed) return;
+      try {
+        await dispatch(removeSavedLesson({ lessonId })).unwrap();
+        toast.success(t('courses.removedFromOffline'));
+      } catch {
+        toast.error(t('courses.removeOfflineFailed'));
+      }
+    };
+
     return (
       <BaseModal ref={modalRef} onClose={handleClose} {...props}>
         <BottomSheetView style={styles.content}>
           <View style={[flexBetween, styles.header]}>
             <TextHeading variant="title" numberOfLines={2}>
-              {lesson?.title ?? 'Lesson'}
+              {lesson?.title ?? t('courses.lessonTitleFallback')}
             </TextHeading>
 
-            <IconButton
-              onPress={() => dismiss()}
-              icon="close"
-              iconType="antd"
-              size="sm"
-              backgroundColor={colors.primary_light}
-              style={globalStyles.border_dashed}
-            />
+            <View style={[globalStyles.flex_row, globalStyles.gap_xs, globalStyles.items_center]}>
+              {
+                !isSaved && mediaUrl ? (
+                  <IconButton
+                    onPress={onSaveOffline}
+                    icon={isSaved ? 'check' : isSaving ? 'loading1' : 'download'}
+                    iconType="antd"
+                    size="sm"
+                    backgroundColor={colors.primary_light}
+                    iconFill={colors.primary}
+                    disabled={!lessonId || !mediaUrl || isSaved || isSaving}
+                    style={globalStyles.border_dashed}
+                  />
+                ) : null
+              }
+              {isSaved ? (
+                <IconButton
+                  size="sm"
+                  icon="delete"
+                  iconType="material"
+                  onPress={onRemoveSaved}
+                  backgroundColor={colors.danger.light}
+                  iconFill={colors.danger.primary}
+                  style={globalStyles.border_dashed}
+                />
+              ) : null}
+              <IconButton
+                onPress={() => dismiss()}
+                icon="close"
+                iconType="antd"
+                size="sm"
+                backgroundColor={colors.primary_light}
+                style={globalStyles.border_dashed}
+              />
+            </View>
           </View>
 
           <Spacer height={themeToken.spacing} />
 
+          {isSaving ? (
+            <TextBody variant="caption" color="secondary" style={globalStyles.text_center}>
+              {percent != null
+                ? t('courses.downloadingWithPercent', {
+                    percent,
+                    written: formatBytes(bytesWritten),
+                    total: formatBytes(totalBytes ?? 0),
+                  })
+                : t('courses.downloadingWithWritten', {
+                    written: formatBytes(bytesWritten),
+                  })}
+            </TextBody>
+          ) : null}
+
           {!lesson ? (
             <View style={styles.centered}>
               <TextBody variant="body2" color="secondary">
-                Select a lesson to play.
+                {t('courses.selectLessonToPlay')}
               </TextBody>
             </View>
           ) : !mediaUrl ? (
             <View style={styles.centered}>
               <TextBody variant="body2" color="secondary" style={globalStyles.text_center}>
-                This lesson doesn’t have a playable media URL yet.
+                {t('courses.lessonNoMedia')}
               </TextBody>
             </View>
           ) : isAudio ? (
             <ThemedView style={styles.audioCard}>
               <View style={[flexBetween, globalStyles.p_md]}>
                 <TextBody variant="body2" color="secondary">
-                  {audioLoaded ? `${formatTime(audioPositionSec)} / ${formatTime(audioDurationSec)}` : 'Loading…'}
+                  {audioLoaded
+                    ? `${formatTime(audioPositionSec)} / ${formatTime(audioDurationSec)}`
+                    : t('courses.loading')}
                 </TextBody>
                 <IconButton
                   icon={audioPlaying ? 'pause' : 'play'}
@@ -199,7 +331,7 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
               <Video
                 ref={videoRef}
                 style={styles.video}
-                source={{ uri: mediaUrl }}
+                source={{ uri: playableUri }}
                 useNativeControls
                 shouldPlay
                 resizeMode={ResizeMode.CONTAIN}

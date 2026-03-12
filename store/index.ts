@@ -12,6 +12,7 @@ import {
   REHYDRATE,
 } from 'redux-persist';
 import { authReducer, AuthState } from './slices/authSlice';
+import { offlineMediaReducer, OfflineMediaState } from './slices/offlineMediaSlice';
 import { preferencesReducer, PreferencesState } from './slices/preferencesSlice';
 
 const authPersistConfig: PersistConfig<AuthState> = {
@@ -24,10 +25,15 @@ const preferencesPersistConfig: PersistConfig<PreferencesState> = {
   storage: AsyncStorage,
 };
 
+const offlineMediaPersistConfig: PersistConfig<OfflineMediaState> = {
+  key: 'lenga:offlineMedia',
+  storage: AsyncStorage,
+};
 
 const Reducers = combineReducers({
   auth: persistReducer(authPersistConfig, authReducer),
   preferences: persistReducer(preferencesPersistConfig, preferencesReducer),
+  offlineMedia: persistReducer(offlineMediaPersistConfig, offlineMediaReducer),
 });
 
 export const store = configureStore({
