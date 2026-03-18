@@ -12,8 +12,7 @@ export function login(payload: LoginPayload) {
 }
 
 export function register(payload: RegisterPayload) {
-  const userTypedPayload = { ...payload, type: 'student' };
-  return api.post<StrapiAuthResponse>('/api/auth/local/register', userTypedPayload);
+  return api.post<StrapiAuthResponse>('/api/auth/local/register', payload);
 }
 
 /**
