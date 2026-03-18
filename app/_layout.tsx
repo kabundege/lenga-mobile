@@ -10,8 +10,8 @@ import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-c
 import { Toaster } from 'sonner-native';
 
 import { AppProviders } from '@/components/providers/AppProviders';
-import '@/translations/i18n';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import '@/translations/i18n';
 import globalStyles from '@/utils/styles/globalstyles.style';
 import colors from '@/utils/theme/colors';
 import { PressablesConfig } from 'pressto';
@@ -60,10 +60,10 @@ export default function RootLayout() {
     <AppProviders>
       <AppShell>
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack initialRouteName="splash">
+          <Stack initialRouteName="splash" screenOptions={{ headerShown: false }}>
             {
               Object.entries(routes).map(([name]) => (
-                <Stack.Screen key={name} name={name} options={{ headerShown: false }} />
+                <Stack.Screen key={name} name={name} />
               ))
             }
           </Stack>

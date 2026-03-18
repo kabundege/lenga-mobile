@@ -15,7 +15,7 @@ const AnimatedBody = Animated.createAnimatedComponent(TextBody);
 const RedirectionDelay = 1400;
 const TextEnteringDelay = 700;
 
-export default function SplashScreen() {
+const SplashScreen = () => {
     const jwt = useAppSelector((s) => s.auth.jwt);
 
     useEffect(() => {
@@ -39,7 +39,9 @@ export default function SplashScreen() {
             </AnimatedBody>
         </ThemedView>
     );
-}
+};
+
+export default SplashScreen;
 
 const styles = StyleSheet.create({
     container: {
