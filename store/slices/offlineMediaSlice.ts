@@ -1,6 +1,12 @@
-import { createAsyncThunk, createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import {
+  createAsyncThunk,
+  createSlice,
+  type PayloadAction,
+  createSelector,
+} from '@reduxjs/toolkit';
 import { File } from 'expo-file-system';
 import { fileExists, getOfflinePathForLesson } from '@/utils/offlineMedia';
+import type { RootState } from '@/store';
 
 export type OfflineMediaStatus = 'not_saved' | 'saving' | 'saved' | 'error';
 
@@ -218,4 +224,12 @@ export const offlineMediaSlice = createSlice({
 export const { startSaving, updateProgress, markSaved, markError, markNotSaved } =
   offlineMediaSlice.actions;
 export const offlineMediaReducer = offlineMediaSlice.reducer;
+
+export const selectSavedOfflineMediaEntries = createSelector(
+  (state: RootState) => state.offlineMedia.byLessonId,
+  (byLessonId) =>
+    Object.values(byLessonId).filter(
+      (e): e is OfflineMediaEntry => e != null && e.status === 'saved'
+    )
+);
 

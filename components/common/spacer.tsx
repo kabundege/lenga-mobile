@@ -2,7 +2,7 @@ import { Dimensions } from "@/utils/styles";
 import { View, ViewProps } from "react-native";
 
 interface SpacerProps extends ViewProps {
-    height?: number;
+    height?: number | 'auto';
 }
 
 const Spacer = ({ height = Dimensions.SCREEN_HEIGHT * 0.1, style, ...props }: SpacerProps) => (

@@ -1,4 +1,5 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
+import Entypo from '@expo/vector-icons/Entypo';
 import Feather from '@expo/vector-icons/Feather';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
@@ -34,6 +35,7 @@ const ICON_REGISTRY = {
   ionicons: { Component: Ionicons, glyphMap: Ionicons.glyphMap },
   fontAwesome: { Component: FontAwesome, glyphMap: FontAwesome.glyphMap },
   fontAwesome6: { Component: FontAwesome6, glyphMap: FontAwesome6.glyphMap },
+  entypo: { Component: Entypo, glyphMap: Entypo.glyphMap },
 } as const;
 
 export type IconType = keyof typeof ICON_REGISTRY;

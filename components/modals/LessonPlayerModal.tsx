@@ -6,8 +6,9 @@ import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import { downloadLessonMedia, markNotSaved, removeSavedLesson } from '@/store/slices/offlineMediaSlice';
 import type { StrapiLessonMinimal } from '@/types/api';
 import { confirm } from '@/utils/functions/confirm';
+import { formatDateAndTime } from '@/utils/functions/date';
 import { fileExists } from '@/utils/offlineMedia';
-import { flexBetween, globalStyles } from '@/utils/styles';
+import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
 import type { LessonPlayerModalRef } from '@/utils/types/modals';
@@ -18,6 +19,7 @@ import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { toast } from 'sonner-native';
+import Icon from '../common/icon';
 import BaseModal, { BaseModalProps } from './BaseModal';
 
 export type LessonPlayerModalProps = Omit<BaseModalProps, 'children'> & {
@@ -63,11 +65,15 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
     const videoRef = useRef<Video>(null);
 
     const soundRef = useRef<Audio.Sound | null>(null);
+    const descriptionSoundRef = useRef<Audio.Sound | null>(null);
 
     const [audioLoaded, setAudioLoaded] = useState(false);
     const [audioPlaying, setAudioPlaying] = useState(false);
     const [audioPositionSec, setAudioPositionSec] = useState(0);
     const [audioDurationSec, setAudioDurationSec] = useState(0);
+
+    const [descriptionAudioLoaded, setDescriptionAudioLoaded] = useState(false);
+    const [descriptionAudioPlaying, setDescriptionAudioPlaying] = useState(false);
 
     const mediaUrl = useMemo(() => getLessonMediaUrl(lesson), [lesson]);
     const lessonType = lesson?.lesson_type ?? '';
@@ -89,6 +95,22 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       if (isSaved && savedEntry?.localUri) return savedEntry.localUri;
       return mediaUrl;
     }, [isSaved, savedEntry?.localUri, mediaUrl]);
+
+    const descriptionText = lesson?.lesson_description?.text_description ?? null;
+    const descriptionAudioUrl = lesson?.lesson_description?.audio_description_url ?? null;
+
+    const lessonDurationSeconds =
+      lesson?.video_lesson_details?.duration_seconds ??
+      lesson?.lesson_details?.duration_seconds ??
+      null;
+
+    const formattedDuration = useMemo(
+      () =>
+        typeof lessonDurationSeconds === 'number' && Number.isFinite(lessonDurationSeconds)
+          ? formatTime(lessonDurationSeconds)
+          : null,
+      [lessonDurationSeconds]
+    );
 
     const isAudio = useMemo(() => {
       const t = lessonType.toLowerCase();
@@ -116,6 +138,24 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       dismiss: () => modalRef.current?.dismiss(),
     }));
 
+    const unloadDescriptionAudio = async () => {
+      const s = descriptionSoundRef.current;
+      descriptionSoundRef.current = null;
+      setDescriptionAudioLoaded(false);
+      setDescriptionAudioPlaying(false);
+      if (!s) return;
+      try {
+        await s.stopAsync();
+      } catch {
+        // ignore
+      }
+      try {
+        await s.unloadAsync();
+      } catch {
+        // ignore
+      }
+    };
+
     const unloadAudio = async () => {
       const s = soundRef.current;
       soundRef.current = null;
@@ -138,6 +178,7 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
 
     const handleClose = () => {
       unloadAudio().catch(() => null);
+      unloadDescriptionAudio().catch(() => null);
       videoRef.current?.pauseAsync().catch(() => null);
       onClose?.();
     };
@@ -185,8 +226,60 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [lesson?.documentId, playableUri, isAudio]);
 
+    useEffect(() => {
+      unloadDescriptionAudio().catch(() => null);
+      if (!lesson || !descriptionAudioUrl) return;
+
+      let cancelled = false;
+
+      (async () => {
+        try {
+          await Audio.setAudioModeAsync({
+            playsInSilentModeIOS: true,
+            staysActiveInBackground: false,
+          });
+
+          const { sound: created } = await Audio.Sound.createAsync(
+            { uri: descriptionAudioUrl },
+            { shouldPlay: false },
+            (status: AVPlaybackStatus) => {
+              if (!status.isLoaded) return;
+              setDescriptionAudioLoaded(true);
+              setDescriptionAudioPlaying(status.isPlaying);
+            }
+          );
+
+          if (cancelled) {
+            await created.unloadAsync();
+            return;
+          }
+
+          descriptionSoundRef.current = created;
+        } catch {
+          toast.error(t('courses.playbackError'));
+        }
+      })();
+
+      return () => {
+        cancelled = true;
+      };
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [lesson?.documentId, descriptionAudioUrl]);
+
     const toggleAudio = async () => {
       const s = soundRef.current;
+      if (!s) return;
+      const status = await s.getStatusAsync();
+      if (!status.isLoaded) return;
+      if (status.isPlaying) {
+        await s.pauseAsync();
+      } else {
+        await s.playAsync();
+      }
+    };
+
+    const toggleDescriptionAudio = async () => {
+      const s = descriptionSoundRef.current;
       if (!s) return;
       const status = await s.getStatusAsync();
       if (!status.isLoaded) return;
@@ -238,9 +331,30 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       <BaseModal ref={modalRef} onClose={handleClose} {...props}>
         <BottomSheetView style={styles.content}>
           <View style={[flexBetween, styles.header]}>
-            <TextHeading variant="title" numberOfLines={2}>
-              {lesson?.title ?? t('courses.lessonTitleFallback')}
-            </TextHeading>
+            <View>
+              <TextHeading variant="title" numberOfLines={2}>
+                {lesson?.title ?? t('courses.lessonTitleFallback')}
+              </TextHeading>
+
+              <View style={[globalStyles.flex_row, globalStyles.gap_sm]}>
+                {lesson?.publishedAt ? (
+                  <View style={[flexBetween, globalStyles.gap_xs]}>
+                    <Icon name="calendar-check-o" type='fontAwesome' size={Dimensions.FONT_SIZE_M} color={colors.primary} />
+                    <TextBody variant="caption" color="secondary">
+                      {formatDateAndTime(new Date(lesson.publishedAt))}
+                    </TextBody>
+                  </View>
+                ) : null}
+                {formattedDuration ? (
+                  <View style={[flexBetween, globalStyles.gap_xs]}>
+                    <Icon name="time-slot" type='entypo' size={Dimensions.FONT_SIZE_M} color={colors.primary} />
+                    <TextBody variant="caption" color="secondary">
+                      {formattedDuration}
+                    </TextBody>
+                  </View>
+                ) : null}
+              </View>
+            </View>
 
             <View style={[globalStyles.flex_row, globalStyles.gap_xs, globalStyles.items_center]}>
               {
@@ -279,19 +393,19 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
             </View>
           </View>
 
-          <Spacer height={themeToken.spacing} />
+          <Spacer height={Dimensions.SCREEN_HEIGHT * 0.01} />
 
           {isSaving ? (
             <TextBody variant="caption" color="secondary" style={globalStyles.text_center}>
               {percent != null
                 ? t('courses.downloadingWithPercent', {
-                    percent,
-                    written: formatBytes(bytesWritten),
-                    total: formatBytes(totalBytes ?? 0),
-                  })
+                  percent,
+                  written: formatBytes(bytesWritten),
+                  total: formatBytes(totalBytes ?? 0),
+                })
                 : t('courses.downloadingWithWritten', {
-                    written: formatBytes(bytesWritten),
-                  })}
+                  written: formatBytes(bytesWritten),
+                })}
             </TextBody>
           ) : null}
 
@@ -338,6 +452,37 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
               />
             </ThemedView>
           )}
+
+          {descriptionText ? (
+            <>
+              <Spacer height={themeToken.spacing} />
+              <TextBody variant="body2" color="secondary" style={styles.description}>
+                {descriptionText}
+              </TextBody>
+            </>
+          ) : null}
+
+          {descriptionAudioUrl ? (
+            <>
+              <Spacer height={themeToken.spacing} />
+              <ThemedView style={styles.audioCard}>
+                <View style={[flexBetween, globalStyles.p_md]}>
+                  <TextBody variant="body2" color="secondary">
+                    {descriptionAudioLoaded ? 'Audio description' : t('courses.loading')}
+                  </TextBody>
+                  <IconButton
+                    icon={descriptionAudioPlaying ? 'pause' : 'play'}
+                    iconType="ionicons"
+                    onPress={toggleDescriptionAudio}
+                    disabled={!descriptionAudioLoaded}
+                    backgroundColor={colors.primary_light}
+                    iconFill={colors.primary}
+                    style={globalStyles.p_md}
+                  />
+                </View>
+              </ThemedView>
+            </>
+          ) : null}
         </BottomSheetView>
       </BaseModal>
     );
@@ -355,6 +500,10 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: themeToken.paddingLg,
     gap: themeToken.spacing,
+  },
+  description: {
+    marginTop: themeToken.spacing,
+    color: colors.text.secondary,
   },
   subtitle: {
     marginTop: themeToken.spacing / 2,

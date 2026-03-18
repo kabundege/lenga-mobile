@@ -84,19 +84,18 @@ export function ControlledInput<T extends FieldValues>({
           name={name}
           render={({ field: { onChange, onBlur, value } }) => (
             <View
-              style={[globalStyles.flex_9, globalStyles.gap_xs, flexBetween]}>
+              style={[globalStyles.flex_grow, globalStyles.gap_xs, flexBetween, globalStyles.overflow_hidden]}>
               <TextInput
                 value={value}
                 onBlur={onBlur}
                 onChangeText={onChange}
-                style={globalStyles.flex_1}
                 secureTextEntry={securedTextEntry}
                 placeholderTextColor={hasError ? colors.danger.primary : colors.text.secondary}
                 {...inputProps}
               />
               {
                 isClearable && value ? (
-                  <IconButton icon="close" onPress={() => onChange('')} size="sm" backgroundColor={colors.text.inverted} style={globalStyles.p_xs} iconType="antd" />
+                  <IconButton icon="close" onPress={() => onChange('')} size="sm" backgroundColor={colors.text.inverted} style={[globalStyles.p_xs,globalStyles._translateX_sm]} iconType="antd" />
                 ) : null
               }
             </View>
@@ -107,9 +106,9 @@ export function ControlledInput<T extends FieldValues>({
             <PressableScale hitSlop={BUTTON_HIT_SLOP} onPress={toggleSecuredTextEntryVisibility}>
               <Icon
                 name={securedTextEntry ? 'eye-off' : 'eye'}
-                type="material"
                 size={Dimensions.FONT_SIZE_L}
                 color={iconColor}
+                type="material"
               />
             </PressableScale>
           )

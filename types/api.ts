@@ -122,6 +122,11 @@ export type StrapiLessonDetailBlock = {
   children?: Array<{ type: string; text?: string }>;
 };
 
+export type StrapiLessonDescription = {
+  text_description?: string | null;
+  audio_description_url?: string | null;
+};
+
 export type StrapiVideoLessonDetail = {
   __component: 'lessons.video-lesson';
   id: number;
@@ -141,6 +146,7 @@ export type StrapiLessonMinimal = {
   locale: string;
   lesson_type: string;
   topic?: StrapiTopicMinimal;
+  lesson_description?: StrapiLessonDescription;
   /** Populated when using populate[lessons][populate][lesson_details] */
   lesson_details?: StrapiVideoLessonDetail;
   /** Populated when using populate[lessons][populate][video_lesson_details] (matches admin API) */

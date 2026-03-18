@@ -3,7 +3,7 @@ import { TextBody } from '@/components/typography/textBody';
 import { useLanguageSwitch } from '@/hooks/useLanguageSwitch';
 import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import { logout } from '@/store/slices/authSlice';
-import type { OfflineMediaEntry } from '@/store/slices/offlineMediaSlice';
+import { selectSavedOfflineMediaEntries } from '@/store/slices/offlineMediaSlice';
 import { flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
@@ -40,11 +40,7 @@ const LogoutModal = forwardRef<LogoutModalRef, LogoutModalProps>(
     const dispatch = useAppDispatch();
     const { dismiss } = useBottomSheetModal();
     const { t, currentLanguage, setLanguage } = useLanguageSwitch();
-    const savedEntries = useAppSelector((s) =>
-      Object.values(s.offlineMedia.byLessonId).filter(
-        (e): e is OfflineMediaEntry => e != null && e.status === 'saved'
-      )
-    );
+    const savedEntries = useAppSelector(selectSavedOfflineMediaEntries);
     const savedCount = savedEntries.length;
     const totalStorageBytes = useMemo(
       () => savedEntries.reduce((sum, e) => sum + (e.fileSize ?? 0), 0),
