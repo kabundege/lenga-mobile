@@ -5,7 +5,7 @@ import { Fragment } from "react";
 
 const CoursesLayout = () => (
     <Fragment>
-        <StatusBar style="light" backgroundColor={colors.primary} />
+        <StatusBar style="dark" backgroundColor={colors.primary} />
         <Stack>
             <Stack.Screen name="index" options={{ headerShown: false }} />
             <Stack.Screen name="[courseId]" options={{ headerShown: false }} />
