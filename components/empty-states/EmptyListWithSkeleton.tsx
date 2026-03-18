@@ -24,7 +24,7 @@ export const EmptyListWithSkeleton = ({
         <CourseCardSkeleton />
       </View>
       {(title || description) && (
-        <View style={styles.copy}>
+        <View>
           {title && (
             <TextHeading
               variant="subTitle"
@@ -38,7 +38,7 @@ export const EmptyListWithSkeleton = ({
             <TextBody
               variant="body2"
               color="secondary"
-              style={[globalStyles.text_center, globalStyles.w_70, globalStyles.self_center, styles.description]}
+              style={[globalStyles.text_center, globalStyles.w_70, globalStyles.self_center]}
               numberOfLines={3}
             >
               {description}
@@ -72,13 +72,6 @@ const styles = StyleSheet.create({
     opacity: 0.5,
     width: '100%',
     marginBottom: themeToken.spacingLg,
-  },
-  copy: {
-    gap: themeToken.spacingSm,
-    marginBottom: themeToken.spacingLg,
-  },
-  description: {
-    marginTop: themeToken.spacingSm,
   },
   action: {
     marginTop: themeToken.spacingSm,

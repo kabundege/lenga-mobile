@@ -95,7 +95,7 @@ export function AnimatedSearchBar({
         ]}
       >
         <View style={[globalStyles.flex_1, style]}>
-          <ControlledInput {...inputProps} style={[globalStyles.w_full, style]} />
+          <ControlledInput {...inputProps} />
         </View>
         {
           handleClose && (

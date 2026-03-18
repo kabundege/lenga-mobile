@@ -21,6 +21,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import Animated, { BounceIn, BounceOut } from 'react-native-reanimated';
 import IconButton from '../buttons/iconButton';
 import { ShakeErrorWrapper } from '../ui/shakeErrorWrapper';
 
@@ -79,28 +80,33 @@ export function ControlledInput<T extends FieldValues>({
       <ShakeErrorWrapper error={errorMessage || error?.message}
         style={[styles.input, globalStyles.gap_xs, hasError ? styles.inputError : undefined]}>
         {conditionalIcon}
-        <Controller
-          control={control}
-          name={name}
-          render={({ field: { onChange, onBlur, value } }) => (
-            <View
-              style={[globalStyles.flex_grow, globalStyles.gap_xs, flexBetween, globalStyles.overflow_hidden]}>
-              <TextInput
-                value={value}
-                onBlur={onBlur}
-                onChangeText={onChange}
-                secureTextEntry={securedTextEntry}
-                placeholderTextColor={hasError ? colors.danger.primary : colors.text.secondary}
-                {...inputProps}
-              />
-              {
-                isClearable && value ? (
-                  <IconButton icon="close" onPress={() => onChange('')} size="sm" backgroundColor={colors.text.inverted} style={[globalStyles.p_xs,globalStyles._translateX_sm]} iconType="antd" />
-                ) : null
-              }
-            </View>
-          )}
-        />
+        <View style={globalStyles.flex_grow}>
+          <Controller
+            control={control}
+            name={name}
+            render={({ field: { onChange, onBlur, value } }) => (
+              <View
+                style={[globalStyles.flex_grow, globalStyles.gap_xs, flexBetween, globalStyles.overflow_hidden]}>
+                <TextInput
+                  value={value}
+                  onBlur={onBlur}
+                  onChangeText={onChange}
+                  style={globalStyles.flex_grow}
+                  secureTextEntry={securedTextEntry}
+                  placeholderTextColor={hasError ? colors.danger.primary : colors.text.secondary}
+                  {...inputProps}
+                />
+                {
+                  isClearable && value ? (
+                    <Animated.View entering={BounceIn} exiting={BounceOut}>
+                      <IconButton icon="close" onPress={() => onChange('')} size="sm" backgroundColor={colors.text.inverted} style={globalStyles.p_xs} iconType="antd" />
+                    </Animated.View>
+                  ) : null
+                }
+              </View>
+            )}
+          />
+        </View>
         {
           secureTextEntry && (
             <PressableScale hitSlop={BUTTON_HIT_SLOP} onPress={toggleSecuredTextEntryVisibility}>

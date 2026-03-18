@@ -1,18 +1,15 @@
 import IconButton from '@/components/buttons/iconButton';
 import { AnimatedSearchBar } from '@/components/inputs/animatedSearchBar';
 import { TextHeading } from '@/components/typography';
-import type { StrapiLessonMinimal, StrapiTopicWithLessons } from '@/types/api';
+import type { StrapiTopicWithLessons } from '@/types/api';
 import { flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
-import type { LessonPlayerModalRef } from '@/utils/types/modals';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useMemo, useState } from 'react';
 import { FieldValues, useForm, useWatch } from 'react-hook-form';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, { CurvedTransition } from 'react-native-reanimated';
-import { toast } from 'sonner-native';
-import { getLessonMediaUrl } from './courseLessonUtils';
 import type { CourseTopicsListProps } from './CourseTopicsList.types';
 import { EmptyTopicsMessage } from './EmptyTopicsMessage';
 import { TopicBlock } from './TopicBlock';
@@ -41,8 +38,6 @@ function filterTopicsWithLessons(
 export function CourseTopicsList({ topics }: CourseTopicsListProps) {
   const { t } = useTranslation();
   const [isSearchVisible, setIsSearchVisible] = useState(false);
-  const [selectedLesson, setSelectedLesson] = useState<StrapiLessonMinimal | null>(null);
-  const lessonPlayerModalRef = useRef<LessonPlayerModalRef>(null);
 
   const { control } = useForm<FieldValues>({
     defaultValues: {
@@ -77,20 +72,6 @@ export function CourseTopicsList({ topics }: CourseTopicsListProps) {
       })
       .filter((t): t is StrapiTopicWithLessons => t != null);
   }, [topicsWithLessons, search]);
-
-  const openLesson = useCallback((lesson: StrapiLessonMinimal) => {
-    const mediaUrl = getLessonMediaUrl(lesson);
-    if (!mediaUrl) {
-      toast.error(t('courses.lessonNoMedia'));
-      return;
-    }
-    setSelectedLesson(lesson);
-    lessonPlayerModalRef.current?.present();
-  }, [t]);
-
-  const closeLessonModal = useCallback(() => {
-    setSelectedLesson(null);
-  }, []);
 
   if (topics.length === 0) {
     return <EmptyTopicsMessage />;
