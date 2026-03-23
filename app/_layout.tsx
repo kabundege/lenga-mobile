@@ -1,7 +1,7 @@
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
-import { Stack } from 'expo-router';
+import { SplashScreen, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -11,10 +11,12 @@ import { Toaster } from 'sonner-native';
 
 import { AppProviders } from '@/components/providers/AppProviders';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import useAppFont from '@/hooks/useAppFont';
 import '@/translations/i18n';
 import globalStyles from '@/utils/styles/globalstyles.style';
 import colors from '@/utils/theme/colors';
 import { PressablesConfig } from 'pressto';
+import { useEffect } from 'react';
 
 const PressablesProvider = ({ children }: { children: React.ReactNode }) => (
   <PressablesConfig
@@ -56,6 +58,14 @@ export const routes = {
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
+  const { fontsLoaded } = useAppFont();
+
+  useEffect(() => {
+    if (fontsLoaded) void SplashScreen.hideAsync();
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
+
   return (
     <AppProviders>
       <AppShell>
