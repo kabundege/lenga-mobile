@@ -1,6 +1,6 @@
 import { TextBody, TextHeading } from '@/components/typography';
 import ThumbnailWithOverlay from '@/components/common/ThumbnailWithOverlay';
-import { useChapterByDocumentId } from '@/hooks/useLessons';
+import { useChapterByDocumentId, useChapterVideo } from '@/hooks/useLessons';
 import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
 import { themeToken } from '@/utils/theme/styles';
 import colors from '@/utils/theme/colors';
@@ -10,27 +10,32 @@ import { getImageUrl } from '@/utils/functions/env';
 import PlayAudioButton from '../buttons/playAudioButton';
 import { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useEffect } from 'react';
-import { CHAPTER_CARD_WIDTH } from '@/screens/lessons/LessonDetailScreen';
+import { CHAPTER_CARD_WIDTH } from '@/screens/lessons/lessonLayout';
 import IconButton from '../buttons/iconButton';
+import { router } from 'expo-router';
 
 interface ChapterCardProps {
   height: number;
   chapterId: string;
-  onPress: () => void;
 }
 
-const ChapterCard = ({ chapterId, onPress, height }: ChapterCardProps) => {
+const ChapterCard = ({ chapterId, height }: ChapterCardProps) => {
   const cardHeight = useSharedValue(0);
   useEffect(() => {
     cardHeight.value = withTiming(height);
   }, [height]);
   const { chapter } = useChapterByDocumentId(chapterId);
+  const { chapterVideo } = useChapterVideo(chapterId);
   const quizzesCount = chapter?.quizzes?.length ?? 0;
 
   const animatedStyles = useAnimatedStyle(() => ({
     paddingRight: Dimensions.SIZE_M,
     height: withTiming(cardHeight.value),
   }));
+
+  const onPress = () => {
+    router.push(`/lessons/chapters/${chapterId}/${chapterVideo ? "video" : "quiz"}`);
+  }
 
   return (
     <PressableScale
@@ -56,11 +61,11 @@ const ChapterCard = ({ chapterId, onPress, height }: ChapterCardProps) => {
         />
         <View style={[globalStyles.self_start, flexBetween, globalStyles.gap_xs]}>
           {
-            quizzesCount ? (
-              <IconButton icon="edit-3" iconType="feather" backgroundColor={colors.primary} iconFill={colors.text.inverted} />
+            quizzesCount || chapterVideo ? (
+              <IconButton icon={chapterVideo ? "videocam" : "edit-3"} iconType={chapterVideo ? "ionicons" : "feather"} backgroundColor={colors.primary} iconFill={colors.text.inverted} />
             ) : null
           }
-          <TextBody variant="body1" color={quizzesCount ? "default" : "secondary"} style={globalStyles.text_md}>{quizzesCount ? 'Imyitozi' : 'Nta Mwitozo wabonetse'} {quizzesCount ?? ''} </TextBody>
+          <TextBody variant="body1" color={quizzesCount || chapterVideo ? "default" : "secondary"} style={globalStyles.text_md}>{chapterVideo ? 'Reba Video' : quizzesCount ? 'Imyitozi' : 'Nta Mwitozo wabonetse'} {chapterVideo ? '' : quizzesCount ?? ''} </TextBody>
         </View>
       </View>
     </PressableScale>

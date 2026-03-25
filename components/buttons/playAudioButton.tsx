@@ -1,4 +1,4 @@
-import IconButton from '@/components/buttons/iconButton';
+import IconButton, { IconButtonProps } from '@/components/buttons/iconButton';
 import { useLessonAudio } from '@/hooks/useLessonAudio';
 import colors from '@/utils/theme/colors';
 import { SizeVariants } from '@/utils/types/theme';
@@ -6,17 +6,18 @@ import { useEffect } from 'react';
 import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
-interface PlayAudioButtonProps {
+interface PlayAudioButtonProps extends Omit<IconButtonProps, 'icon' | 'iconType'> {
   style?: StyleProp<ViewStyle>;
-  backgroundColor?: string;
   size?: SizeVariants;
   audioUrl?: string;
 }
 
 const PlayAudioButton = ({
+  style,
   audioUrl,
   size = 'md',
-  style,
+  backgroundColor = colors.primary_light,
+  ...iconButtonProps
 }: PlayAudioButtonProps) => {
   const rotation = useSharedValue(0);
   const { audioLoaded, audioPlaying, toggleAudio } = useLessonAudio(audioUrl);
@@ -46,12 +47,13 @@ const PlayAudioButton = ({
     <View style={[styles.wrapper, style]}>
       <IconButton
         size={size}
-        iconType="ionicons"
         onPress={toggleAudio}
         disabled={!audioLoaded}
         iconFill={colors.primary}
-        icon={audioPlaying ? 'pause' : 'play'}
-        backgroundColor={colors.primary_light}
+        styles={iconButtonProps.styles}
+        backgroundColor={backgroundColor}
+        icon={audioPlaying ? 'pause' : 'sound'}
+        iconType={audioPlaying ? "ionicons" : "entypo"}
       />
       {!audioLoaded ? <Animated.View pointerEvents="none" style={[styles.loadingRing, loadingRingStyle]} /> : null}
     </View>

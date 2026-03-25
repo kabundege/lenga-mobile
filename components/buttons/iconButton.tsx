@@ -66,8 +66,8 @@ const IconButton = ({
     [icon, iconType, iconSize, iconFill, iconStroke]
   );
 
-  const Wrapper = disabled ? View : PressableScale;
-  const WrapperProps = disabled ? {} : { onPress };
+  const Wrapper = disabled || !onPress ? View : PressableScale;
+  const WrapperProps = disabled || !onPress ? {} : { onPress };
 
   return (
     <Wrapper {...WrapperProps} {...props} style={[styles.base, dynamicStyles, customStyles]}>

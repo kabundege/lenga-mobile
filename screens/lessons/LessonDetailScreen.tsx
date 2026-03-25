@@ -1,31 +1,22 @@
 import Button from '@/components/buttons/button';
-import IconButton from '@/components/buttons/iconButton';
-import PlayAudioButton from '@/components/buttons/playAudioButton';
 import ChapterCard from '@/components/cards/ChapterCard';
 import { EmptyListWithSkeleton } from '@/components/empty-states';
 import { LessonCardSkeleton } from '@/components/skeletons';
 import { ThemedView } from '@/components/themed-view';
-import { TextBody, TextHeading } from '@/components/typography';
+import ContentThumbnailHeader from '@/components/headers/ContentThumbnailHeader';
 import { useLessonByDocumentId } from '@/hooks/useLessons';
 import { StrapiLessonChapter } from '@/types/api';
-import { getImageUrl } from '@/utils/functions/env';
 import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
 import { LegendList, LegendListRef, LegendListRenderItemProps, } from '@legendapp/list';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { scale } from 'react-native-size-matters';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { AnimatedLegendList } from '@legendapp/list/reanimated';
-import { Image, ImageBackground, LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, RefreshControl, StyleSheet, View } from 'react-native';
+import { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, RefreshControl, StyleSheet, View } from 'react-native';
 import Loader from '@/components/loader';
-
-export const CHAPTER_CARD_WIDTH = (Dimensions.SCREEN_WIDTH - themeToken.spacingLg * 2) * 0.8;
-export const CHAPTER_CARD_SPACING = Dimensions.SIZE_M;
-export const CHAPTER_SNAP_INTERVAL = CHAPTER_CARD_WIDTH + CHAPTER_CARD_SPACING;
-export const DEFAULT_LIST_HEIGHT = Dimensions.SCREEN_HEIGHT - (Dimensions.SIZE_M * 5)
+import { CHAPTER_SNAP_INTERVAL, DEFAULT_LIST_HEIGHT } from './lessonLayout';
 
 const LessonDetailScreen = () => {
   const [loadedLayouts, setLoadedLayouts] = useState(0);
@@ -45,7 +36,6 @@ const LessonDetailScreen = () => {
     <ChapterCard
       height={listHeight}
       chapterId={item.documentId}
-      onPress={() => router.push(`/lessons/chapters/${item.documentId}?lessonId=${lessonId}`)}
     />
   );
 
@@ -113,25 +103,16 @@ const LessonDetailScreen = () => {
 
   return (
     <ThemedView style={styles.container}>
-      <SafeAreaView onLayout={onLayout} edges={['top']} style={[globalStyles.bg_primary_light, globalStyles.p_md, globalStyles.gap_sm]}>
-        <StatusBar style="dark" backgroundColor={colors.primary} />
-        <View>
-          <View style={flexBetween}>
-            <IconButton onPress={router.back} icon="chevron-left" iconType="feather" backgroundColor={colors.primary_light} iconFill={colors.primary} />
-            <PlayAudioButton audioUrl={lesson?.audio_desc?.url} />
-          </View>
-          <ImageBackground source={{ uri: getImageUrl(lesson?.thumbnail?.url) }} style={styles.thumbnailBackground} />
-          <View style={[flexBetween, globalStyles.gap_sm, globalStyles.mt_sm]}>
-            <Image resizeMode='contain' source={{ uri: getImageUrl(lesson?.thumbnail?.url) }} style={styles.thumbnail} />
-            <View style={globalStyles.flex_1}>
-              <TextBody variant="body2" color="primary" style={globalStyles.mt_xs}>
-                Igice cya 1
-              </TextBody>
-              <TextHeading variant="title">{lesson?.title ?? 'Lesson'}</TextHeading>
-            </View>
-          </View>
-        </View>
-      </SafeAreaView>
+      <StatusBar style="dark" backgroundColor={colors.primary} />
+      <View onLayout={onLayout}>
+        <ContentThumbnailHeader
+          onBack={router.back}
+          title={lesson?.title ?? 'Lesson'}
+          subtitle="Igice cya 1"
+          thumbnailUrl={lesson?.thumbnail?.url}
+          audioUrl={lesson?.audio_desc?.url}
+        />
+      </View>
       {
         loadedLayouts < 2 ? (
           <Loader />
@@ -229,15 +210,5 @@ const styles = StyleSheet.create({
     width: 260,
     marginRight: themeToken.spacing,
     justifyContent: 'center',
-  },
-  thumbnail: {
-    width: scale(60),
-    height: scale(60),
-  },
-  thumbnailBackground: {
-    ...StyleSheet.absoluteFillObject,
-    ...globalStyles.overflow_hidden,
-    ...globalStyles.rounded_md,
-    ...globalStyles.opacity_025,
   },
 });

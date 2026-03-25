@@ -110,13 +110,15 @@ export type StrapiMedia = {
 };
 
 export type StrapiQA = {
-  id: StrapiEntityId;
-  documentId: string;
-  qa_desc: string;
+  locale: string;
   createdAt: string;
   updatedAt: string;
+  id: StrapiEntityId;
+  documentId: string;
+  audio_desc: StrapiMedia;
+  quiz?: StrapiQuiz | null;
+  is_correct_answer: boolean;
   publishedAt: string | null;
-  locale: string;
   thumbnail?: StrapiMedia | null;
 };
 
@@ -126,9 +128,11 @@ export type StrapiQuiz = {
   title: string;
   createdAt: string;
   updatedAt: string;
-  publishedAt: string | null;
   locale: string;
   qas?: StrapiQA[];
+  publishedAt: string | null;
+  audio_desc?: StrapiMedia | null;
+  lesson_chapter?: StrapiLessonChapter | null;
 };
 
 export type StrapiLessonVideo = {
@@ -139,6 +143,7 @@ export type StrapiLessonVideo = {
   publishedAt: string | null;
   locale: string;
   lesson_video?: StrapiMedia | null;
+  lesson_chapter?: StrapiLessonChapter | null;
 };
 
 export type StrapiLessonChapter = {

@@ -12,6 +12,7 @@ import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
 import type { LessonPlayerModalRef } from '@/utils/types/modals';
+import { activateSingleAudio, clearActiveSoundIf } from '@/utils/singleAudioPlayer';
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { BottomSheetView, useBottomSheetModal } from '@gorhom/bottom-sheet';
 import { Audio, ResizeMode, Video, type AVPlaybackStatus } from 'expo-av';
@@ -143,6 +144,7 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       descriptionSoundRef.current = null;
       setDescriptionAudioLoaded(false);
       setDescriptionAudioPlaying(false);
+      clearActiveSoundIf(s);
       if (!s) return;
       try {
         await s.stopAsync();
@@ -163,6 +165,7 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       setAudioPlaying(false);
       setAudioPositionSec(0);
       setAudioDurationSec(0);
+      clearActiveSoundIf(s);
       if (!s) return;
       try {
         await s.stopAsync();
@@ -200,7 +203,7 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
 
           const { sound: created } = await Audio.Sound.createAsync(
             { uri: playableUri },
-            { shouldPlay: true },
+            { shouldPlay: false },
             (status: AVPlaybackStatus) => {
               if (!status.isLoaded) return;
               setAudioLoaded(true);
@@ -216,6 +219,11 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
           }
 
           soundRef.current = created;
+          // Start playback while ensuring only one audio is active globally.
+          await activateSingleAudio(created);
+          if (!cancelled) {
+            await created.playAsync();
+          }
         } catch {
           toast.error(t('lessons.playbackError'));
         }
@@ -287,6 +295,20 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       if (status.isPlaying) {
         await s.pauseAsync();
       } else {
+        const didJustFinish = (status as any).didJustFinish === true;
+        const positionMillis = (status as any).positionMillis as number | undefined;
+        const durationMillis = (status as any).durationMillis as number | undefined;
+        if (
+          didJustFinish ||
+          (typeof positionMillis === 'number' &&
+            typeof durationMillis === 'number' &&
+            positionMillis >= durationMillis - 250)
+        ) {
+          // Expo keeps the playhead at the end after finish; reset so next play starts over.
+          await s.setPositionAsync(0);
+        }
+        // Ensure only one audio track can play at a time.
+        await activateSingleAudio(s);
         await s.playAsync();
       }
     };
@@ -299,6 +321,20 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       if (status.isPlaying) {
         await s.pauseAsync();
       } else {
+        const didJustFinish = (status as any).didJustFinish === true;
+        const positionMillis = (status as any).positionMillis as number | undefined;
+        const durationMillis = (status as any).durationMillis as number | undefined;
+        if (
+          didJustFinish ||
+          (typeof positionMillis === 'number' &&
+            typeof durationMillis === 'number' &&
+            positionMillis >= durationMillis - 250)
+        ) {
+          // Ensure next play starts from the beginning.
+          await s.setPositionAsync(0);
+        }
+        // Prevent overlapping audio (main vs description).
+        await activateSingleAudio(s);
         await s.playAsync();
       }
     };

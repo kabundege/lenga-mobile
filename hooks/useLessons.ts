@@ -69,11 +69,12 @@ export const useVideos = () => {
   return { ...request, videos };
 };
 
-export const useVideoByDocumentId = (documentId: string) => {
+export const useChapterVideo = (chapterId: string) => {
   const { videos, ...request } = useVideos();
-  const video = videos.find((video) => video.documentId === documentId);
-  return { ...request, video };
+  const chapterVideo = videos.find((video) => video.lesson_chapter?.documentId === chapterId);
+  return { ...request, chapterVideo };
 };
+
 
 export const useQuizzes = () => {
   const locale = useAppSelector((s) => s.preferences.locale);
@@ -85,10 +86,10 @@ export const useQuizzes = () => {
   return { ...request, quizzes };
 };
 
-export const useQuizByDocumentId = (documentId: string) => {
+export const useChapterQuizzes = (chapterId: string) => {
   const { quizzes, ...request } = useQuizzes();
-  const quiz = quizzes.find((quiz) => quiz.documentId === documentId);
-  return { ...request, quiz };
+  const chapterQuizzes = quizzes.filter((quiz) => quiz.lesson_chapter?.documentId === chapterId);
+  return { ...request, chapterQuizzes };
 };
 
 export const useQAs = () => {
@@ -99,6 +100,12 @@ export const useQAs = () => {
   });
   const qas = getListFromResponse<StrapiQA>(request.data);
   return { ...request, qas };
+};
+
+export const useQuizQAs = (quizId: string) => {
+  const { qas, ...request } = useQAs();
+  const quizQas = qas.filter((qa) => qa.quiz?.documentId === quizId);
+  return { ...request, quizQas };
 };
 
 export const useQAByDocumentId = (documentId: string) => {

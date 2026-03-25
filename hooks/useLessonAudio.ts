@@ -1,6 +1,7 @@
 import { API_URL } from '@/utils/functions/env';
 import { Audio, type AVPlaybackStatus } from 'expo-av';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { activateSingleAudio, clearActiveSoundIf } from '@/utils/singleAudioPlayer';
 
 interface UseLessonAudioResult {
   audioUrl: string | null;
@@ -13,6 +14,7 @@ export const useLessonAudio = (rawAudioUrl?: string | null): UseLessonAudioResul
   const soundRef = useRef<Audio.Sound | null>(null);
   const [audioLoaded, setAudioLoaded] = useState(false);
   const [audioPlaying, setAudioPlaying] = useState(false);
+  const [audioFinished, setAudioFinished] = useState(false);
 
   const audioUrl = useMemo(() => {
     if (!rawAudioUrl) return null;
@@ -24,6 +26,8 @@ export const useLessonAudio = (rawAudioUrl?: string | null): UseLessonAudioResul
     soundRef.current = null;
     setAudioLoaded(false);
     setAudioPlaying(false);
+    setAudioFinished(false);
+    clearActiveSoundIf(sound);
     if (!sound) return;
     try {
       await sound.stopAsync();
@@ -56,6 +60,13 @@ export const useLessonAudio = (rawAudioUrl?: string | null): UseLessonAudioResul
             if (!status.isLoaded) return;
             setAudioLoaded(true);
             setAudioPlaying(status.isPlaying);
+            // When playback finishes, Expo keeps the playhead at the end.
+            // We track this so we can reset the position on next play.
+            if ('didJustFinish' in status && status.didJustFinish) {
+              setAudioFinished(true);
+            } else if (status.isPlaying) {
+              setAudioFinished(false);
+            }
           }
         );
 
@@ -85,9 +96,17 @@ export const useLessonAudio = (rawAudioUrl?: string | null): UseLessonAudioResul
     if (status.isPlaying) {
       await sound.pauseAsync();
     } else {
+      const didJustFinish = (status as any).didJustFinish === true;
+      if (audioFinished || didJustFinish) {
+        // Ensure subsequent play starts from the beginning.
+        await sound.setPositionAsync(0);
+        setAudioFinished(false);
+      }
+      // Ensure only one audio track can play at a time.
+      await activateSingleAudio(sound);
       await sound.playAsync();
     }
-  }, []);
+  }, [audioFinished]);
 
   return {
     audioUrl,

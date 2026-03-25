@@ -1,83 +1,87 @@
 import type { StrapiQA } from '@/types/api';
-import { flexBetween, globalStyles } from '@/utils/styles';
+import ThumbnailWithOverlay from '@/components/common/ThumbnailWithOverlay';
+import { getImageUrl } from '@/utils/functions/env';
+import { Dimensions, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
 import { PressableScale } from 'pressto';
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
+import PlayAudioButton from '../buttons/playAudioButton';
 import { TextBody } from '../typography';
+import { useQAByDocumentId } from '@/hooks/useLessons';
+import Loader from '../loader';
+import { useEffect, useState } from 'react';
+import { Icon } from '../common/icon';
+import IconButton from '../buttons/iconButton';
+import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 export type QuizQACardRevealState = 'idle' | 'correct' | 'wrong' | 'unknown';
 
 type QuizQACardProps = {
-  qa: StrapiQA;
-  onPress: () => void;
-  revealState?: QuizQACardRevealState;
+  qaId: string;
+  rightAnswerCallBack: () => void;
 };
 
-function getRevealStyles(state: QuizQACardRevealState) {
-  if (state === 'correct') {
-    return {
-      borderColor: colors.success.primary,
-      backgroundColor: colors.success.tertiary,
-      label: 'Correct',
-      labelBg: colors.success.primary,
-    };
-  }
-  if (state === 'wrong') {
-    return {
-      borderColor: colors.danger.primary,
-      backgroundColor: colors.danger.tertiary,
-      label: 'Wrong',
-      labelBg: colors.danger.primary,
-    };
-  }
-  if (state === 'unknown') {
-    return {
-      borderColor: colors.border.primary,
-      backgroundColor: colors.background.secondary,
-      label: 'Selected',
-      labelBg: colors.primary,
-    };
-  }
-  return {
-    borderColor: colors.border.primary,
-    backgroundColor: colors.background.secondary,
-    label: null,
-    labelBg: colors.primary,
-  };
-}
+const AnimatedImage = Animated.createAnimatedComponent(Image);
 
-const QuizQACard = ({ qa, onPress, revealState = 'idle' }: QuizQACardProps) => {
-  const reveal = getRevealStyles(revealState);
+const QuizQACard = ({ qaId, rightAnswerCallBack }: QuizQACardProps) => {
+  const opacity = useSharedValue(1);
+  const { qa } = useQAByDocumentId(qaId);
+  const [selected, setSelected] = useState(false);
+  const thumbnailUrl = getImageUrl(qa?.thumbnail?.url);
+
+  const onPress = () => {
+    if (selected) return;
+    setSelected(true);
+    if (qa?.is_correct_answer) {
+      rightAnswerCallBack();
+    }
+  }
+
+  useEffect(() => {
+    if (selected) {
+      opacity.value = withTiming(0.5);
+    }
+  }, [selected]);
+
+  const ImageAnimatedStyle = useAnimatedStyle(() => {
+    return {
+      opacity: opacity.value,
+    }
+  })
+
+  if (!qa) return <Loader />;
 
   return (
     <PressableScale
       onPress={onPress}
-      style={[
-        styles.card,
-        {
-          borderColor: reveal.borderColor,
-          backgroundColor: reveal.backgroundColor,
-        },
-      ]}
+      enabled={!selected}
+      style={globalStyles.w_50}
     >
-      <View style={[flexBetween, globalStyles.gap_sm]}>
-        <TextBody variant="body2" strong style={globalStyles.flex_1}>
-          {qa.qa_desc}
-        </TextBody>
-        {reveal.label ? (
-          <View style={[styles.pill, { backgroundColor: reveal.labelBg }]}>
-            <TextBody variant="caption" strong color="inverted">
-              {reveal.label}
-            </TextBody>
-          </View>
-        ) : null}
-      </View>
+      <AnimatedImage
+        source={{ uri: thumbnailUrl }}
+        style={[styles.thumbnail, ImageAnimatedStyle]}
+      />
+      <PlayAudioButton styles={globalStyles.border_secondary} audioUrl={qa.audio_desc.url} style={styles.audioButton} backgroundColor={colors.background.tertiary} />
+      {selected ? (
+        <View style={styles.selectBtn}>
+          <IconButton
+            backgroundColor={qa.is_correct_answer ? colors.success.tertiary : colors.danger.light}
+            iconFill={qa.is_correct_answer ? colors.success.primary : colors.text.danger}
+            icon={qa?.is_correct_answer ? "check" : "close"}
+            style={globalStyles.self_start}
+            size="lg"
+          />
+        </View>
+      ) : null}
     </PressableScale>
   );
 };
 
 export default QuizQACard;
+
+const CARD_WIDTH = Dimensions.SCREEN_WIDTH * 0.35;
+const CARD_HEIGHT = CARD_WIDTH + Dimensions.FONT_SIZE_L;
 
 const styles = StyleSheet.create({
   card: {
@@ -85,11 +89,38 @@ const styles = StyleSheet.create({
     borderRadius: themeToken.borderRadius,
     padding: themeToken.padding,
   },
+  audioButton: {
+    position: 'absolute',
+    bottom: -CARD_HEIGHT * 0.1,
+    left: (CARD_WIDTH - Dimensions.FONT_SIZE_L) * 0.7,
+  },
+  thumbnail: {
+    height: CARD_WIDTH,
+    resizeMode: 'contain',
+  },
+  thumbnailOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    ...globalStyles.overflow_hidden,
+    ...globalStyles.rounded_md,
+    ...globalStyles.opacity_05,
+  },
   pill: {
+    position: 'absolute',
+    left: themeToken.paddingSm,
+    bottom: themeToken.paddingSm,
     paddingHorizontal: themeToken.paddingSm,
-    paddingVertical: themeToken.paddingXs,
+    paddingVertical: themeToken.paddingSm,
     borderRadius: 999,
     ...globalStyles.overflow_hidden,
   },
+  selectBtn: StyleSheet.flatten([
+    {
+      top: "20%",
+      left: (CARD_WIDTH - Dimensions.FONT_SIZE_L) * 0.65,
+    },
+    globalStyles.absolute,
+    globalStyles.rounded_lg,
+    globalStyles.bg_background,
+  ])
 });
 

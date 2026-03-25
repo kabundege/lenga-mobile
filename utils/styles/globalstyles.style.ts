@@ -95,6 +95,7 @@ const globalStyles = StyleSheet.create({
   top_2xs: { top: Dimensions.SIZE_XS / 2 },
 
   left_0: { left: 0 },
+  left_50: { left: '50%' },
   // ====== Right =====
   right_0: { right: 0 },
   right_xs: { right: Dimensions.SIZE_XS },
@@ -123,6 +124,7 @@ const globalStyles = StyleSheet.create({
   w_70: { width: "70%" },
   w_60: { width: "60%" },
   w_50: { width: "50%" },
+  w_48: { width: "48%" },
   w_45: { width: "45%" },
   w_40: { width: "40%" },
   w_33: { width: "33.33%" },

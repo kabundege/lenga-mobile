@@ -21,7 +21,6 @@ interface LessonCardProps {
 
 const LessonCard = ({ index, lesson, style }: LessonCardProps) => {
   const thumbnailUrl = useMemo(() => getImageUrl(lesson.thumbnail?.url ?? ''), [lesson.thumbnail?.url]);
-  const { audioUrl, audioLoaded, audioPlaying, toggleAudio } = useLessonAudio(lesson.audio_desc?.url);
 
   const stylesAnimated = useAnimatedStyle(() => ({
     marginLeft: withTiming(index % 2 === 0 ? 0 : cardSpacing),
@@ -40,18 +39,10 @@ const LessonCard = ({ index, lesson, style }: LessonCardProps) => {
       />
       <View style={flexBetween}>
         <TextBody variant='body1' >Intambwe ya {index + 1}</TextBody>
-        {
-          audioUrl ? (
-            <PlayAudioButton
-              size='sm'
-              onPress={toggleAudio}
-              isLoaded={audioLoaded}
-              isPlaying={audioPlaying}
-              backgroundColor={colors.primary_light}
-              iconColor={colors.primary}
-            />
-          ) : null
-        }
+        <PlayAudioButton
+          size='sm'
+          audioUrl={lesson.audio_desc?.url}
+        />
       </View>
       <View style={globalStyles.flex_1} />
       <TextHeading variant='subTitle'>{lesson.title}</TextHeading>
