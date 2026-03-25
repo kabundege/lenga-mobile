@@ -6,8 +6,9 @@ import { themeToken } from '@/utils/theme/styles';
 import { SizeVariants } from '@/utils/types/theme';
 import { CustomPressableProps, PressableScale } from 'pressto';
 import React, { ReactNode, useMemo } from 'react';
-import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { StyleProp, StyleSheet, TextStyle, View, ViewStyle } from 'react-native';
 import { scale } from 'react-native-size-matters';
+import Icon, { IconName, IconProps } from '../common/icon';
 
 export type ButtonType = 'primary' | 'secondary' | 'tertiary' | 'outlined' | 'danger' | 'success' | 'light';
 
@@ -20,15 +21,16 @@ export type ButtonProps = {
   loading?: boolean;
   isBlock?: boolean;
   textColor?: string;
-  iconLeft?: ReactNode;
-  iconRight?: ReactNode;
+  leftIcon?: IconProps;
+  rightIcon?: IconProps;
   numberOfLines?: number;
   styles?: StyleProp<ViewStyle>;
   customIconSize?: SizeVariants;
+  textStyles?: StyleProp<TextStyle>;
   overRiddingStyles?: StyleProp<ViewStyle>;
 } & CustomPressableProps;
 
-const Button = ({ size = 'md', numberOfLines, customIconSize, rounded = false, ...props }: ButtonProps) => {
+const Button = ({ size = 'md', numberOfLines, customIconSize, rounded = false, textStyles, ...props }: ButtonProps) => {
   const dimensions: { [key in ButtonProps['size']]: ViewStyle } = {
     lg: {
       paddingHorizontal: 25,
@@ -39,6 +41,9 @@ const Button = ({ size = 'md', numberOfLines, customIconSize, rounded = false, .
     sm: {
       paddingHorizontal: 15,
     },
+    xs: {
+      paddingHorizontal: 10,
+    },
   };
 
   const textSize: {
@@ -47,6 +52,7 @@ const Button = ({ size = 'md', numberOfLines, customIconSize, rounded = false, .
     lg: 'body1',
     md: 'body2',
     sm: 'body2',
+    xs: 'caption',
   };
 
   const textColor = useMemo(
@@ -87,7 +93,7 @@ const Button = ({ size = 'md', numberOfLines, customIconSize, rounded = false, .
         <Loader />
       ) : (
         <>
-          {props.iconLeft}
+          {props.leftIcon && <Icon {...props.leftIcon} />}
           {props?.label && (
             <TextBody
               strong
@@ -95,12 +101,12 @@ const Button = ({ size = 'md', numberOfLines, customIconSize, rounded = false, .
               color="default"
               variant={textSize[size]}
               numberOfLines={numberOfLines}
-              style={[textColor ? { color: textColor } : undefined, globalStyles.uppercase, globalStyles.w_full]}
+              style={[textColor ? { color: textColor } : undefined, globalStyles.uppercase, globalStyles.w_full, textStyles]}
             >
               {props.label}
             </TextBody>
           )}
-          {props.iconRight}
+          {props.rightIcon && <Icon {...props.rightIcon} />}
         </>
       )}
     </Wrapper>

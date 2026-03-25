@@ -1,9 +1,9 @@
-import courses from '../../modules/en/courses.json';
+import lessons from '../../modules/en/lessons.json';
 import global from '../../modules/en/global.json';
 import profile from '../../modules/en/profile.json';
 
 export default {
-  courses,
+  lessons,
   global,
   profile,
 };

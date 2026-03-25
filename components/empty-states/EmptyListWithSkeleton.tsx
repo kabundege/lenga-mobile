@@ -1,5 +1,5 @@
 import Button from '@/components/buttons/button';
-import { CourseCardSkeleton } from '@/components/skeletons';
+import { LessonCardSkeleton } from '@/components/skeletons';
 import { TextBody, TextHeading } from '@/components/typography';
 import { globalStyles } from '@/utils/styles';
 import { themeToken } from '@/utils/theme/styles';
@@ -21,7 +21,7 @@ export const EmptyListWithSkeleton = ({
   return (
     <View style={[styles.container, containerStyles]}>
       <View style={styles.skeletonWrapper}>
-        <CourseCardSkeleton />
+        <LessonCardSkeleton />
       </View>
       {(title || description) && (
         <View>

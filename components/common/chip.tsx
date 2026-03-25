@@ -28,6 +28,7 @@ export interface ChipProps {
   /** Verified */
   isVerified?: boolean;
   iconProps?: IconProps;
+  leftIconProps?: IconProps;
   sub?: string;
 }
 
@@ -80,6 +81,7 @@ const Chip: React.FC<ChipProps> = ({
   isVerified,
   variant = "default",
   iconProps,
+  leftIconProps,
   sub,
 }) => {
   // Variant-based styles
@@ -118,6 +120,7 @@ const Chip: React.FC<ChipProps> = ({
 
   return (
     <Wrapper onPress={onPress} style={chipStyle}>
+      {leftIconProps ? <Icon {...leftIconProps} /> : null}
       <View>
         <TextBody
           strong={selected}

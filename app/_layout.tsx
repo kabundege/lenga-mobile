@@ -2,7 +2,6 @@ import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { SplashScreen, Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
@@ -14,7 +13,6 @@ import { useColorScheme } from '@/hooks/use-color-scheme';
 import useAppFont from '@/hooks/useAppFont';
 import '@/translations/i18n';
 import globalStyles from '@/utils/styles/globalstyles.style';
-import colors from '@/utils/theme/colors';
 import { PressablesConfig } from 'pressto';
 import { useEffect } from 'react';
 
@@ -39,7 +37,6 @@ const AppShell = ({ children }: { children: React.ReactNode }) => (
       <PressablesProvider>
         <SafeAreaProvider initialMetrics={initialWindowMetrics}>
           <BottomSheetModalProvider>
-            <StatusBar style="light" backgroundColor={colors.primary} />
             {children}
             <Toaster position="bottom-center" />
           </BottomSheetModalProvider>
@@ -51,7 +48,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => (
 
 export const routes = {
   register: 'register',
-  courses: 'courses',
+  lessons: 'lessons',
   splash: 'splash',
   login: 'login',
 }

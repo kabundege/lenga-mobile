@@ -18,7 +18,7 @@ import { StyleSheet, View } from 'react-native';
 
 export default function LoginScreen() {
   const loginMutation = useLogin({
-    onSuccess: () => router.replace('/courses'),
+    onSuccess: () => router.replace('/lessons'),
   });
 
   const {
@@ -29,7 +29,11 @@ export default function LoginScreen() {
     defaultValues: { identifier: '', password: '' },
   });
 
-  const handleLogin = handleSubmit((data) => loginMutation.mutate(data));
+  const handleLogin = handleSubmit((data) => {
+    // comment this out for now
+    // loginMutation.mutate(data)
+    router.replace('/lessons')
+  });
 
   return (
     <ThemedView style={globalStyles.flex_1}>

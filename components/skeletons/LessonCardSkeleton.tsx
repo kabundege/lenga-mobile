@@ -5,7 +5,7 @@ import { flexBetween } from '@/utils/styles/reusable.style';
 import { StyleSheet, View } from 'react-native';
 import { AnimatedSkeleton } from './AnimatedSkeleton';
 
-export const CourseCardSkeleton = () => {
+export const LessonCardSkeleton = () => {
   return (
     <AnimatedSkeleton style={styles.card}>
       <View>

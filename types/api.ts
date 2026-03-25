@@ -14,6 +14,8 @@ export type StrapiMeta = {
   pagination?: StrapiPagination;
 };
 
+export type StrapiEntityId = number | string;
+
 // Auth
 export type StrapiAuthResponse = {
   jwt: string;
@@ -31,16 +33,6 @@ export type StrapiRole = {
   publishedAt: string;
 };
 
-export type StrapiEnrollmentMinimal = {
-  id: number;
-  documentId: string;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt: string | null;
-  locale: string;
-  enrollment_status: string;
-};
-
 export type StrapiUser = {
   id: number;
   documentId: string;
@@ -56,54 +48,6 @@ export type StrapiUser = {
   publishedAt: string;
   age: number | null;
   role?: StrapiRole;
-  enrollments?: StrapiEnrollmentMinimal[];
-};
-
-// Course list/detail (from GET /api/courses)
-export type StrapiCourseCategory = {
-  id: number;
-  documentId: string;
-  name: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt: string;
-  locale: string;
-};
-
-export type StrapiInstructor = {
-  id: number;
-  documentId: string;
-  username: string;
-  email: string;
-  provider: string;
-  confirmed: boolean;
-  blocked: boolean;
-  full_name: string;
-  gender: string | null;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt: string | null;
-  age: number | null;
-};
-
-export type StrapiInstitution = {
-  id: number;
-  documentId: string;
-  name: string;
-  description: string;
-  country: string;
-  city: string;
-  website: string | null;
-  telephone: string | null;
-  address_facebook: string | null;
-  address_linkedin: string | null;
-  address_x: string | null;
-  address_youtube: string | null;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt: string;
-  locale: string;
 };
 
 export type StrapiTopicMinimal = {
@@ -119,7 +63,7 @@ export type StrapiTopicMinimal = {
 
 export type StrapiLessonDetailBlock = {
   type: string;
-  children?: Array<{ type: string; text?: string }>;
+  children?: { type: string; text?: string }[];
 };
 
 export type StrapiLessonDescription = {
@@ -157,35 +101,73 @@ export type StrapiTopicWithLessons = StrapiTopicMinimal & {
   lessons?: StrapiLessonMinimal[];
 };
 
-export type StrapiCourse = {
-  id: number;
+export type StrapiMedia = {
+  id: StrapiEntityId;
+  documentId?: string;
+  name: string;
+  url: string;
+  mime: string;
+};
+
+export type StrapiQA = {
+  id: StrapiEntityId;
   documentId: string;
-  title: string;
-  description: string;
+  qa_desc: string;
   createdAt: string;
   updatedAt: string;
-  publishedAt: string;
+  publishedAt: string | null;
   locale: string;
-  course_categories?: StrapiCourseCategory[];
-  courses_instructors?: StrapiInstructor[];
-  course_provider_institutions?: StrapiInstitution[];
-  authors?: StrapiInstructor[];
-  enrollments?: StrapiEnrollmentMinimal[];
-  course_thumbnail?: unknown;
-  topics?: StrapiTopicMinimal[] | StrapiTopicWithLessons[];
-  localizations?: unknown[];
+  thumbnail?: StrapiMedia | null;
 };
 
-export type StrapiCourseDetail = StrapiCourse & {
-  topics?: StrapiTopicWithLessons[];
+export type StrapiQuiz = {
+  id: StrapiEntityId;
+  documentId: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
+  locale: string;
+  qas?: StrapiQA[];
 };
 
-// Enrollment payload
-export type EnrollmentPayload = {
-  enrollment_status?: string;
-  users_permissions_user: number;
-  course: number;
-  locale?: string;
+export type StrapiLessonVideo = {
+  id: StrapiEntityId;
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
+  locale: string;
+  lesson_video?: StrapiMedia | null;
+};
+
+export type StrapiLessonChapter = {
+  title: string;
+  order: number;
+  id: StrapiEntityId;
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
+  locale: string;
+  thumbnail?: StrapiMedia | null;
+  audio_desc?: StrapiMedia | null;
+  quizzes?: StrapiQuiz[];
+  lesson_video?: StrapiLessonVideo | null;
+};
+
+export type StrapiLesson = {
+  id: StrapiEntityId;
+  documentId: string;
+  title: string;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
+  locale: string;
+  thumbnail?: StrapiMedia | null;
+  audio_desc?: StrapiMedia | null;
+  lesson_chapters?: StrapiLessonChapter[];
 };
 
 // Profile update payload

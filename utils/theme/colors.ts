@@ -58,9 +58,9 @@ const colors = {
     default: '#D7D7D6',
   },
   border: {
-    primary: '#4C4B4D',
+    primary: '#DEDEDE',
     secondary: '#EBEBEB',
-    tertiary: '#4C4B4D',
+    tertiary: '#DEDEDE',
   },
   modalGestureIndicator: '#4C4B4D',
   tabBar: '#282829',

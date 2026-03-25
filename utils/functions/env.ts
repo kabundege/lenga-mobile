@@ -7,7 +7,7 @@ const getEnvVar = (key: string, fallback?: string): string => {
   return typeof value === 'string' ? value : '';
 };
 
-export const API_URL = getEnvVar('EXPO_PUBLIC_API_URL', 'http://13.244.85.180:1337');
+export const API_URL = 'http://192.168.1.68:1337'; //getEnvVar('EXPO_PUBLIC_API_URL', 'http://192.168.1.68:1337');
 
 export type Env = {
   API_URL: string;
@@ -15,4 +15,9 @@ export type Env = {
 
 export function getEnv(): Env {
   return { API_URL };
+}
+
+export function getImageUrl(url: string | undefined): string {
+  if (!url) return '';
+  return `${API_URL}${url}`;
 }

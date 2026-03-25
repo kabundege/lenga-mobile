@@ -17,7 +17,7 @@ export function register(payload: RegisterPayload) {
 
 /**
  * Logged-in user profile.
- * GET /api/auth/users/me — returns the current user with role and enrollments.
+ * GET /api/auth/users/me — returns the current user with role.
  */
 export function getMe() {
   return api.get<StrapiUser>('/api/users/me?populate=role');

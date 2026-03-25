@@ -31,7 +31,11 @@ export default function RegisterScreen() {
     defaultValues: { username: '', email: '', password: '' },
   });
 
-  const handleRegister = handleSubmit((data) => registerMutation.mutate(data));
+  const handleRegister = handleSubmit((data) => {
+    // comment this out for now
+    // registerMutation.mutate(data)
+    router.replace('/lessons')
+  });
 
   return (
     <ThemedView style={globalStyles.flex_1}>
