@@ -9,7 +9,7 @@ import { StrapiLessonChapter } from '@/types/api';
 import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
-import { LegendList, LegendListRef, LegendListRenderItemProps, } from '@legendapp/list';
+import { LegendListRef, LegendListRenderItemProps, } from '@legendapp/list';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useCallback, useMemo, useRef, useState } from 'react';

@@ -1,12 +1,14 @@
+import { router } from 'expo-router';
 import { useMe } from '@/hooks/useAuth';
 import colors from '@/utils/theme/colors';
 import { StrapiLesson } from '@/types/api';
-import { useCallback, useMemo } from 'react';
+import { StatusBar } from 'expo-status-bar';
 import { useLessons } from '@/hooks/useLessons';
 import { themeToken } from '@/utils/theme/styles';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import LessonCard from '@/components/cards/LessonCard';
+import { useCallback, useEffect, useMemo } from 'react';
 import IconButton from '@/components/buttons/iconButton';
 import LogoutModal from '@/components/modals/LogoutModal';
 import { flexBetween, globalStyles } from '@/utils/styles';
@@ -35,6 +37,12 @@ const LessonListScreen = () => {
     return lessons.filter((lesson) => lesson.title.toLowerCase().includes(search?.toLowerCase() ?? ''));
   }, [lessons, search]);
 
+  useEffect(() => {
+    if (error) {
+      router.replace('/login');
+    }
+  }, [error]);
+
   if (error) {
     return (
       <ThemedView style={styles.centered}>
@@ -46,12 +54,17 @@ const LessonListScreen = () => {
     );
   }
 
+  const formattedUsername = useMemo(() => {
+    return user?.email.split('@')[0].split('_').join(' ');
+  }, [user?.email])
+
   const renderHeader = useCallback(({ editable = true }: { editable?: boolean }) => (
     <SafeAreaView edges={['top']} style={[globalStyles.pt_sm, globalStyles.gap_sm]}>
+      <StatusBar style="dark" />
       <View style={[flexBetween, globalStyles.gap_sm]}>
         <View style={[globalStyles.flex_row, globalStyles.gap_2xs, globalStyles.flex_wrap, globalStyles.w_40]}>
           <TextBody strong color='tertiary'>Muraho,</TextBody>
-          <TextBody strong numberOfLines={1} style={globalStyles.capitalize}>{user?.full_name || user?.username || user?.email || 'Guest'}</TextBody>
+          <TextBody strong numberOfLines={1} style={globalStyles.capitalize}>{formattedUsername}</TextBody>
         </View>
         <LogoutModal
           toggleBtn={({ onPress }) => (
@@ -77,14 +90,6 @@ const LessonListScreen = () => {
     </SafeAreaView>
   ), [control, user]);
 
-  if (isLoading && lessons.length === 0) {
-    return (
-      <ThemedView style={styles.list}>
-        {renderHeader({ editable: false })}
-        <LessonsListSkeleton />
-      </ThemedView>
-    );
-  }
 
   const renderLessons = useCallback(({ item, index }: ListRenderItemInfo<StrapiLesson>) => (
     <LessonCard key={item.documentId} lesson={item} index={index} />
@@ -102,6 +107,16 @@ const LessonListScreen = () => {
       )}
     />
   ), [control]);
+
+  if (isLoading && lessons.length === 0) {
+    return (
+      <ThemedView style={styles.list}>
+        {renderHeader({ editable: false })}
+        <LessonsListSkeleton />
+      </ThemedView>
+    );
+  }
+
 
   return (
     <Animated.FlatList

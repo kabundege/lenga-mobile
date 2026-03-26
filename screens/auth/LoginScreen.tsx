@@ -13,6 +13,7 @@ import { themeToken } from '@/utils/theme/styles';
 import { loginSchema, type LoginFormValues } from '@/utils/validations/auth';
 import { yupResolver } from '@hookform/resolvers/yup';
 import { router } from 'expo-router';
+import { StatusBar } from 'expo-status-bar';
 import { useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 
@@ -31,40 +32,45 @@ export default function LoginScreen() {
 
   const handleLogin = handleSubmit((data) => {
     // comment this out for now
-    // loginMutation.mutate(data)
-    router.replace('/lessons')
+    loginMutation.mutate(data)
   });
 
   return (
     <ThemedView style={globalStyles.flex_1}>
+      <StatusBar style="dark" />
       <WithKeyboardScrollView style={styles.container}>
         <View style={[centered, globalStyles.mb_xl]}>
           <ThemedText type="title" style={[globalStyles.text_primary, globalStyles.line_height_4xl]}>
             Injira
           </ThemedText>
           <TextBody variant="body1" color='tertiary' center>
-            Kwinjira muri konti yawe urasabwa kwinjira emeyili yawe na pasiwadi (ijambobanga)
+            Kwinjira muri konti yawe urasabwa kwinjira Nomero yawe na PIN (ijambobanga)
           </TextBody>
         </View>
         <View style={globalStyles.gap_xl}>
           <View style={globalStyles.gap_xs}>
             <ControlledInput<LoginFormValues>
-              control={control}
-              placeholder="urugero@mail.com"
+              placeholder="07...."
+              label="Nimero ya telefoni"
               autoCapitalize="none"
               name="identifier"
+              control={control}
               key="identifier"
-              label="Imeyili"
-              icon="email"
+              icon="smartphone"
+              iconType='feather'
             />
             <ControlledInput<LoginFormValues>
               control={control}
+              icon="lock"
               name="password"
               key="password"
               secureTextEntry
-              icon="lock-open"
-              label="Ijambobanga"
+              iconType='feather'
+              label="PIN"
+              maxLength={5}
               placeholder="********"
+              keyboardType='phone-pad'
+              onSubmitEditing={handleLogin}
             />
           </View>
           <View style={globalStyles.gap_sm}>

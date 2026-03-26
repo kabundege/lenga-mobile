@@ -1,11 +1,12 @@
-import AntDesign from '@expo/vector-icons/AntDesign';
 import Entypo from '@expo/vector-icons/Entypo';
 import Feather from '@expo/vector-icons/Feather';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import AntDesign from '@expo/vector-icons/AntDesign';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6';
-import Ionicons from '@expo/vector-icons/Ionicons';
-import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import SimpleLineIcons from '@expo/vector-icons/SimpleLineIcons';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import React from 'react';
 import { StyleProp, TextStyle } from 'react-native';
 
@@ -36,6 +37,7 @@ const ICON_REGISTRY = {
   fontAwesome: { Component: FontAwesome, glyphMap: FontAwesome.glyphMap },
   fontAwesome6: { Component: FontAwesome6, glyphMap: FontAwesome6.glyphMap },
   entypo: { Component: Entypo, glyphMap: Entypo.glyphMap },
+  simpleLineIcons: { Component: SimpleLineIcons, glyphMap: SimpleLineIcons.glyphMap },
 } as const;
 
 export type IconType = keyof typeof ICON_REGISTRY;

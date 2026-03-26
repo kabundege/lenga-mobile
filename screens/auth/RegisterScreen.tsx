@@ -28,13 +28,17 @@ export default function RegisterScreen() {
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: yupResolver(registerSchema) as Resolver<RegisterFormValues>,
-    defaultValues: { username: '', email: '', password: '' },
+    defaultValues: { username: '', phone: '', password: '' },
   });
 
   const handleRegister = handleSubmit((data) => {
     // comment this out for now
-    // registerMutation.mutate(data)
-    router.replace('/lessons')
+    const formattedEmail = data.username.split(' ').join('_').toLowerCase() + '@email.com';
+    registerMutation.mutate({
+      username: data.phone,
+      email: formattedEmail,
+      password: data.password,
+    })
   });
 
   return (
@@ -51,31 +55,35 @@ export default function RegisterScreen() {
         <View style={globalStyles.gap_xl}>
           <View style={globalStyles.gap_xs}>
             <ControlledInput<RegisterFormValues>
-              control={control}
+              icon="user"
               name="username"
-              icon="account"
-              label="Username"
-              placeholder="Username"
+              iconType='antd'
+              label="Amazina"
+              control={control}
               autoCapitalize="none"
+              placeholder="andika hano"
               errorMessage={errors.username?.message}
             />
             <ControlledInput<RegisterFormValues>
               control={control}
-              name="email"
-              label="Imeyili"
-              icon="email"
-              placeholder="urugero@mail.com"
+              name="phone"
+              icon="smartphone"
+              iconType='feather'
+              placeholder="07...."
+              label="Nimero ya telefoni"
               keyboardType="email-address"
-              autoCapitalize="none"
-              errorMessage={errors.email?.message}
+              errorMessage={errors.phone?.message}
             />
             <ControlledInput<RegisterFormValues>
-              control={control}
+              label="PIN"
+              icon="lock"
               name="password"
-              label="Ijambobanga"
-              icon="lock-open"
+              control={control}
+              iconType='feather'
               placeholder="********"
               secureTextEntry
+              keyboardType='phone-pad'
+              onSubmitEditing={handleRegister}
               errorMessage={errors.password?.message}
             />
           </View>

@@ -1,13 +1,13 @@
+import { useEffect } from 'react';
+import { router } from 'expo-router';
+import { StyleSheet } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import { useAppSelector } from '@/hooks/useRedux';
+import { themeToken } from '@/utils/theme/styles';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import { TextBody } from '@/components/typography/textBody';
-import { useAppSelector } from '@/hooks/useRedux';
 import globalStyles from '@/utils/styles/globalstyles.style';
-import { themeToken } from '@/utils/theme/styles';
-import { router } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
 import Animated, { BounceIn, BounceOut, FadeInDown, FadeOut } from 'react-native-reanimated';
 
 const AnimatedText = Animated.createAnimatedComponent(ThemedText);
@@ -21,17 +21,18 @@ const SplashScreen = () => {
 
     useEffect(() => {
         const t = setTimeout(() => {
-            // if (jwt) {
-            router.replace('/lessons');
-            // } else {
-            //     router.replace('/login');
-            // }
+            if (jwt) {
+                router.replace('/lessons');
+            } else {
+                router.replace('/login');
+            }
         }, RedirectionDelay);
         return () => clearTimeout(t);
     }, [jwt]);
 
     return (
         <ThemedView style={styles.container}>
+            <StatusBar style="dark" />
             <AnimatedText entering={BounceIn} exiting={BounceOut.delay(RedirectionDelay * 0.9)} type="title" style={[globalStyles.text_primary, globalStyles.text_center]}>
                 LENGA
             </AnimatedText>

@@ -1,14 +1,14 @@
 import * as Yup from 'yup';
 
 export const loginSchema = Yup.object({
-  identifier: Yup.string().required('Identifier is required'),
-  password: Yup.string().required('Password is required'),
+  identifier: Yup.string().required('Injiza nimero ya telefoni'),
+  password: Yup.string().min(5, 'PIN Igomba kuba imibare 5').required('Injiza PIN'),
 });
 
 export const registerSchema = Yup.object({
-  username: Yup.string().required('Username is required'),
-  email: Yup.string().email('Invalid email').required('Email is required'),
-  password: Yup.string().min(6, 'At least 6 characters').required('Password is required'),
+  phone: Yup.string().required('Injiza nimero ya telefoni'),
+  username: Yup.string().required('Injiza amazina'),
+  password: Yup.string().min(5, 'PIN Igomba kuba imibare 5').required('Injiza PIN'),
 });
 
 export type LoginFormValues = Yup.InferType<typeof loginSchema>;
