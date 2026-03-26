@@ -1,5 +1,5 @@
 import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
-import { Audio, type AVPlaybackStatus } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer, type AudioStatus } from 'expo-audio';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { activateSingleAudio, clearActiveSoundIf } from '@/utils/singleAudioPlayer';
 
@@ -11,7 +11,7 @@ interface UseLessonAudioResult {
 }
 
 export const useLessonAudio = (rawAudioUrl?: string | null): UseLessonAudioResult => {
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const soundRef = useRef<AudioPlayer | null>(null);
   const [audioLoaded, setAudioLoaded] = useState(false);
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [audioFinished, setAudioFinished] = useState(false);
@@ -28,12 +28,13 @@ export const useLessonAudio = (rawAudioUrl?: string | null): UseLessonAudioResul
     clearActiveSoundIf(sound);
     if (!sound) return;
     try {
-      await sound.stopAsync();
+      sound.pause();
+      await sound.seekTo(0);
     } catch {
       // ignore stop errors during teardown
     }
     try {
-      await sound.unloadAsync();
+      sound.remove();
     } catch {
       // ignore unload errors during teardown
     }
@@ -46,34 +47,43 @@ export const useLessonAudio = (rawAudioUrl?: string | null): UseLessonAudioResul
 
     (async () => {
       try {
-        await Audio.setAudioModeAsync({
-          playsInSilentModeIOS: true,
-          staysActiveInBackground: false,
+        await setAudioModeAsync({
+          playsInSilentMode: true,
+          shouldPlayInBackground: false,
         });
 
-        const { sound } = await Audio.Sound.createAsync(
-          { uri: audioUrl },
-          { shouldPlay: false },
-          (status: AVPlaybackStatus) => {
-            if (!status.isLoaded) return;
-            setAudioLoaded(true);
-            setAudioPlaying(status.isPlaying);
-            // When playback finishes, Expo keeps the playhead at the end.
-            // We track this so we can reset the position on next play.
-            if ('didJustFinish' in status && status.didJustFinish) {
-              setAudioFinished(true);
-            } else if (status.isPlaying) {
-              setAudioFinished(false);
-            }
+        const sound = createAudioPlayer({ uri: audioUrl }, { updateInterval: 250 });
+        const sub = sound.addListener('playbackStatusUpdate', (status: AudioStatus) => {
+          if (!status.isLoaded) return;
+          setAudioLoaded(true);
+          setAudioPlaying(status.playing);
+          // When playback finishes, we reset on next play.
+          if (status.didJustFinish) {
+            setAudioFinished(true);
+          } else if (status.playing) {
+            setAudioFinished(false);
           }
-        );
+        });
 
         if (cancelled) {
-          await sound.unloadAsync();
+          sub.remove();
+          sound.remove();
           return;
         }
 
+        // Mark audio as ready right after successful load.
+        const status = sound.currentStatus;
+        if (status.isLoaded) {
+          setAudioLoaded(true);
+          setAudioPlaying(status.playing);
+        }
+
         soundRef.current = sound;
+
+        if (cancelled) {
+          sub.remove();
+          sound.remove();
+        }
       } catch {
         setAudioLoaded(false);
         setAudioPlaying(false);
@@ -90,24 +100,23 @@ export const useLessonAudio = (rawAudioUrl?: string | null): UseLessonAudioResul
     try {
       const sound = soundRef.current;
       if (!sound) return;
-      const status = await sound.getStatusAsync();
+      const status = sound.currentStatus;
       if (!status.isLoaded) return;
-      if (status.isPlaying) {
-        await sound.pauseAsync();
+      if (status.playing) {
+        sound.pause();
       } else {
-        const didJustFinish = (status as any).didJustFinish === true;
+        const didJustFinish = status.didJustFinish === true;
         if (audioFinished || didJustFinish) {
           // Ensure subsequent play starts from the beginning.
-          await sound.setPositionAsync(0);
+          await sound.seekTo(0);
           setAudioFinished(false);
         }
         // Ensure only one audio track can play at a time.
         await activateSingleAudio(sound);
-        await sound.playAsync();
+        sound.play();
       }
-    } catch (error) {
+    } catch {
       // ignore
-      console.error(error);
     }
   }, [audioFinished]);
 

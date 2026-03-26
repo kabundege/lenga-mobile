@@ -3,7 +3,7 @@ import ThumbnailWithOverlay from '@/components/common/ThumbnailWithOverlay';
 import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
 import { useAppSelector } from '@/hooks/useRedux';
 import type { StrapiLesson } from '@/types/api';
-import { selectLessonSyncEntry } from '@/store/slices/offlineContentSlice';
+import { selectLessonSyncEntry } from '@/store/slices/offlineAssetsSlice';
 import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
@@ -53,9 +53,8 @@ const LessonCard = ({ index, lesson, style }: LessonCardProps) => {
       ) : null}
 
       <View style={flexBetween}>
-        <TextBody variant='body1'>Igice ya {index + 1}</TextBody>
+        <TextBody variant='body1' strong color='secondary'>Igice ya {index + 1}</TextBody>
         <PlayAudioButton
-          size='sm'
           audioUrl={lesson.audio_desc?.url}
         />
       </View>
@@ -77,8 +76,8 @@ const styles = StyleSheet.create({
     globalStyles.p_md,
     globalStyles.rounded_md,
     globalStyles.overflow_hidden,
-    globalStyles.border_tertiary,
     globalStyles.overflow_hidden,
+    globalStyles.border_secondary,
     {
       backgroundColor: colors.background.tertiary,
       width: cardWidth,

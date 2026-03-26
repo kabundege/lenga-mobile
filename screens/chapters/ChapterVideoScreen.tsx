@@ -1,23 +1,23 @@
-import { ThemedView } from '@/components/themed-view';
-import ContentThumbnailHeader from '@/components/headers/ContentThumbnailHeader';
-import Button from '@/components/buttons/button';
-import { TextBody, TextHeading } from '@/components/typography';
-import { useChapterByDocumentId, useChapterVideo } from '@/hooks/useLessons';
-import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
-import { centered, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
+import Loader from '@/components/loader';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { themeToken } from '@/utils/theme/styles';
-import { ResizeMode, Video } from 'expo-av';
+import { getChapterVideoUrl } from './chapterVideo';
+import { ThemedView } from '@/components/themed-view';
+import { centered, globalStyles } from '@/utils/styles';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { getChapterVideoUrl } from './chapterVideo';
-import Loader from '@/components/loader';
+import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
+import { TextBody } from '@/components/typography';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useChapterByDocumentId, useChapterVideo } from '@/hooks/useLessons';
+import ContentThumbnailHeader from '@/components/headers/ContentThumbnailHeader';
 
 const ChapterVideoScreen = () => {
+  const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ chapterId: string; lessonId?: string }>();
   const chapterId = typeof params.chapterId === 'string' ? params.chapterId : '';
-
   const { chapter, isLoading: isChapterLoading, error: chapterError, refetch: chapterRefetch } = useChapterByDocumentId(chapterId);
   const { chapterVideo, isLoading: isVideoLoading, error: videoError, refetch: videoRefetch } = useChapterVideo(chapterId);
 
@@ -31,13 +31,24 @@ const ChapterVideoScreen = () => {
 
   const videoUrl = useMemo(() => getChapterVideoUrl(chapterVideo ?? null), [chapterVideo]);
   const offlineVideoUri = useOfflineAssetUri(videoUrl);
-
-  const videoRef = useRef<Video>(null);
+  const videoPlayer = useVideoPlayer(offlineVideoUri || null);
   const [videoPlaybackError, setVideoPlaybackError] = useState(false);
 
   useEffect(() => {
     setVideoPlaybackError(false);
   }, [videoUrl]);
+
+  useEffect(() => {
+    const sub = videoPlayer.addListener('statusChange', ({ status }) => {
+      if (status === 'error') setVideoPlaybackError(true);
+    });
+    return () => sub.remove();
+  }, [videoPlayer]);
+
+  useEffect(() => {
+    if (!offlineVideoUri) return;
+    videoPlayer.play();
+  }, [offlineVideoUri, videoPlayer]);
 
   if (!chapterId) return <ThemedView style={[styles.container, globalStyles.center]} />;
 
@@ -65,17 +76,9 @@ const ChapterVideoScreen = () => {
         thumbnailUrl={chapter?.thumbnail?.url}
         audioUrl={chapter?.audio_desc?.url}
       />
-      <View style={globalStyles.flex_1}>
+      <View style={[globalStyles.flex_1, { paddingBottom: insets.bottom }]}>
         {isLoading ? <View style={[centered, globalStyles.flex_1]}> <Loader color="primary" size="large" /> </View> : offlineVideoUri ? (
-          <Video
-            ref={videoRef}
-            useNativeControls
-            style={styles.video}
-            source={{ uri: offlineVideoUri }}
-            resizeMode={ResizeMode.CONTAIN}
-            onError={() => setVideoPlaybackError(true)}
-            onLoad={() => videoRef.current?.playAsync()}
-          />
+          <VideoView player={videoPlayer} nativeControls style={styles.video} contentFit="contain" />
         ) : null}
       </View>
     </ThemedView>

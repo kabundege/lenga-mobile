@@ -111,13 +111,6 @@ export const removeSavedLesson = createAsyncThunk<
   return { lessonId };
 });
 
-export const upsertEntry = createAsyncThunk<
-  { lessonId: string; remoteUrl: string },
-  { lessonId: string; remoteUrl: string }
->('offlineMedia/upsertEntry', async ({ lessonId, remoteUrl }) => {
-  return { lessonId, remoteUrl };
-});
-
 export const offlineMediaSlice = createSlice({
   name: 'offlineMedia',
   initialState,
@@ -198,31 +191,9 @@ export const offlineMediaSlice = createSlice({
       delete state.byLessonId[lessonId];
     },
   },
-  extraReducers: (builder) => {
-    builder.addCase(upsertEntry.fulfilled, (state, action) => {
-      const { lessonId, remoteUrl } = action.payload;
-      const prev = state.byLessonId[lessonId];
-      if (!prev) {
-        state.byLessonId[lessonId] = {
-          lessonId,
-          remoteUrl,
-          localUri: null,
-          status: 'not_saved',
-          bytesWritten: 0,
-          totalBytes: null,
-          errorMessage: null,
-          updatedAt: Date.now(),
-        };
-        return;
-      }
-      prev.remoteUrl = remoteUrl;
-      prev.updatedAt = Date.now();
-    });
-  },
 });
 
-export const { startSaving, updateProgress, markSaved, markError, markNotSaved } =
-  offlineMediaSlice.actions;
+export const { startSaving, updateProgress, markSaved, markError, markNotSaved } = offlineMediaSlice.actions;
 export const offlineMediaReducer = offlineMediaSlice.reducer;
 
 export const selectSavedOfflineMediaEntries = createSelector(

@@ -4,21 +4,23 @@ import { EmptyListWithSkeleton } from '@/components/empty-states';
 import { LessonCardSkeleton } from '@/components/skeletons';
 import { ThemedView } from '@/components/themed-view';
 import ContentThumbnailHeader from '@/components/headers/ContentThumbnailHeader';
-import { useLessonByDocumentId } from '@/hooks/useLessons';
+import { useChapterByDocumentId, useLessonByDocumentId } from '@/hooks/useLessons';
 import { StrapiLessonChapter } from '@/types/api';
 import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
-import { LegendListRef, LegendListRenderItemProps, } from '@legendapp/list';
-import { router, useLocalSearchParams } from 'expo-router';
+import Loader from '@/components/loader';
 import { StatusBar } from 'expo-status-bar';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { AnimatedLegendList } from '@legendapp/list/reanimated';
-import { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, RefreshControl, StyleSheet, View } from 'react-native';
-import Loader from '@/components/loader';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LegendListRef, LegendListRenderItemProps } from '@legendapp/list';
 import { CHAPTER_SNAP_INTERVAL, DEFAULT_LIST_HEIGHT } from './lessonLayout';
+import { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, RefreshControl, StyleSheet, View } from 'react-native';
 
 const LessonDetailScreen = () => {
+  const insets = useSafeAreaInsets();
   const [loadedLayouts, setLoadedLayouts] = useState(0);
   const chapterListRef = useRef<LegendListRef | null>(null);
   const params = useLocalSearchParams<{ lessonId: string }>();
@@ -26,6 +28,8 @@ const LessonDetailScreen = () => {
   const [listHeight, setListHeight] = useState(DEFAULT_LIST_HEIGHT);
   const lessonId = typeof params.lessonId === 'string' ? params.lessonId : '';
   const { lesson, isLoading, isRefetching, error, lessonChapters, refetch } = useLessonByDocumentId(lessonId);
+
+  const { chapter: activeChapter } = useChapterByDocumentId(lessonChapters[activeChapterIndex].documentId);
 
   const refreshControl = useMemo(
     () => <RefreshControl refreshing={isRefetching} onRefresh={refetch} />,
@@ -74,10 +78,11 @@ const LessonDetailScreen = () => {
     return { color: colors.text.default, bgStyles: globalStyles.bg_primary_light };
   }, [activeChapterIndex]);
 
+  const isLastChapter = activeChapterIndex >= lessonChapters.length - 1;
+
   const getNextButtonColor = useMemo(() => {
-    if (activeChapterIndex >= lessonChapters.length - 1) return { color: colors.text.tertiary, bgStyles: globalStyles.bg_tertiary };
     return { color: colors.text.default, bgStyles: globalStyles.bg_primary_light };
-  }, [activeChapterIndex, lessonChapters.length]);
+  }, []);
 
   if (!lessonId) {
     return (
@@ -111,7 +116,7 @@ const LessonDetailScreen = () => {
           title={lesson?.title ?? 'Isomo'}
           subtitle="Igice cya 1"
           thumbnailUrl={lesson?.thumbnail?.url}
-          audioUrl={lesson?.audio_desc?.url}
+          audioUrl={activeChapter?.audio_desc?.url}
         />
       </View>
       {
@@ -153,7 +158,7 @@ const LessonDetailScreen = () => {
           />)
       }
       {lessonChapters.length > 1 ? (
-        <View onLayout={onLayout} style={[flexBetween, globalStyles.px_md, globalStyles.pb_lg]}>
+        <View onLayout={onLayout} style={[flexBetween, globalStyles.px_md, { paddingBottom: insets.bottom }]}>
           <Button
             size='sm'
             type='primary'
@@ -168,11 +173,16 @@ const LessonDetailScreen = () => {
           <Button
             size='sm'
             type='primary'
-            label='Ibikurikira'
-            onPress={goToNextChapter}
+            label={isLastChapter ? 'Sohoka' : 'Ibikurikira'}
+            onPress={() => {
+              if (isLastChapter) {
+                router.back();
+                return;
+              }
+              goToNextChapter();
+            }}
             textStyles={globalStyles.w_auto}
             textColor={getNextButtonColor.color}
-            disabled={activeChapterIndex >= lessonChapters.length - 1}
             overRiddingStyles={[globalStyles.w_40, getNextButtonColor.bgStyles]}
             rightIcon={{ name: 'chevron-right', color: getNextButtonColor.color }}
           />

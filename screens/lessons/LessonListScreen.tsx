@@ -2,30 +2,34 @@ import { useMe } from '@/hooks/useAuth';
 import colors from '@/utils/theme/colors';
 import { StrapiLesson } from '@/types/api';
 import { StatusBar } from 'expo-status-bar';
+import { useCallback, useMemo } from 'react';
 import { useLessons } from '@/hooks/useLessons';
-import { useOfflineSync } from '@/hooks/useOfflineSync';
+import Spacer from '@/components/common/spacer';
 import { themeToken } from '@/utils/theme/styles';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import LessonCard from '@/components/cards/LessonCard';
-import { useCallback, useMemo } from 'react';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
 import IconButton from '@/components/buttons/iconButton';
 import LogoutModal from '@/components/modals/LogoutModal';
 import { flexBetween, globalStyles } from '@/utils/styles';
 import { TextBody } from '@/components/typography/textBody';
 import { LessonsListSkeleton } from '@/components/skeletons';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { Controller, useForm, useWatch } from 'react-hook-form';
 import { EmptyListWithSkeleton } from '@/components/empty-states';
 import Animated, { CurvedTransition } from 'react-native-reanimated';
 import { ControlledInput } from '@/components/inputs/ControlledInput';
 import { ListRenderItemInfo, Pressable, StyleSheet, View } from 'react-native';
-import Spacer from '@/components/common/spacer';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useAppSelector } from '@/hooks/useRedux';
 
 const LessonListScreen = () => {
   useOfflineSync();
   const { user } = useMe();
+  const insets = useSafeAreaInsets();
+  const { byRemoteUrl } = useAppSelector(state => state.offlineAssets);
   const { lessons, isLoading, isRefetching, error, refetch } = useLessons();
+
 
   const { control } = useForm({
     defaultValues: {
@@ -124,10 +128,10 @@ const LessonListScreen = () => {
         layout={CurvedTransition}
         refreshing={isRefetching}
         renderItem={renderLessons}
-        ListFooterComponent={<Spacer />}
         keyExtractor={(item) => item.documentId}
         ListEmptyComponent={renderEmptyComponent}
         contentContainerStyle={styles.contentContainer}
+        ListFooterComponent={<Spacer height={insets.bottom} />}
       />
     </View>
   );

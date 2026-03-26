@@ -1,22 +1,23 @@
-import { Audio } from 'expo-av';
+import type { AudioPlayer } from 'expo-audio';
 
-// Global singleton to prevent multiple Expo sounds playing at once.
-let activeSound: Audio.Sound | null = null;
+// Global singleton to prevent multiple audio tracks playing at once.
+let activeSound: AudioPlayer | null = null;
 
-export function clearActiveSoundIf(sound: Audio.Sound | null | undefined) {
+export function clearActiveSoundIf(sound: AudioPlayer | null | undefined) {
   if (!sound) return;
   if (activeSound === sound) activeSound = null;
 }
 
-async function stopSound(sound: Audio.Sound) {
+async function stopSound(sound: AudioPlayer) {
   try {
-    await sound.stopAsync();
+    sound.pause();
+    await sound.seekTo(0);
   } catch {
     // ignore stop errors
   }
 }
 
-export async function activateSingleAudio(sound: Audio.Sound) {
+export async function activateSingleAudio(sound: AudioPlayer) {
   // Stop previously active sound (unless it's the same one).
   const previous = activeSound;
   if (previous && previous !== sound) {

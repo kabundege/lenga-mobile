@@ -1,22 +1,24 @@
+import colors from '@/utils/theme/colors';
+import Button from '@/components/buttons/button';
+import { themeToken } from '@/utils/theme/styles';
+import { TextBody } from '@/components/typography';
+import { getChapterVideoUrl } from './chapterVideo';
 import { ThemedView } from '@/components/themed-view';
 import QuizQACard from '@/components/cards/QuizQACard';
-import { TextBody, TextHeading } from '@/components/typography';
-import ContentThumbnailHeader from '@/components/headers/ContentThumbnailHeader';
-import Button from '@/components/buttons/button';
-import { useChapterByDocumentId, useChapterQuizzes, useChapterVideo } from '@/hooks/useLessons';
-import type { StrapiQA } from '@/types/api';
-import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
-import colors from '@/utils/theme/colors';
-import { themeToken } from '@/utils/theme/styles';
 import { router, useLocalSearchParams } from 'expo-router';
+import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Linking, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { getChapterVideoUrl } from './chapterVideo';
+import ContentThumbnailHeader from '@/components/headers/ContentThumbnailHeader';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { useChapterByDocumentId, useChapterQuizzes, useChapterVideo } from '@/hooks/useLessons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { EmptyListWithSkeleton } from '@/components/empty-states';
 
 const ChapterQuizScreen = () => {
   const [hasQuizRightAnswer, setHasQuizRightAnswer] = useState(false);
   const [activeQuizIndex, setActiveQuizIndex] = useState(0);
   const [pickedQaId, setPickedQaId] = useState('');
+  const insets = useSafeAreaInsets();
 
   const params = useLocalSearchParams<{ chapterId: string; lessonId?: string; quizId?: string }>();
   const chapterId = typeof params.chapterId === 'string' ? params.chapterId : '';
@@ -129,15 +131,15 @@ const ChapterQuizScreen = () => {
           <RenderQas />
         </ScrollView>
       ) : !isLoading ? (
-        <View style={styles.emptyState}>
-          <TextBody variant="body2" color="secondary">
-            {quizId ? "Nta bibazo biboneka muri uyu mwitozo." : "Nta myitozo iboneka muri iki gice."}
-          </TextBody>
-        </View>
+        <EmptyListWithSkeleton
+          title={quizId ? 'Nta bibazo biboneka' : 'Nta myitozo iboneka'}
+          description={quizId ? 'Nta bibazo biboneka muri uyu mwitozo.' : 'Nta myitozo iboneka muri iki gice.'}
+          containerStyles={styles.emptyState}
+        />
       ) : null}
 
       {chapterQuizzes.length > 1 ? (
-        <View style={[flexBetween, globalStyles.px_md, globalStyles.py_lg]}>
+        <View style={[flexBetween, globalStyles.px_md, { paddingBottom: insets.bottom }]}>
           <Button
             size="sm"
             type="primary"

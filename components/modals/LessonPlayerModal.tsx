@@ -15,7 +15,8 @@ import type { LessonPlayerModalRef } from '@/utils/types/modals';
 import { activateSingleAudio, clearActiveSoundIf } from '@/utils/singleAudioPlayer';
 import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { BottomSheetView, useBottomSheetModal } from '@gorhom/bottom-sheet';
-import { Audio, ResizeMode, Video, type AVPlaybackStatus } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync, type AudioPlayer, type AudioStatus } from 'expo-audio';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import React, { forwardRef, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -63,10 +64,8 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
     const { dismiss } = useBottomSheetModal();
     const dispatch = useAppDispatch();
 
-    const videoRef = useRef<Video>(null);
-
-    const soundRef = useRef<Audio.Sound | null>(null);
-    const descriptionSoundRef = useRef<Audio.Sound | null>(null);
+    const soundRef = useRef<AudioPlayer | null>(null);
+    const descriptionSoundRef = useRef<AudioPlayer | null>(null);
 
     const [audioLoaded, setAudioLoaded] = useState(false);
     const [audioPlaying, setAudioPlaying] = useState(false);
@@ -96,6 +95,7 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       if (isSaved && savedEntry?.localUri) return savedEntry.localUri;
       return mediaUrl;
     }, [isSaved, savedEntry?.localUri, mediaUrl]);
+    const videoPlayer = useVideoPlayer(playableUri || null);
 
     const descriptionText = lesson?.lesson_description?.text_description ?? null;
     const descriptionAudioUrl = lesson?.lesson_description?.audio_description_url ?? null;
@@ -119,6 +119,11 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       if (t.includes('video')) return false;
       return /\.(mp3|m4a|aac|wav|ogg)(\?.*)?$/i.test(mediaUrl);
     }, [lessonType, mediaUrl]);
+
+    useEffect(() => {
+      if (!playableUri || isAudio) return;
+      videoPlayer.play();
+    }, [isAudio, playableUri, videoPlayer]);
 
     useEffect(() => {
       if (!lessonId) return;
@@ -147,12 +152,13 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       clearActiveSoundIf(s);
       if (!s) return;
       try {
-        await s.stopAsync();
+        s.pause();
+        await s.seekTo(0);
       } catch {
         // ignore
       }
       try {
-        await s.unloadAsync();
+        s.remove();
       } catch {
         // ignore
       }
@@ -168,12 +174,13 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       clearActiveSoundIf(s);
       if (!s) return;
       try {
-        await s.stopAsync();
+        s.pause();
+        await s.seekTo(0);
       } catch {
         // ignore
       }
       try {
-        await s.unloadAsync();
+        s.remove();
       } catch {
         // ignore
       }
@@ -182,8 +189,8 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
     const handleClose = () => {
       unloadAudio().catch(() => null);
       unloadDescriptionAudio().catch(() => null);
-      videoRef.current?.pauseAsync().catch(() => null);
-      videoRef.current?.unloadAsync().catch(() => null);
+      videoPlayer.pause();
+      videoPlayer.currentTime = 0;
       onClose?.();
     };
 
@@ -196,25 +203,23 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
 
       (async () => {
         try {
-          await Audio.setAudioModeAsync({
-            playsInSilentModeIOS: true,
-            staysActiveInBackground: false,
+          await setAudioModeAsync({
+            playsInSilentMode: true,
+            shouldPlayInBackground: false,
           });
 
-          const { sound: created } = await Audio.Sound.createAsync(
-            { uri: playableUri },
-            { shouldPlay: false },
-            (status: AVPlaybackStatus) => {
-              if (!status.isLoaded) return;
-              setAudioLoaded(true);
-              setAudioPlaying(status.isPlaying);
-              setAudioPositionSec(status.positionMillis / 1000);
-              setAudioDurationSec((status.durationMillis ?? 0) / 1000);
-            }
-          );
+          const created = createAudioPlayer({ uri: playableUri }, { updateInterval: 250 });
+          const sub = created.addListener('playbackStatusUpdate', (status: AudioStatus) => {
+            if (!status.isLoaded) return;
+            setAudioLoaded(true);
+            setAudioPlaying(status.playing);
+            setAudioPositionSec(status.currentTime);
+            setAudioDurationSec(status.duration ?? 0);
+          });
 
           if (cancelled) {
-            await created.unloadAsync();
+            sub.remove();
+            created.remove();
             return;
           }
 
@@ -222,7 +227,7 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
           // Start playback while ensuring only one audio is active globally.
           await activateSingleAudio(created);
           if (!cancelled) {
-            await created.playAsync();
+            created.play();
           }
         } catch {
           toast.error(t('lessons.playbackError'));
@@ -244,23 +249,21 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
 
       (async () => {
         try {
-          await Audio.setAudioModeAsync({
-            playsInSilentModeIOS: true,
-            staysActiveInBackground: false,
+          await setAudioModeAsync({
+            playsInSilentMode: true,
+            shouldPlayInBackground: false,
           });
 
-          const { sound: created } = await Audio.Sound.createAsync(
-            { uri: descriptionAudioUrl },
-            { shouldPlay: false },
-            (status: AVPlaybackStatus) => {
-              if (!status.isLoaded) return;
-              setDescriptionAudioLoaded(true);
-              setDescriptionAudioPlaying(status.isPlaying);
-            }
-          );
+          const created = createAudioPlayer({ uri: descriptionAudioUrl }, { updateInterval: 250 });
+          const sub = created.addListener('playbackStatusUpdate', (status: AudioStatus) => {
+            if (!status.isLoaded) return;
+            setDescriptionAudioLoaded(true);
+            setDescriptionAudioPlaying(status.playing);
+          });
 
           if (cancelled) {
-            await created.unloadAsync();
+            sub.remove();
+            created.remove();
             return;
           }
 
@@ -281,61 +284,60 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       return () => {
         unloadAudio().catch(() => null);
         unloadDescriptionAudio().catch(() => null);
-        videoRef.current?.pauseAsync().catch(() => null);
-        videoRef.current?.unloadAsync().catch(() => null);
+        videoPlayer.pause();
+        videoPlayer.currentTime = 0;
       };
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [videoPlayer]);
 
     const toggleAudio = async () => {
       const s = soundRef.current;
       if (!s) return;
-      const status = await s.getStatusAsync();
+      const status = s.currentStatus;
       if (!status.isLoaded) return;
-      if (status.isPlaying) {
-        await s.pauseAsync();
+      if (status.playing) {
+        s.pause();
       } else {
-        const didJustFinish = (status as any).didJustFinish === true;
-        const positionMillis = (status as any).positionMillis as number | undefined;
-        const durationMillis = (status as any).durationMillis as number | undefined;
+        const didJustFinish = status.didJustFinish === true;
+        const positionSec = status.currentTime as number | undefined;
+        const durationSec = status.duration as number | undefined;
         if (
           didJustFinish ||
-          (typeof positionMillis === 'number' &&
-            typeof durationMillis === 'number' &&
-            positionMillis >= durationMillis - 250)
+          (typeof positionSec === 'number' &&
+            typeof durationSec === 'number' &&
+            positionSec >= durationSec - 0.25)
         ) {
           // Expo keeps the playhead at the end after finish; reset so next play starts over.
-          await s.setPositionAsync(0);
+          await s.seekTo(0);
         }
         // Ensure only one audio track can play at a time.
         await activateSingleAudio(s);
-        await s.playAsync();
+        s.play();
       }
     };
 
     const toggleDescriptionAudio = async () => {
       const s = descriptionSoundRef.current;
       if (!s) return;
-      const status = await s.getStatusAsync();
+      const status = s.currentStatus;
       if (!status.isLoaded) return;
-      if (status.isPlaying) {
-        await s.pauseAsync();
+      if (status.playing) {
+        s.pause();
       } else {
-        const didJustFinish = (status as any).didJustFinish === true;
-        const positionMillis = (status as any).positionMillis as number | undefined;
-        const durationMillis = (status as any).durationMillis as number | undefined;
+        const didJustFinish = status.didJustFinish === true;
+        const positionSec = status.currentTime as number | undefined;
+        const durationSec = status.duration as number | undefined;
         if (
           didJustFinish ||
-          (typeof positionMillis === 'number' &&
-            typeof durationMillis === 'number' &&
-            positionMillis >= durationMillis - 250)
+          (typeof positionSec === 'number' &&
+            typeof durationSec === 'number' &&
+            positionSec >= durationSec - 0.25)
         ) {
           // Ensure next play starts from the beginning.
-          await s.setPositionAsync(0);
+          await s.seekTo(0);
         }
         // Prevent overlapping audio (main vs description).
         await activateSingleAudio(s);
-        await s.playAsync();
+        s.play();
       }
     };
 
@@ -491,14 +493,7 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
             </ThemedView>
           ) : (
             <ThemedView style={styles.videoCard}>
-              <Video
-                ref={videoRef}
-                style={styles.video}
-                source={{ uri: playableUri }}
-                useNativeControls
-                shouldPlay
-                resizeMode={ResizeMode.CONTAIN}
-              />
+              <VideoView player={videoPlayer} style={styles.video} nativeControls contentFit="contain" />
             </ThemedView>
           )}
 

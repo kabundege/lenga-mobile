@@ -39,7 +39,6 @@ export default function ContentThumbnailHeader({
             <PlayAudioButton audioUrl={audioUrl ?? undefined} />
           </View>
 
-
           <View style={[flexBetween, globalStyles.gap_sm, globalStyles.mt_sm]}>
             {source ? <Image resizeMode="contain" source={source} style={styles.thumbnail} /> : <View style={styles.thumbnailPlaceholder} />}
             <View style={globalStyles.flex_1}>
