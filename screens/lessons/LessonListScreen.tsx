@@ -20,6 +20,7 @@ import { EmptyListWithSkeleton } from '@/components/empty-states';
 import Animated, { CurvedTransition } from 'react-native-reanimated';
 import { ControlledInput } from '@/components/inputs/ControlledInput';
 import { ListRenderItemInfo, Pressable, StyleSheet, View } from 'react-native';
+import Spacer from '@/components/common/spacer';
 
 const LessonListScreen = () => {
   useOfflineSync();
@@ -54,7 +55,7 @@ const LessonListScreen = () => {
   }, [user?.email])
 
   const RenderHeader = useCallback(({ editable = true }: { editable?: boolean }) => (
-    <SafeAreaView edges={['top']} style={[globalStyles.pt_sm, globalStyles.gap_2xs, globalStyles.px_md, globalStyles.pb_xs, globalStyles.border_b]}>
+    <SafeAreaView edges={['top']} style={[globalStyles.pt_sm, globalStyles.gap_2xs, globalStyles.px_md, globalStyles.pb_sm, globalStyles.border_b]}>
       <StatusBar style="dark" />
       <View style={[flexBetween, globalStyles.gap_sm]}>
         <View style={[globalStyles.flex_row, globalStyles.gap_2xs, globalStyles.flex_wrap, globalStyles.w_60]}>
@@ -123,6 +124,7 @@ const LessonListScreen = () => {
         layout={CurvedTransition}
         refreshing={isRefetching}
         renderItem={renderLessons}
+        ListFooterComponent={<Spacer />}
         keyExtractor={(item) => item.documentId}
         ListEmptyComponent={renderEmptyComponent}
         contentContainerStyle={styles.contentContainer}
@@ -140,8 +142,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     gap: themeToken.spacing,
-    paddingTop: themeToken.spacingSm,
-    paddingBottom: themeToken.paddingLg,
+    paddingVertical: themeToken.spacing,
     paddingHorizontal: themeToken.paddingLg,
   },
   centered: {

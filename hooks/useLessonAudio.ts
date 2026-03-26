@@ -87,22 +87,27 @@ export const useLessonAudio = (rawAudioUrl?: string | null): UseLessonAudioResul
   }, [audioUrl, unloadAudio]);
 
   const toggleAudio = useCallback(async () => {
-    const sound = soundRef.current;
-    if (!sound) return;
-    const status = await sound.getStatusAsync();
-    if (!status.isLoaded) return;
-    if (status.isPlaying) {
-      await sound.pauseAsync();
-    } else {
-      const didJustFinish = (status as any).didJustFinish === true;
-      if (audioFinished || didJustFinish) {
-        // Ensure subsequent play starts from the beginning.
-        await sound.setPositionAsync(0);
-        setAudioFinished(false);
+    try {
+      const sound = soundRef.current;
+      if (!sound) return;
+      const status = await sound.getStatusAsync();
+      if (!status.isLoaded) return;
+      if (status.isPlaying) {
+        await sound.pauseAsync();
+      } else {
+        const didJustFinish = (status as any).didJustFinish === true;
+        if (audioFinished || didJustFinish) {
+          // Ensure subsequent play starts from the beginning.
+          await sound.setPositionAsync(0);
+          setAudioFinished(false);
+        }
+        // Ensure only one audio track can play at a time.
+        await activateSingleAudio(sound);
+        await sound.playAsync();
       }
-      // Ensure only one audio track can play at a time.
-      await activateSingleAudio(sound);
-      await sound.playAsync();
+    } catch (error) {
+      // ignore
+      console.error(error);
     }
   }, [audioFinished]);
 

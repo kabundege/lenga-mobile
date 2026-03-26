@@ -57,6 +57,7 @@ export default function LoginScreen() {
               control={control}
               key="identifier"
               icon="smartphone"
+              keyboardType='phone-pad'
               iconType='feather'
             />
             <ControlledInput<LoginFormValues>

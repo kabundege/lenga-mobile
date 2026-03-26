@@ -83,12 +83,13 @@ const ChapterQuizScreen = () => {
     return { isDisabled, color: colors.text.default, bgStyles: globalStyles.bg_primary_light };
   }, [activeQuizIndex]);
 
+  const isLastQuiz = activeQuizIndex >= chapterQuizzes.length - 1;
 
   const nextButton = useMemo(() => {
-    const isDisabled = activeQuizIndex >= chapterQuizzes.length - 1 || !hasQuizRightAnswer;
+    const isDisabled = !hasQuizRightAnswer;
     if (isDisabled) return { isDisabled, color: colors.text.tertiary, bgStyles: globalStyles.bg_tertiary };
     return { isDisabled, color: colors.text.default, bgStyles: globalStyles.bg_primary_light };
-  }, [activeQuizIndex, chapterQuizzes.length, hasQuizRightAnswer]);
+  }, [hasQuizRightAnswer]);
 
   const RenderQas = useCallback(() => {
     return qas.map((qa) => (
@@ -102,11 +103,11 @@ const ChapterQuizScreen = () => {
     return (
       <ThemedView style={[styles.container, globalStyles.center]}>
         <TextBody variant="body2" strong>
-          Failed to load chapter.
+          Ntibyashobotse gufungura igice.
         </TextBody>
         <Pressable onPress={refetch} style={globalStyles.mt_sm}>
           <TextBody variant="body2" color="primary">
-            Retry
+            Ongera ugerageze
           </TextBody>
         </Pressable>
       </ThemedView>
@@ -117,7 +118,7 @@ const ChapterQuizScreen = () => {
     <ThemedView style={styles.container}>
       <ContentThumbnailHeader
         onBack={router.back}
-        title={activeQuiz?.title ?? chapter?.title ?? 'Chapter'}
+        title={activeQuiz?.title ?? chapter?.title ?? 'Igice'}
         subtitle={activeQuiz ? `Umwitozo wa ${activeQuizIndex + 1}` : undefined}
         thumbnailUrl={chapter?.thumbnail?.url}
         audioUrl={activeQuiz?.audio_desc?.url ?? chapter?.audio_desc?.url}
@@ -130,7 +131,7 @@ const ChapterQuizScreen = () => {
       ) : !isLoading ? (
         <View style={styles.emptyState}>
           <TextBody variant="body2" color="secondary">
-            {quizId ? 'No questions available for this quiz.' : 'No quizzes available for this chapter.'}
+            {quizId ? "Nta bibazo biboneka muri uyu mwitozo." : "Nta myitozo iboneka muri iki gice."}
           </TextBody>
         </View>
       ) : null}
@@ -151,13 +152,19 @@ const ChapterQuizScreen = () => {
           <Button
             size="sm"
             type="primary"
-            label="Ibikurikira"
+            label={isLastQuiz ? 'Sohoka' : 'Ibikurikira'}
             textColor={nextButton.color}
             textStyles={globalStyles.w_auto}
             disabled={nextButton.isDisabled}
             overRiddingStyles={[globalStyles.w_40, nextButton.bgStyles]}
             rightIcon={{ name: 'chevron-right', color: nextButton.color }}
-            onPress={() => pushQuizByIndex(Math.min(chapterQuizzes.length - 1, activeQuizIndex + 1))}
+            onPress={() => {
+              if (isLastQuiz) {
+                router.back();
+                return;
+              }
+              pushQuizByIndex(Math.min(chapterQuizzes.length - 1, activeQuizIndex + 1));
+            }}
           />
         </View>
       ) : null}

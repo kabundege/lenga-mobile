@@ -1,7 +1,8 @@
 import { TextBody, TextHeading } from '@/components/typography';
 import ThumbnailWithOverlay from '@/components/common/ThumbnailWithOverlay';
 import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
-import { useChapterByDocumentId, useChapterVideo } from '@/hooks/useLessons';
+import { useChapterVideo } from '@/hooks/useLessons';
+import { StrapiLessonChapter } from '@/types/api';
 import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
 import { themeToken } from '@/utils/theme/styles';
 import colors from '@/utils/theme/colors';
@@ -16,15 +17,15 @@ import { router } from 'expo-router';
 
 interface ChapterCardProps {
   height: number;
-  chapterId: string;
+  chapter: StrapiLessonChapter;
 }
 
-const ChapterCard = ({ chapterId, height }: ChapterCardProps) => {
+const ChapterCard = ({ chapter, height }: ChapterCardProps) => {
   const cardHeight = useSharedValue(0);
   useEffect(() => {
     cardHeight.value = withTiming(height);
   }, [height]);
-  const { chapter } = useChapterByDocumentId(chapterId);
+  const chapterId = chapter.documentId;
   const { chapterVideo } = useChapterVideo(chapterId);
   const thumbnailUrl = useOfflineAssetUri(chapter?.thumbnail?.url);
   const quizzesCount = chapter?.quizzes?.length ?? 0;

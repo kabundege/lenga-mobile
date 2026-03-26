@@ -35,7 +35,7 @@ const LessonDetailScreen = () => {
   const renderChapter = ({ item }: LegendListRenderItemProps<StrapiLessonChapter>) => (
     <ChapterCard
       height={listHeight}
-      chapterId={item.documentId}
+      chapter={item}
     />
   );
 
@@ -63,9 +63,10 @@ const LessonDetailScreen = () => {
   }, [lessonChapters.length]);
 
   const onLayout = useCallback((event: LayoutChangeEvent) => {
-    if (!event.nativeEvent?.layout.height) return;
+    const height = event.nativeEvent?.layout.height;
+    if (!height) return;
     setLoadedLayouts(prev => prev + 1);
-    setListHeight(prev => prev - (event.nativeEvent?.layout.height ?? 100));
+    setListHeight(prev => prev - height);
   }, []);
 
   const getBackButtonColor = useMemo(() => {
@@ -82,8 +83,8 @@ const LessonDetailScreen = () => {
     return (
       <ThemedView style={styles.container}>
         <EmptyListWithSkeleton
-          title="Lesson not found."
-          description="Please go back and choose a lesson to continue."
+          title="Isomo ntiryabonetse."
+          description="Subira inyuma uhitemo isomo kugira ngo ukomeze."
         />
       </ThemedView>
     );
@@ -93,9 +94,9 @@ const LessonDetailScreen = () => {
     return (
       <ThemedView style={styles.container}>
         <EmptyListWithSkeleton
-          title="Failed to load lesson chapters."
-          description="Check your connection and try again."
-          action={{ label: 'Retry', onPress: refetch }}
+          title="Ntibyashobotse gufungura ibice by'isomo."
+          description="Reba umurongo wa interineti wongere ugerageze."
+          action={{ label: 'Ongera ugerageze', onPress: refetch }}
         />
       </ThemedView>
     );
@@ -107,7 +108,7 @@ const LessonDetailScreen = () => {
       <View onLayout={onLayout}>
         <ContentThumbnailHeader
           onBack={router.back}
-          title={lesson?.title ?? 'Lesson'}
+          title={lesson?.title ?? 'Isomo'}
           subtitle="Igice cya 1"
           thumbnailUrl={lesson?.thumbnail?.url}
           audioUrl={lesson?.audio_desc?.url}
@@ -143,9 +144,9 @@ const LessonDetailScreen = () => {
                 </View>
               ) : (
                 <EmptyListWithSkeleton
-                  title="No chapters found"
+                  title="Nta bice byabonetse"
                   containerStyles={styles.emptyState}
-                  description="This lesson does not have chapters yet."
+                  description="Iri somo ntirirashyirwamo ibice."
                 />
               )
             }

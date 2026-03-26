@@ -53,7 +53,7 @@ const LessonCard = ({ index, lesson, style }: LessonCardProps) => {
       ) : null}
 
       <View style={flexBetween}>
-        <TextBody variant='body1'>Intambwe ya {index + 1}</TextBody>
+        <TextBody variant='body1'>Igice ya {index + 1}</TextBody>
         <PlayAudioButton
           size='sm'
           audioUrl={lesson.audio_desc?.url}

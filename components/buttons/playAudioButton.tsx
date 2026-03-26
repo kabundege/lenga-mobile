@@ -52,8 +52,8 @@ const PlayAudioButton = ({
         iconFill={colors.primary}
         styles={iconButtonProps.styles}
         backgroundColor={backgroundColor}
-        icon={audioPlaying ? 'pause' : 'sound'}
         iconType={audioPlaying ? "ionicons" : "entypo"}
+        icon={audioPlaying ? 'pause' : audioLoaded ? 'sound' : 'warning'}
       />
       {!audioLoaded ? <Animated.View pointerEvents="none" style={[styles.loadingRing, loadingRingStyle]} /> : null}
     </View>

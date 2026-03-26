@@ -45,11 +45,11 @@ const ChapterVideoScreen = () => {
     return (
       <ThemedView style={[styles.container, globalStyles.center]}>
         <TextBody variant="body2" strong>
-          Failed to load chapter video.
+          Ntibyashobotse gufungura videwo y'igice.
         </TextBody>
         <Pressable onPress={refetch} style={globalStyles.mt_sm}>
           <TextBody variant="body2" color="primary">
-            Retry
+            Ongera ugerageze
           </TextBody>
         </Pressable>
       </ThemedView>
@@ -60,8 +60,8 @@ const ChapterVideoScreen = () => {
     <ThemedView style={styles.container}>
       <ContentThumbnailHeader
         onBack={router.back}
-        title={chapter?.title ?? 'Chapter'}
-        subtitle="Video"
+        title={chapter?.title ?? 'Igice'}
+        subtitle="Videwo"
         thumbnailUrl={chapter?.thumbnail?.url}
         audioUrl={chapter?.audio_desc?.url}
       />
