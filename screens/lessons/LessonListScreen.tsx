@@ -58,11 +58,11 @@ const LessonListScreen = () => {
     return user?.email.split('@')[0].split('_').join(' ');
   }, [user?.email])
 
-  const renderHeader = useCallback(({ editable = true }: { editable?: boolean }) => (
-    <SafeAreaView edges={['top']} style={[globalStyles.pt_sm, globalStyles.gap_sm]}>
+  const RenderHeader = useCallback(({ editable = true }: { editable?: boolean }) => (
+    <SafeAreaView edges={['top']} style={[globalStyles.pt_sm, globalStyles.gap_2xs, globalStyles.px_md, globalStyles.pb_xs, globalStyles.border_b]}>
       <StatusBar style="dark" />
       <View style={[flexBetween, globalStyles.gap_sm]}>
-        <View style={[globalStyles.flex_row, globalStyles.gap_2xs, globalStyles.flex_wrap, globalStyles.w_40]}>
+        <View style={[globalStyles.flex_row, globalStyles.gap_2xs, globalStyles.flex_wrap, globalStyles.w_60]}>
           <TextBody strong color='tertiary'>Muraho,</TextBody>
           <TextBody strong numberOfLines={1} style={globalStyles.capitalize}>{formattedUsername}</TextBody>
         </View>
@@ -110,8 +110,8 @@ const LessonListScreen = () => {
 
   if (isLoading && lessons.length === 0) {
     return (
-      <ThemedView style={styles.list}>
-        {renderHeader({ editable: false })}
+      <ThemedView style={styles.container}>
+        <RenderHeader editable={false} />
         <LessonsListSkeleton />
       </ThemedView>
     );
@@ -119,35 +119,40 @@ const LessonListScreen = () => {
 
 
   return (
-    <Animated.FlatList
-      numColumns={2}
-      onRefresh={refetch}
-      data={filteredLessons}
-      layout={CurvedTransition}
-      refreshing={isRefetching}
-      renderItem={renderLessons}
-      style={globalStyles.screen}
-      ListHeaderComponent={renderHeader}
-      contentContainerStyle={styles.list}
-      keyExtractor={(item) => item.documentId}
-      ListEmptyComponent={renderEmptyComponent}
-    />
+    <View style={styles.container}>
+      <RenderHeader />
+      <Animated.FlatList
+        numColumns={2}
+        onRefresh={refetch}
+        data={filteredLessons}
+        layout={CurvedTransition}
+        refreshing={isRefetching}
+        renderItem={renderLessons}
+        keyExtractor={(item) => item.documentId}
+        ListEmptyComponent={renderEmptyComponent}
+        contentContainerStyle={styles.contentContainer}
+      />
+    </View>
   );
 };
 
 export default LessonListScreen;
 
 const styles = StyleSheet.create({
-  list: {
+  container: {
     flex: 1,
-    gap: themeToken.spacing,
-    paddingHorizontal: themeToken.paddingLg,
     backgroundColor: colors.background.primary,
+  },
+  contentContainer: {
+    gap: themeToken.spacing,
+    paddingTop: themeToken.spacingSm,
+    paddingBottom: themeToken.paddingLg,
+    paddingHorizontal: themeToken.paddingLg,
   },
   centered: {
     flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
+    justifyContent: 'center',
     padding: themeToken.paddingLg,
   },
 });

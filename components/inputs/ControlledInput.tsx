@@ -120,13 +120,14 @@ export function ControlledInput<T extends FieldValues>({
           )
         }
       </ShakeErrorWrapper>
-      <View style={globalStyles.px_xs}>
-        {hasError ? (
+
+      {hasError ? (
+        <View style={globalStyles.px_xs}>
           <TextBody variant="caption" color="danger" style={globalStyles.text_right}>
             {errorMessage || error?.message}
           </TextBody>
-        ) : null}
-      </View>
+        </View>
+      ) : null}
     </View>
   );
 }
