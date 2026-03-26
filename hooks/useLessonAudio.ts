@@ -1,4 +1,4 @@
-import { API_URL } from '@/utils/functions/env';
+import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
 import { Audio, type AVPlaybackStatus } from 'expo-av';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { activateSingleAudio, clearActiveSoundIf } from '@/utils/singleAudioPlayer';
@@ -16,10 +16,8 @@ export const useLessonAudio = (rawAudioUrl?: string | null): UseLessonAudioResul
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [audioFinished, setAudioFinished] = useState(false);
 
-  const audioUrl = useMemo(() => {
-    if (!rawAudioUrl) return null;
-    return rawAudioUrl.startsWith('http') ? rawAudioUrl : API_URL + rawAudioUrl;
-  }, [rawAudioUrl]);
+  const resolvedAudioUri = useOfflineAssetUri(rawAudioUrl);
+  const audioUrl = useMemo(() => (resolvedAudioUri ? resolvedAudioUri : null), [resolvedAudioUri]);
 
   const unloadAudio = useCallback(async () => {
     const sound = soundRef.current;

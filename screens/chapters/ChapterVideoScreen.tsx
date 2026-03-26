@@ -3,6 +3,7 @@ import ContentThumbnailHeader from '@/components/headers/ContentThumbnailHeader'
 import Button from '@/components/buttons/button';
 import { TextBody, TextHeading } from '@/components/typography';
 import { useChapterByDocumentId, useChapterVideo } from '@/hooks/useLessons';
+import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
 import { centered, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
@@ -29,6 +30,7 @@ const ChapterVideoScreen = () => {
   }, [chapterRefetch, videoRefetch]);
 
   const videoUrl = useMemo(() => getChapterVideoUrl(chapterVideo ?? null), [chapterVideo]);
+  const offlineVideoUri = useOfflineAssetUri(videoUrl);
 
   const videoRef = useRef<Video>(null);
   const [videoPlaybackError, setVideoPlaybackError] = useState(false);
@@ -64,12 +66,12 @@ const ChapterVideoScreen = () => {
         audioUrl={chapter?.audio_desc?.url}
       />
       <View style={globalStyles.flex_1}>
-        {isLoading ? <View style={[centered, globalStyles.flex_1]}> <Loader color="primary" size="large" /> </View> : videoUrl ? (
+        {isLoading ? <View style={[centered, globalStyles.flex_1]}> <Loader color="primary" size="large" /> </View> : offlineVideoUri ? (
           <Video
             ref={videoRef}
             useNativeControls
             style={styles.video}
-            source={{ uri: videoUrl }}
+            source={{ uri: offlineVideoUri }}
             resizeMode={ResizeMode.CONTAIN}
             onError={() => setVideoPlaybackError(true)}
             onLoad={() => videoRef.current?.playAsync()}

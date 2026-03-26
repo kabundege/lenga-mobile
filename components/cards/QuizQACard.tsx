@@ -1,17 +1,13 @@
-import type { StrapiQA } from '@/types/api';
-import ThumbnailWithOverlay from '@/components/common/ThumbnailWithOverlay';
-import { getImageUrl } from '@/utils/functions/env';
+import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
 import { Dimensions, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
 import { PressableScale } from 'pressto';
 import { Image, StyleSheet, View } from 'react-native';
 import PlayAudioButton from '../buttons/playAudioButton';
-import { TextBody } from '../typography';
 import { useQAByDocumentId } from '@/hooks/useLessons';
 import Loader from '../loader';
 import { useEffect, useState } from 'react';
-import { Icon } from '../common/icon';
 import IconButton from '../buttons/iconButton';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
@@ -28,7 +24,7 @@ const QuizQACard = ({ qaId, rightAnswerCallBack }: QuizQACardProps) => {
   const opacity = useSharedValue(1);
   const { qa } = useQAByDocumentId(qaId);
   const [selected, setSelected] = useState(false);
-  const thumbnailUrl = getImageUrl(qa?.thumbnail?.url);
+  const thumbnailUrl = useOfflineAssetUri(qa?.thumbnail?.url);
 
   const onPress = () => {
     if (selected) return;

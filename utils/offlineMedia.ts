@@ -1,4 +1,5 @@
 import { Directory, File, Paths } from 'expo-file-system';
+import { API_URL } from '@/utils/functions/env';
 
 export function getOfflineDir() {
   return new Directory(Paths.document, 'offline-media');
@@ -30,5 +31,27 @@ export function getOfflinePathForLesson(lessonId: string, remoteUrl: string) {
 
 export function fileExists(uri: string) {
   return new File(uri).exists;
+}
+
+export function toAbsoluteMediaUrl(url?: string | null) {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  return `${API_URL}${url}`;
+}
+
+function hashString(input: string) {
+  let hash = 0;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (hash * 31 + input.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash).toString(36);
+}
+
+export function getOfflinePathForRemoteUrl(remoteUrl: string) {
+  const absoluteUrl = toAbsoluteMediaUrl(remoteUrl);
+  const ext = guessExtensionFromUrl(absoluteUrl);
+  const safeName = `asset_${hashString(absoluteUrl)}${ext}`;
+  const dir = ensureOfflineDir();
+  return new File(dir, safeName).uri;
 }
 

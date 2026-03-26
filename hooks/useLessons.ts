@@ -25,14 +25,32 @@ const getListFromResponse = <T extends { documentId: string }>(response?: { data
 
 const compareLessonByOrder = (a: StrapiLesson, b: StrapiLesson) => a.order - b.order;
 
+/**
+ * Merges online data on top of offline cache. Offline is always the baseline;
+ * fresh network data replaces it when available.
+ */
+function mergeOfflineFirst<T extends { documentId: string }>(online: T[], offline: T[]): T[] {
+  if (online.length > 0) return online;
+  return offline;
+}
+
 export const useLessons = () => {
   const locale = useAppSelector((s) => s.preferences.locale);
+  const offlineLessons = useAppSelector((s) => s.offlineContent.lessons);
+  const hasOfflineData = offlineLessons.length > 0;
+
   const request = useQuery({
     queryKey: api_keys.lessons(locale),
     queryFn: () => lessonsService.getLessonsList(locale),
+    retry: hasOfflineData ? 0 : 2,
   });
-  const lessons = getListFromResponse<StrapiLesson>(request.data).slice().sort(compareLessonByOrder);
-  return { ...request, lessons };
+
+  const onlineLessons = getListFromResponse<StrapiLesson>(request.data);
+  const lessons = mergeOfflineFirst(onlineLessons, offlineLessons).slice().sort(compareLessonByOrder);
+  const isLoading = request.isLoading && !hasOfflineData;
+  const error = hasOfflineData ? null : request.error;
+
+  return { ...request, lessons, isLoading, error };
 };
 
 export const useLessonByDocumentId = (documentId: string) => {
@@ -45,12 +63,21 @@ export const useLessonByDocumentId = (documentId: string) => {
 
 export const useChapters = () => {
   const locale = useAppSelector((s) => s.preferences.locale);
+  const offlineChapters = useAppSelector((s) => s.offlineContent.chapters);
+  const hasOfflineData = offlineChapters.length > 0;
+
   const request = useQuery({
     queryKey: api_keys.chapters(locale),
     queryFn: () => lessonsService.getChaptersList(locale),
+    retry: hasOfflineData ? 0 : 2,
   });
-  const chapters = getListFromResponse<StrapiLessonChapter>(request.data);
-  return { ...request, chapters };
+
+  const onlineChapters = getListFromResponse<StrapiLessonChapter>(request.data);
+  const chapters = mergeOfflineFirst(onlineChapters, offlineChapters);
+  const isLoading = request.isLoading && !hasOfflineData;
+  const error = hasOfflineData ? null : request.error;
+
+  return { ...request, chapters, isLoading, error };
 };
 
 export const useChapterByDocumentId = (documentId: string) => {
@@ -61,12 +88,21 @@ export const useChapterByDocumentId = (documentId: string) => {
 
 export const useVideos = () => {
   const locale = useAppSelector((s) => s.preferences.locale);
+  const offlineVideos = useAppSelector((s) => s.offlineContent.videos);
+  const hasOfflineData = offlineVideos.length > 0;
+
   const request = useQuery({
     queryKey: api_keys.videos(locale),
     queryFn: () => lessonsService.getVideosList(locale),
+    retry: hasOfflineData ? 0 : 2,
   });
-  const videos = getListFromResponse<StrapiLessonVideo>(request.data);
-  return { ...request, videos };
+
+  const onlineVideos = getListFromResponse<StrapiLessonVideo>(request.data);
+  const videos = mergeOfflineFirst(onlineVideos, offlineVideos);
+  const isLoading = request.isLoading && !hasOfflineData;
+  const error = hasOfflineData ? null : request.error;
+
+  return { ...request, videos, isLoading, error };
 };
 
 export const useChapterVideo = (chapterId: string) => {
@@ -78,12 +114,21 @@ export const useChapterVideo = (chapterId: string) => {
 
 export const useQuizzes = () => {
   const locale = useAppSelector((s) => s.preferences.locale);
+  const offlineQuizzes = useAppSelector((s) => s.offlineContent.quizzes);
+  const hasOfflineData = offlineQuizzes.length > 0;
+
   const request = useQuery({
     queryKey: api_keys.quizzes(locale),
     queryFn: () => lessonsService.getQuizzesList(locale),
+    retry: hasOfflineData ? 0 : 2,
   });
-  const quizzes = getListFromResponse<StrapiQuiz>(request.data);
-  return { ...request, quizzes };
+
+  const onlineQuizzes = getListFromResponse<StrapiQuiz>(request.data);
+  const quizzes = mergeOfflineFirst(onlineQuizzes, offlineQuizzes);
+  const isLoading = request.isLoading && !hasOfflineData;
+  const error = hasOfflineData ? null : request.error;
+
+  return { ...request, quizzes, isLoading, error };
 };
 
 export const useChapterQuizzes = (chapterId: string) => {
@@ -94,12 +139,21 @@ export const useChapterQuizzes = (chapterId: string) => {
 
 export const useQAs = () => {
   const locale = useAppSelector((s) => s.preferences.locale);
+  const offlineQAs = useAppSelector((s) => s.offlineContent.qas);
+  const hasOfflineData = offlineQAs.length > 0;
+
   const request = useQuery({
     queryKey: api_keys.qas(locale),
     queryFn: () => lessonsService.getQAsList(locale),
+    retry: hasOfflineData ? 0 : 2,
   });
-  const qas = getListFromResponse<StrapiQA>(request.data);
-  return { ...request, qas };
+
+  const onlineQAs = getListFromResponse<StrapiQA>(request.data);
+  const qas = mergeOfflineFirst(onlineQAs, offlineQAs);
+  const isLoading = request.isLoading && !hasOfflineData;
+  const error = hasOfflineData ? null : request.error;
+
+  return { ...request, qas, isLoading, error };
 };
 
 export const useQuizQAs = (quizId: string) => {

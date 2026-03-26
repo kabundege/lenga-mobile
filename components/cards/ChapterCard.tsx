@@ -1,12 +1,12 @@
 import { TextBody, TextHeading } from '@/components/typography';
 import ThumbnailWithOverlay from '@/components/common/ThumbnailWithOverlay';
+import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
 import { useChapterByDocumentId, useChapterVideo } from '@/hooks/useLessons';
 import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
 import { themeToken } from '@/utils/theme/styles';
 import colors from '@/utils/theme/colors';
 import { StyleSheet, View } from 'react-native';
 import { PressableScale } from 'pressto';
-import { getImageUrl } from '@/utils/functions/env';
 import PlayAudioButton from '../buttons/playAudioButton';
 import { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useEffect } from 'react';
@@ -26,6 +26,7 @@ const ChapterCard = ({ chapterId, height }: ChapterCardProps) => {
   }, [height]);
   const { chapter } = useChapterByDocumentId(chapterId);
   const { chapterVideo } = useChapterVideo(chapterId);
+  const thumbnailUrl = useOfflineAssetUri(chapter?.thumbnail?.url);
   const quizzesCount = chapter?.quizzes?.length ?? 0;
 
   const animatedStyles = useAnimatedStyle(() => ({
@@ -57,7 +58,7 @@ const ChapterCard = ({ chapterId, height }: ChapterCardProps) => {
         <ThumbnailWithOverlay
           overlayStyle={styles.overlay}
           imageStyle={styles.thumbnail}
-          uri={getImageUrl(chapter?.thumbnail?.url)}
+          uri={thumbnailUrl}
         />
         <View style={[globalStyles.self_start, flexBetween, globalStyles.gap_xs]}>
           {

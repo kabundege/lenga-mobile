@@ -1,15 +1,15 @@
 import PlayAudioButton from '@/components/buttons/playAudioButton';
 import ThumbnailWithOverlay from '@/components/common/ThumbnailWithOverlay';
-import { useLessonAudio } from '@/hooks/useLessonAudio';
+import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
+import { useAppSelector } from '@/hooks/useRedux';
 import type { StrapiLesson } from '@/types/api';
-import { getImageUrl } from '@/utils/functions/env';
+import { selectLessonSyncEntry } from '@/store/slices/offlineContentSlice';
 import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
 import { router } from 'expo-router';
 import { PressableScale } from 'pressto';
-import { useMemo } from 'react';
-import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { ActivityIndicator, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
 import { FadeInDown, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { TextBody, TextHeading } from '../typography';
 
@@ -20,7 +20,12 @@ interface LessonCardProps {
 }
 
 const LessonCard = ({ index, lesson, style }: LessonCardProps) => {
-  const thumbnailUrl = useMemo(() => getImageUrl(lesson.thumbnail?.url ?? ''), [lesson.thumbnail?.url]);
+  const thumbnailUrl = useOfflineAssetUri(lesson.thumbnail?.url);
+  const syncEntry = useAppSelector(selectLessonSyncEntry(lesson.documentId));
+  const isSyncing = syncEntry?.status === 'downloading' || syncEntry?.status === 'queued';
+  const progress = syncEntry && syncEntry.totalAssets > 0
+    ? Math.round((syncEntry.downloadedAssets / syncEntry.totalAssets) * 100)
+    : 0;
 
   const stylesAnimated = useAnimatedStyle(() => ({
     marginLeft: withTiming(index % 2 === 0 ? 0 : cardSpacing),
@@ -37,8 +42,18 @@ const LessonCard = ({ index, lesson, style }: LessonCardProps) => {
         overlayStyle={styles.overlay}
         imageStyle={StyleSheet.absoluteFillObject}
       />
+
+      {isSyncing ? (
+        <View style={styles.syncOverlay}>
+          <ActivityIndicator size="small" color={colors.primary} />
+          <TextBody variant="caption" color="primary" strong>
+            {syncEntry?.status === 'queued' ? 'Gutegereza...' : `${progress}%`}
+          </TextBody>
+        </View>
+      ) : null}
+
       <View style={flexBetween}>
-        <TextBody variant='body1' >Intambwe ya {index + 1}</TextBody>
+        <TextBody variant='body1'>Intambwe ya {index + 1}</TextBody>
         <PlayAudioButton
           size='sm'
           audioUrl={lesson.audio_desc?.url}
@@ -46,7 +61,7 @@ const LessonCard = ({ index, lesson, style }: LessonCardProps) => {
       </View>
       <View style={globalStyles.flex_1} />
       <TextHeading variant='subTitle'>{lesson.title}</TextHeading>
-    </PressableScale >
+    </PressableScale>
   );
 };
 
@@ -75,5 +90,23 @@ const styles = StyleSheet.create({
     ...globalStyles.overflow_hidden,
     ...globalStyles.rounded_md,
     ...globalStyles.opacity_05,
+  },
+  syncOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.overlays.white_80,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    zIndex: 10,
+    borderRadius: themeToken.borderRadius,
+  },
+  savedBadge: {
+    position: 'absolute',
+    top: themeToken.paddingSm,
+    right: themeToken.paddingSm,
+    zIndex: 10,
+    backgroundColor: colors.overlays.white_90,
+    borderRadius: 12,
+    padding: 2,
   },
 });

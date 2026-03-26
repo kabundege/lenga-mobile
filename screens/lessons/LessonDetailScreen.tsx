@@ -152,7 +152,7 @@ const LessonDetailScreen = () => {
           />)
       }
       {lessonChapters.length > 1 ? (
-        <View onLayout={onLayout} style={[flexBetween, globalStyles.px_md, globalStyles.py_lg]}>
+        <View onLayout={onLayout} style={[flexBetween, globalStyles.px_md, globalStyles.pb_lg]}>
           <Button
             size='sm'
             type='primary'

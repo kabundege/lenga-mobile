@@ -1,14 +1,14 @@
-import { router } from 'expo-router';
 import { useMe } from '@/hooks/useAuth';
 import colors from '@/utils/theme/colors';
 import { StrapiLesson } from '@/types/api';
 import { StatusBar } from 'expo-status-bar';
 import { useLessons } from '@/hooks/useLessons';
+import { useOfflineSync } from '@/hooks/useOfflineSync';
 import { themeToken } from '@/utils/theme/styles';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
 import LessonCard from '@/components/cards/LessonCard';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import IconButton from '@/components/buttons/iconButton';
 import LogoutModal from '@/components/modals/LogoutModal';
 import { flexBetween, globalStyles } from '@/utils/styles';
@@ -22,6 +22,7 @@ import { ControlledInput } from '@/components/inputs/ControlledInput';
 import { ListRenderItemInfo, Pressable, StyleSheet, View } from 'react-native';
 
 const LessonListScreen = () => {
+  useOfflineSync();
   const { user } = useMe();
   const { lessons, isLoading, isRefetching, error, refetch } = useLessons();
 
@@ -37,13 +38,7 @@ const LessonListScreen = () => {
     return lessons.filter((lesson) => lesson.title.toLowerCase().includes(search?.toLowerCase() ?? ''));
   }, [lessons, search]);
 
-  useEffect(() => {
-    if (error) {
-      router.replace('/login');
-    }
-  }, [error]);
-
-  if (error) {
+  if (error && lessons.length === 0) {
     return (
       <ThemedView style={styles.centered}>
         <ThemedText type="defaultSemiBold">Hari ikitagenze neza mu kubona amasomo.</ThemedText>

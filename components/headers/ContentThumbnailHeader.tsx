@@ -1,7 +1,7 @@
 import IconButton from '@/components/buttons/iconButton';
 import PlayAudioButton from '@/components/buttons/playAudioButton';
+import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
 import { TextBody, TextHeading } from '@/components/typography';
-import { getImageUrl } from '@/utils/functions/env';
 import { flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { SafeAreaView, type SafeAreaViewProps } from 'react-native-safe-area-context';
@@ -25,7 +25,7 @@ export default function ContentThumbnailHeader({
   onBack,
   edges = ['top'],
 }: Props) {
-  const img = getImageUrl(thumbnailUrl ?? undefined);
+  const img = useOfflineAssetUri(thumbnailUrl);
   const source: ImageSourcePropType | undefined = img ? { uri: img } : undefined;
 
   return (

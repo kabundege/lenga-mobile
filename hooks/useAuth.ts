@@ -1,6 +1,7 @@
 import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import * as authService from '@/services/auth.service';
 import { setCredentials, setUser } from '@/store/slices/authSlice';
+import { syncOfflineLearningContent } from '@/store/slices/offlineContentSlice';
 import type { UpdateProfilePayload } from '@/types/api';
 import { handleAxiosError } from '@/utils/error.util';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -16,6 +17,7 @@ export const getMeKeys = (email?: string) => [...AUTH_KEYS.ME, { email }];
 export function useLogin(options?: { onSuccess?: () => void }) {
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
+  const locale = useAppSelector((s) => s.preferences.locale);
 
   return useMutation({
     mutationFn: authService.login,
@@ -23,6 +25,7 @@ export function useLogin(options?: { onSuccess?: () => void }) {
       const { jwt, user } = res.data;
       dispatch(setCredentials({ jwt, user }));
       queryClient.setQueryData(AUTH_KEYS.ME, user);
+      dispatch(syncOfflineLearningContent({ locale })).catch(() => null);
       toast.success('Login successful');
       options?.onSuccess?.();
     },
@@ -33,6 +36,7 @@ export function useLogin(options?: { onSuccess?: () => void }) {
 export function useRegister(options?: { onSuccess?: () => void }) {
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
+  const locale = useAppSelector((s) => s.preferences.locale);
 
   return useMutation({
     mutationFn: authService.register,
@@ -40,6 +44,7 @@ export function useRegister(options?: { onSuccess?: () => void }) {
       const { jwt, user } = res.data;
       dispatch(setCredentials({ jwt, user }));
       queryClient.setQueryData(AUTH_KEYS.ME, user);
+      dispatch(syncOfflineLearningContent({ locale })).catch(() => null);
       toast.success('Registration successful');
       options?.onSuccess?.();
     },
