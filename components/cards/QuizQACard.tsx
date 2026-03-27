@@ -1,15 +1,20 @@
-import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
-import { Dimensions, globalStyles } from '@/utils/styles';
-import colors from '@/utils/theme/colors';
-import { themeToken } from '@/utils/theme/styles';
-import { PressableScale } from 'pressto';
-import { Image, StyleSheet, View } from 'react-native';
-import PlayAudioButton from '../buttons/playAudioButton';
-import { useQAByDocumentId } from '@/hooks/useLessons';
 import Loader from '../loader';
+import { PressableScale } from 'pressto';
+import colors from '@/utils/theme/colors';
 import { useEffect, useState } from 'react';
 import IconButton from '../buttons/iconButton';
+import { API_URL } from '@/utils/functions/env';
+import { themeToken } from '@/utils/theme/styles';
+import { Image, StyleSheet, View } from 'react-native';
+import { useQAByDocumentId } from '@/hooks/useLessons';
+import { useLessonAudio } from '@/hooks/useLessonAudio';
+import PlayAudioButton from '../buttons/playAudioButton';
+import { Dimensions, globalStyles } from '@/utils/styles';
+import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
+
+const correctAnswerAudio = API_URL + "/uploads/correct_7f6e03656f.mp3"
+const wrongAnswerAudio = API_URL + "/uploads/wrong_044b26aa89.mp3"
 
 export type QuizQACardRevealState = 'idle' | 'correct' | 'wrong' | 'unknown';
 
@@ -26,11 +31,30 @@ const QuizQACard = ({ qaId, rightAnswerCallBack }: QuizQACardProps) => {
   const [selected, setSelected] = useState(false);
   const thumbnailUrl = useOfflineAssetUri(qa?.thumbnail?.url);
 
+  const {
+    audioLoaded: correctAudioLoaded,
+    toggleAudio: toggleCorrectAnswerAudio,
+  } = useLessonAudio(correctAnswerAudio);
+
+  const {
+    audioLoaded: wrongAudioLoaded,
+    toggleAudio: toggleWrongAnswerAudio,
+  } = useLessonAudio(wrongAnswerAudio);
+
   const onPress = () => {
     if (selected) return;
     setSelected(true);
     if (qa?.is_correct_answer) {
       rightAnswerCallBack();
+      if (correctAudioLoaded) {
+        // Play correct answer audio
+        toggleCorrectAnswerAudio();
+      }
+      return;
+    }
+    if (wrongAudioLoaded) {
+      // Play wrong answer audio
+      toggleWrongAnswerAudio();
     }
   }
 

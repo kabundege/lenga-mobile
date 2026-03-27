@@ -1,9 +1,9 @@
 import colors from '@/utils/theme/colors';
 import Loader from '@/components/loader';
-import { useVideoPlayer, VideoView } from 'expo-video';
 import { themeToken } from '@/utils/theme/styles';
 import { getChapterVideoUrl } from './chapterVideo';
 import { ThemedView } from '@/components/themed-view';
+import { useVideoPlayer, VideoView } from 'expo-video';
 import { centered, globalStyles } from '@/utils/styles';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
