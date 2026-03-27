@@ -113,7 +113,7 @@ export default function RegisterScreen() {
           </View>
           <View style={centered}>
             <TextBody color="tertiary">Nemeye ko nasomye kandi nemera</TextBody>
-            <LinkButton strong color="default">
+            <LinkButton strong color="default" onPress={() => router.push('/terms')}>
               Amategeko n'amabwiriza
             </LinkButton>
           </View>

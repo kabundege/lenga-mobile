@@ -4,6 +4,9 @@ import type {
   StrapiLesson,
   StrapiLessonChapter,
   StrapiLessonVideo,
+  StrapiMatching,
+  StrapiMatchingAnswer,
+  StrapiMatchingQuestion,
   StrapiQA,
   StrapiQuiz,
 } from '@/types/api';
@@ -15,6 +18,9 @@ export const API_KEYS = {
   VIDEOS: 'videos',
   QUIZZES: 'quizzes',
   QAS: 'qas',
+  MATCHINGS: 'matchings',
+  MATCHING_QUESTIONS: 'matching-questions',
+  MATCHING_ANSWERS: 'matching-answers',
 } as const;
 
 export const api_keys = {
@@ -23,6 +29,9 @@ export const api_keys = {
   videos: (locale: string) => [API_KEYS.VIDEOS, { locale }] as const,
   quizzes: (locale: string) => [API_KEYS.QUIZZES, { locale }] as const,
   qas: (locale: string) => [API_KEYS.QAS, { locale }] as const,
+  matchings: (locale: string) => [API_KEYS.MATCHINGS, { locale }] as const,
+  matchingQuestions: (locale: string) => [API_KEYS.MATCHING_QUESTIONS, { locale }] as const,
+  matchingAnswers: (locale: string) => [API_KEYS.MATCHING_ANSWERS, { locale }] as const,
 };
 
 const getListFromResponse = <T extends { documentId: string }>(
@@ -126,4 +135,61 @@ export const useQAByDocumentId = (documentId: string) => {
   const { qas, ...request } = useQAs();
   const qa = qas.find((qa) => qa.documentId === documentId);
   return { ...request, qa };
+};
+
+// ─── Matchings ────────────────────────────────────────────────────────────────
+
+export const useMatchings = () => {
+  const locale = useAppSelector((s) => s.preferences.locale);
+  const request = useQuery({
+    queryKey: api_keys.matchings(locale),
+    queryFn: () => lessonsService.getMatchingsList(locale),
+  });
+  const matchings = getListFromResponse<StrapiMatching>(request.data);
+  return { ...request, matchings };
+};
+
+export const useChapterMatchings = (chapterId: string) => {
+  const { matchings, ...request } = useMatchings();
+  const chapterMatchings = matchings
+    .filter((m) => m.lesson_chapter?.documentId === chapterId)
+    .slice()
+    .sort((a, b) => a.order - b.order);
+  return { ...request, chapterMatchings };
+};
+
+// ─── Matching Questions ───────────────────────────────────────────────────────
+
+export const useMatchingQuestions = () => {
+  const locale = useAppSelector((s) => s.preferences.locale);
+  const request = useQuery({
+    queryKey: api_keys.matchingQuestions(locale),
+    queryFn: () => lessonsService.getMatchingQuestionsList(locale),
+  });
+  const matchingQuestions = getListFromResponse<StrapiMatchingQuestion>(request.data);
+  return { ...request, matchingQuestions };
+};
+
+export const useMatchingQuestionsByMatchingId = (matchingId: string) => {
+  const { matchingQuestions, ...request } = useMatchingQuestions();
+  const questions = matchingQuestions.filter((q) => q.matching?.documentId === matchingId);
+  return { ...request, questions };
+};
+
+// ─── Matching Answers ─────────────────────────────────────────────────────────
+
+export const useMatchingAnswers = () => {
+  const locale = useAppSelector((s) => s.preferences.locale);
+  const request = useQuery({
+    queryKey: api_keys.matchingAnswers(locale),
+    queryFn: () => lessonsService.getMatchingAnswersList(locale),
+  });
+  const matchingAnswers = getListFromResponse<StrapiMatchingAnswer>(request.data);
+  return { ...request, matchingAnswers };
+};
+
+export const useMatchingAnswersByMatchingId = (matchingId: string) => {
+  const { matchingAnswers, ...request } = useMatchingAnswers();
+  const answers = matchingAnswers.filter((a) => a.matching?.documentId === matchingId);
+  return { ...request, answers };
 };

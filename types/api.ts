@@ -146,6 +146,44 @@ export type StrapiLessonVideo = {
   lesson_chapter?: StrapiLessonChapter | null;
 };
 
+export type StrapiMatchingAnswer = {
+  id: StrapiEntityId;
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
+  locale: string;
+  thumbnail: StrapiMedia;
+  matching?: StrapiMatching | null;
+};
+
+export type StrapiMatchingQuestion = {
+  id: StrapiEntityId;
+  documentId: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
+  locale: string;
+  thumbnail: StrapiMedia;
+  matching?: StrapiMatching | null;
+  matching_answer?: StrapiMatchingAnswer | null;
+};
+
+export type StrapiMatching = {
+  id: StrapiEntityId;
+  documentId: string;
+  title: string;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string | null;
+  locale: string;
+  audio_desc?: StrapiMedia | null;
+  matching_answers?: StrapiMatchingAnswer[];
+  matching_questions?: StrapiMatchingQuestion[];
+  lesson_chapter?: StrapiLessonChapter | null;
+};
+
 export type StrapiLessonChapter = {
   title: string;
   order: number;
@@ -158,6 +196,7 @@ export type StrapiLessonChapter = {
   thumbnail?: StrapiMedia | null;
   audio_desc?: StrapiMedia | null;
   quizzes?: StrapiQuiz[];
+  matchings?: StrapiMatching[];
   lesson_video?: StrapiLessonVideo | null;
 };
 

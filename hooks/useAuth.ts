@@ -16,6 +16,8 @@ export const AUTH_KEYS = {
 
 export const getMeKeys = (email?: string) => [...AUTH_KEYS.ME, { email }];
 
+export const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
 /**
  * After a successful login/register, pre-warm the QueryClient cache for all
  * learning data and immediately kick off media-asset downloads.
@@ -34,7 +36,7 @@ async function warmCacheAndSync(
     queryClient.prefetchQuery({
       queryKey: api_keys.chapters(locale),
       queryFn: () => lessonsService.getChaptersList(locale),
-      staleTime: 5 * 60 * 1000,
+      staleTime: 24 * 60 * 60 * 1000, // a day
     }),
     queryClient.prefetchQuery({
       queryKey: api_keys.videos(locale),
@@ -49,6 +51,21 @@ async function warmCacheAndSync(
     queryClient.prefetchQuery({
       queryKey: api_keys.qas(locale),
       queryFn: () => lessonsService.getQAsList(locale),
+      staleTime: 5 * 60 * 1000,
+    }),
+    queryClient.prefetchQuery({
+      queryKey: api_keys.matchings(locale),
+      queryFn: () => lessonsService.getMatchingsList(locale),
+      staleTime: 5 * 60 * 1000,
+    }),
+    queryClient.prefetchQuery({
+      queryKey: api_keys.matchingQuestions(locale),
+      queryFn: () => lessonsService.getMatchingQuestionsList(locale),
+      staleTime: 5 * 60 * 1000,
+    }),
+    queryClient.prefetchQuery({
+      queryKey: api_keys.matchingAnswers(locale),
+      queryFn: () => lessonsService.getMatchingAnswersList(locale),
       staleTime: 5 * 60 * 1000,
     }),
   ]);
@@ -82,13 +99,8 @@ export function useRegister(options?: { onSuccess?: () => void }) {
 
   return useMutation({
     mutationFn: authService.register,
-    onSuccess: (res) => {
-      const { jwt, user } = res.data;
-      dispatch(setCredentials({ jwt, user }));
-      queryClient.setQueryData(AUTH_KEYS.ME, user);
-      warmCacheAndSync(queryClient, dispatch, locale).catch(() => null);
+    onSuccess: () => {
       toast.success('Registration successful');
-      options?.onSuccess?.();
     },
     onError: handleAxiosError,
   });

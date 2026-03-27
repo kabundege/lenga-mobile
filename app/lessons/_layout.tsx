@@ -6,6 +6,7 @@ const LessonsLayout = () => (
     <Stack.Screen name="[lessonId]" options={{ headerShown: false }} />
     <Stack.Screen name="chapters/[chapterId]/quiz" options={{ headerShown: false }} />
     <Stack.Screen name="chapters/[chapterId]/video" options={{ headerShown: false }} />
+    <Stack.Screen name="chapters/[chapterId]/matching" options={{ headerShown: false }} />
   </Stack>
 );
 

@@ -10,7 +10,7 @@ import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ContentThumbnailHeader from '@/components/headers/ContentThumbnailHeader';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { useChapterByDocumentId, useChapterQuizzes, useChapterVideo } from '@/hooks/useLessons';
+import { useChapterByDocumentId, useChapterMatchings, useChapterQuizzes, useChapterVideo } from '@/hooks/useLessons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EmptyListWithSkeleton } from '@/components/empty-states';
 
@@ -35,6 +35,8 @@ const ChapterQuizScreen = () => {
     isLoading: isChapterQuizzesLoading,
     isRefetching: isChapterQuizzesRefetching,
   } = useChapterQuizzes(chapterId);
+
+  const { chapterMatchings } = useChapterMatchings(chapterId);
 
   const isLoading = isChapterLoading || isChapterVideoLoading || isChapterQuizzesLoading;
   const isRefetching = isChapterRefetching || isChapterVideoRefetching || isChapterQuizzesRefetching;
@@ -86,6 +88,7 @@ const ChapterQuizScreen = () => {
   }, [activeQuizIndex]);
 
   const isLastQuiz = activeQuizIndex >= chapterQuizzes.length - 1;
+  const hasMatchings = chapterMatchings.length > 0;
 
   const nextButton = useMemo(() => {
     const isDisabled = !hasQuizRightAnswer;
@@ -138,7 +141,7 @@ const ChapterQuizScreen = () => {
         />
       ) : null}
 
-      {chapterQuizzes.length > 1 ? (
+      {chapterQuizzes.length > 1 || hasMatchings ? (
         <View style={[flexBetween, globalStyles.px_md, { paddingBottom: insets.bottom }]}>
           <Button
             size="sm"
@@ -154,7 +157,7 @@ const ChapterQuizScreen = () => {
           <Button
             size="sm"
             type="primary"
-            label={isLastQuiz ? 'Sohoka' : 'Ibikurikira'}
+            label={isLastQuiz ? (hasMatchings ? 'Guhuzanya' : 'Sohoka') : 'Ibikurikira'}
             textColor={nextButton.color}
             textStyles={globalStyles.w_auto}
             disabled={nextButton.isDisabled}
@@ -162,7 +165,14 @@ const ChapterQuizScreen = () => {
             rightIcon={{ name: 'chevron-right', color: nextButton.color }}
             onPress={() => {
               if (isLastQuiz) {
-                router.back();
+                if (hasMatchings) {
+                  router.push({
+                    pathname: '/lessons/chapters/[chapterId]/matching',
+                    params: { chapterId, lessonId },
+                  });
+                } else {
+                  router.back();
+                }
                 return;
               }
               pushQuizByIndex(Math.min(chapterQuizzes.length - 1, activeQuizIndex + 1));

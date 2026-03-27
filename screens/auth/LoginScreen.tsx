@@ -98,7 +98,7 @@ export default function LoginScreen() {
           </View>
           <View style={centered}>
             <TextBody color='tertiary'>Nemeye ko nasomye kandi nemera</TextBody>
-            <LinkButton strong color='default'>Amategeko n'amabwiriza</LinkButton>
+            <LinkButton strong color='default' onPress={() => router.push('/terms')}>Amategeko n'amabwiriza</LinkButton>
           </View>
         </View>
       </WithKeyboardScrollView>

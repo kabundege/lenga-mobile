@@ -51,6 +51,7 @@ export const routes = {
   lessons: 'lessons',
   splash: 'splash',
   login: 'login',
+  terms: 'terms',
 }
 
 export default function RootLayout() {

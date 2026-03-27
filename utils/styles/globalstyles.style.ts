@@ -402,10 +402,11 @@ const globalStyles = StyleSheet.create({
   border: { borderWidth: 0.5, borderColor: colors.border.primary },
   border_t: { borderTopWidth: 0.5, borderColor: colors.border.primary },
   border_t_secondary: {
-    borderTopWidth: 0.5,
+    borderTopWidth: 1,
     borderColor: colors.border.secondary,
   },
   border_b: { borderBottomWidth: 0.5, borderColor: colors.border.primary },
+  border_b_secondary: { borderBottomWidth: 0.5, borderColor: colors.border.secondary },
   border_l: { borderLeftWidth: 0.5, borderColor: colors.border.primary },
   border_r: { borderRightWidth: 0.5, borderColor: colors.border.primary },
   border_secondary: { borderWidth: 0.5, borderColor: colors.border.primary },
