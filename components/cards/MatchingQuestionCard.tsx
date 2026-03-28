@@ -30,7 +30,7 @@ type Props = {
   onDragEnd: (questionId: string, absoluteX: number, absoluteY: number) => void;
 };
 
-const CARD_SIZE = Dimensions.SCREEN_WIDTH * 0.36;
+const CARD_SIZE = Dimensions.SCREEN_WIDTH * 0.3;
 
 const MatchingQuestionCard = ({
   question,

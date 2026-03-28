@@ -1,4 +1,4 @@
-import { type StrapiMatchingAnswer } from '@/types/api';
+import { type StrapiMatchingAnswer, type StrapiMatchingQuestion } from '@/types/api';
 import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
 import { globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
@@ -19,6 +19,8 @@ import { CARD_SIZE, type AnswerLayout, type AnswerPositionEntry } from './Matchi
 type Props = {
   answer: StrapiMatchingAnswer;
   isMatched: boolean;
+  /** Questions correctly dropped on this answer (can be several per bucket). */
+  matchedQuestions: StrapiMatchingQuestion[];
   hoveredAnswerId: SharedValue<string>;
   onRegisterLayout: (answerId: string, layout: AnswerLayout) => void;
   ghostX: SharedValue<number>;
@@ -32,9 +34,12 @@ type Props = {
   onWrongDragEnd: (questionId: string, absoluteX: number, absoluteY: number) => void;
 };
 
+const MATCHED_THUMB = Math.round(CARD_SIZE * 0.38);
+
 const MatchingAnswerCard = ({
   answer,
   isMatched,
+  matchedQuestions,
   hoveredAnswerId,
   onRegisterLayout,
   ghostX,
@@ -129,7 +134,10 @@ const MatchingAnswerCard = ({
     opacity: isDraggingWrongPiece ? 0.3 : 1,
   }));
 
-  const showWrongOverlay = !!wrongQuestionId && !isMatched;
+  /** Show wrong piece whenever this answer has a wrong placement — even if the answer also has correct match(es). Otherwise the wrong question only shows an empty grid slot and looks "lost". */
+  const showWrongOverlay = !!wrongQuestionId;
+  /** Keep matched chips visible alongside the wrong overlay when both exist. */
+  const showMatchedList = matchedQuestions.length > 0;
 
   return (
     <Animated.View
@@ -142,50 +150,73 @@ const MatchingAnswerCard = ({
         hoverStyle,
       ]}
     >
-      {!showWrongOverlay ? (
-        thumbUri ? (
-          <Image source={{ uri: thumbUri }} style={styles.thumb} resizeMode="contain" />
-        ) : (
-          <View style={styles.thumbPlaceholder} />
-        )
-      ) : null}
+      <View style={styles.answerMain}>
+        {!showWrongOverlay ? (
+          thumbUri ? (
+            <Image source={{ uri: thumbUri }} style={styles.thumb} resizeMode="contain" />
+          ) : (
+            <View style={styles.thumbPlaceholder} />
+          )
+        ) : null}
 
-      {showWrongOverlay ? (
-        <GestureDetector gesture={wrongPan}>
-          <Animated.View style={[styles.wrongOverlay, wrongOverlayDimStyle]}>
-            {wrongThumbUri ? (
-              <Image source={{ uri: wrongThumbUri }} style={styles.thumb} resizeMode="contain" />
-            ) : (
-              <View style={styles.thumbPlaceholder} />
-            )}
-            <View style={styles.badgeWrong}>
-              <IconButton
-                size="sm"
-                icon="close"
-                iconType="antd"
-                style={globalStyles.self_start}
-                iconFill={colors.danger.primary}
-                backgroundColor={colors.danger.tertiary}
-              />
-            </View>
-          </Animated.View>
-        </GestureDetector>
-      ) : null}
+        {showWrongOverlay ? (
+          <GestureDetector gesture={wrongPan}>
+            <Animated.View style={[styles.wrongOverlay, wrongOverlayDimStyle]}>
+              {wrongThumbUri ? (
+                <Image source={{ uri: wrongThumbUri }} style={styles.thumb} resizeMode="contain" />
+              ) : (
+                <View style={styles.thumbPlaceholder} />
+              )}
+              <View style={styles.badgeWrong}>
+                <IconButton
+                  size="sm"
+                  icon="close"
+                  iconType="antd"
+                  style={globalStyles.self_start}
+                  iconFill={colors.danger.primary}
+                  backgroundColor={colors.danger.tertiary}
+                />
+              </View>
+            </Animated.View>
+          </GestureDetector>
+        ) : null}
 
-      {isMatched ? (
-        <View style={styles.badge}>
-          <IconButton
-            size="sm"
-            icon="check"
-            style={globalStyles.self_start}
-            iconFill={colors.success.primary}
-            backgroundColor={colors.success.tertiary}
-          />
+        {isMatched ? (
+          <View style={styles.badge}>
+            <IconButton
+              size="sm"
+              icon="check"
+              style={globalStyles.self_start}
+              iconFill={colors.success.primary}
+              backgroundColor={colors.success.tertiary}
+            />
+          </View>
+        ) : null}
+      </View>
+
+      {showMatchedList ? (
+        <View style={styles.matchedList}>
+          {matchedQuestions.map((mq) => (
+            <MatchedQuestionChip key={mq.documentId} thumbUrl={mq.thumbnail?.url} />
+          ))}
         </View>
       ) : null}
 
       <HazeOverlay hoveredAnswerId={hoveredAnswerId} answerId={answerId} isMatched={isMatched} />
     </Animated.View>
+  );
+};
+
+const MatchedQuestionChip = ({ thumbUrl }: { thumbUrl?: string | null }) => {
+  const uri = useOfflineAssetUri(thumbUrl);
+  return (
+    <View style={styles.matchedChip}>
+      {uri ? (
+        <Image source={{ uri }} style={styles.matchedThumb} resizeMode="contain" />
+      ) : (
+        <View style={styles.matchedThumbPlaceholder} />
+      )}
+    </View>
   );
 };
 
@@ -213,10 +244,47 @@ export default MatchingAnswerCard;
 const styles = StyleSheet.create({
   card: {
     width: CARD_SIZE,
-    height: CARD_SIZE,
+    minHeight: CARD_SIZE,
     overflow: 'hidden',
     alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingBottom: themeToken.paddingSm,
+  },
+  answerMain: {
+    width: CARD_SIZE,
+    height: CARD_SIZE,
+    alignItems: 'center',
     justifyContent: 'center',
+  },
+  matchedList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 4,
+    maxWidth: CARD_SIZE + 48,
+    marginTop: 2,
+  },
+  matchedChip: {
+    width: MATCHED_THUMB,
+    height: MATCHED_THUMB,
+    borderRadius: themeToken.borderRadius,
+    overflow: 'hidden',
+    backgroundColor: colors.background.secondary,
+    borderWidth: 1,
+    borderColor: colors.border.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  matchedThumb: {
+    width: '88%',
+    height: '88%',
+  },
+  matchedThumbPlaceholder: {
+    width: '88%',
+    height: '88%',
+    backgroundColor: colors.background.tertiary,
+    borderRadius: themeToken.borderRadius,
   },
   cardMatched: {
     borderColor: colors.success.primary,

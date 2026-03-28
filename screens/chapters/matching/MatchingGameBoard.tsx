@@ -118,11 +118,6 @@ export const MatchingGameBoard = ({
 
         if (!hit) continue;
 
-        const ownerOfAnswer = Object.entries(matchedPairs).find(([, aid]) => aid === answerId)?.[0];
-        if (ownerOfAnswer !== undefined && ownerOfAnswer !== questionId) {
-          continue;
-        }
-
         const question = questions.find((q) => q.documentId === questionId);
         const isCorrect = question?.matching_answer?.documentId === answerId;
 
@@ -152,7 +147,6 @@ export const MatchingGameBoard = ({
     },
     [
       questions,
-      matchedPairs,
       correctAudioLoaded,
       playCorrectAudio,
       wrongAudioLoaded,
@@ -163,6 +157,17 @@ export const MatchingGameBoard = ({
   );
 
   const matchedAnswerIds = useMemo(() => new Set(Object.values(matchedPairs)), [matchedPairs]);
+
+  const matchedQuestionsByAnswerId = useMemo(() => {
+    const map: Record<string, typeof questions> = {};
+    for (const q of questions) {
+      const aid = matchedPairs[q.documentId];
+      if (!aid) continue;
+      if (!map[aid]) map[aid] = [];
+      map[aid].push(q);
+    }
+    return map;
+  }, [questions, matchedPairs]);
 
   return (
     <View style={styles.columns}>
@@ -196,6 +201,7 @@ export const MatchingGameBoard = ({
               key={a.documentId}
               answer={a}
               isMatched={matchedAnswerIds.has(a.documentId)}
+              matchedQuestions={matchedQuestionsByAnswerId[a.documentId] ?? []}
               hoveredAnswerId={hoveredAnswerId}
               onRegisterLayout={registerAnswerLayout}
               ghostX={ghostX}

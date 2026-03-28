@@ -4,7 +4,7 @@ import { EmptyListWithSkeleton } from '@/components/empty-states';
 import { LessonCardSkeleton } from '@/components/skeletons';
 import { ThemedView } from '@/components/themed-view';
 import ContentThumbnailHeader from '@/components/headers/ContentThumbnailHeader';
-import { useChapterByDocumentId, useLessonByDocumentId } from '@/hooks/useLessons';
+import { useLessonByDocumentId } from '@/hooks/useLessons';
 import { StrapiLessonChapter } from '@/types/api';
 import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
@@ -28,8 +28,6 @@ const LessonDetailScreen = () => {
   const [listHeight, setListHeight] = useState(DEFAULT_LIST_HEIGHT);
   const lessonId = typeof params.lessonId === 'string' ? params.lessonId : '';
   const { lesson, isLoading, isRefetching, error, lessonChapters, refetch } = useLessonByDocumentId(lessonId);
-
-  const { chapter: activeChapter } = useChapterByDocumentId(lessonChapters[activeChapterIndex].documentId);
 
   const refreshControl = useMemo(
     () => <RefreshControl refreshing={isRefetching} onRefresh={refetch} />,
@@ -113,10 +111,10 @@ const LessonDetailScreen = () => {
       <View onLayout={onLayout}>
         <ContentThumbnailHeader
           onBack={router.back}
-          title={lesson?.title ?? 'Isomo'}
           subtitle="Igice cya 1"
+          title={lesson?.title ?? 'Isomo'}
+          audioUrl={lesson?.audio_desc?.url}
           thumbnailUrl={lesson?.thumbnail?.url}
-          audioUrl={activeChapter?.audio_desc?.url}
         />
       </View>
       {
@@ -157,7 +155,7 @@ const LessonDetailScreen = () => {
             }
           />)
       }
-      {lessonChapters.length > 1 ? (
+      {lessonChapters.length > 0 ? (
         <View onLayout={onLayout} style={[flexBetween, globalStyles.px_md, { paddingBottom: insets.bottom }]}>
           <Button
             size='sm'

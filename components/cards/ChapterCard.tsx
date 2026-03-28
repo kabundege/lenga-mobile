@@ -28,8 +28,8 @@ const ChapterCard = ({ chapter: embeddedChapter, height }: ChapterCardProps) => 
 
   const chapterId = embeddedChapter.documentId;
   const { chapter: fullChapter } = useChapterByDocumentId(chapterId);
-  const { chapterVideo } = useChapterVideo(chapterId);
   const { chapterMatchings } = useChapterMatchings(chapterId);
+  const { chapterVideo } = useChapterVideo(chapterId);
   const chapter = fullChapter ?? embeddedChapter;
   const thumbnailUrl = useOfflineAssetUri(chapter.thumbnail?.url);
   const quizzesCount = chapter.quizzes?.length ?? 0;
@@ -49,7 +49,7 @@ const ChapterCard = ({ chapter: embeddedChapter, height }: ChapterCardProps) => 
         <View style={styles.header}>
           <View style={globalStyles.w_80}>
             <TextBody variant="body1" color="secondary">Intambwe ya {chapter.order}</TextBody>
-            <TextHeading variant="heading" numberOfLines={2}>
+            <TextHeading variant="heading" numberOfLines={3}>
               {chapter.title}
             </TextHeading>
           </View>

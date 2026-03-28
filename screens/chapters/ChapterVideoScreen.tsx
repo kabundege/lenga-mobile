@@ -38,7 +38,6 @@ const ChapterVideoScreen = () => {
 
   useEffect(() => {
     const sub = videoPlayer.addListener('statusChange', ({ status, error, oldStatus }) => {
-      console.log({ status, error, oldStatus });
       if (status === 'error') setVideoPlaybackError(true);
     });
     return () => sub.remove();

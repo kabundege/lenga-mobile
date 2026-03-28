@@ -71,9 +71,9 @@ export const useChapters = () => {
   return { ...request, chapters };
 };
 
-export const useChapterByDocumentId = (documentId: string) => {
+export const useChapterByDocumentId = (documentId?: string) => {
   const { chapters, ...request } = useChapters();
-  const chapter = chapters.find((c) => c.documentId === documentId);
+  const chapter = documentId ? chapters.find((c) => c.documentId === documentId) : undefined;
   return { ...request, chapter };
 };
 
