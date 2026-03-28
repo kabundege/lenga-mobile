@@ -1,16 +1,18 @@
-import colors from '@/utils/theme/colors';
 import Loader from '@/components/loader';
+import colors from '@/utils/theme/colors';
+import { StyleSheet, View } from 'react-native';
+import Button from '@/components/buttons/button';
 import { themeToken } from '@/utils/theme/styles';
+import { TextBody } from '@/components/typography';
 import { getChapterVideoUrl } from './chapterVideo';
 import { ThemedView } from '@/components/themed-view';
 import { useVideoPlayer, VideoView } from 'expo-video';
-import { centered, globalStyles } from '@/utils/styles';
+import IconButton from '@/components/buttons/iconButton';
 import { router, useLocalSearchParams } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
 import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
-import { TextBody } from '@/components/typography';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { centered, flexBetween, globalStyles } from '@/utils/styles';
 import { useChapterByDocumentId, useChapterVideo } from '@/hooks/useLessons';
 import ContentThumbnailHeader from '@/components/headers/ContentThumbnailHeader';
 
@@ -31,15 +33,12 @@ const ChapterVideoScreen = () => {
 
   const videoUrl = useMemo(() => getChapterVideoUrl(chapterVideo ?? null), [chapterVideo]);
   const offlineVideoUri = useOfflineAssetUri(videoUrl);
-  const videoPlayer = useVideoPlayer(offlineVideoUri || null);
+  const videoPlayer = useVideoPlayer(videoUrl);
   const [videoPlaybackError, setVideoPlaybackError] = useState(false);
 
   useEffect(() => {
-    setVideoPlaybackError(false);
-  }, [videoUrl]);
-
-  useEffect(() => {
-    const sub = videoPlayer.addListener('statusChange', ({ status }) => {
+    const sub = videoPlayer.addListener('statusChange', ({ status, error, oldStatus }) => {
+      console.log({ status, error, oldStatus });
       if (status === 'error') setVideoPlaybackError(true);
     });
     return () => sub.remove();
@@ -50,19 +49,25 @@ const ChapterVideoScreen = () => {
     videoPlayer.play();
   }, [offlineVideoUri, videoPlayer]);
 
-  if (!chapterId) return <ThemedView style={[styles.container, globalStyles.center]} />;
+  if (!chapterId || isLoading) return <ThemedView style={[styles.container, globalStyles.center]}> <Loader color="primary" size="large" /> </ThemedView>;
 
   if (error || videoPlaybackError) {
     return (
       <ThemedView style={[styles.container, globalStyles.center]}>
         <TextBody variant="body2" strong>
-          Ntibyashobotse gufungura videwo y'igice.
+          Ntibyashobotse gufungura videwo.
         </TextBody>
-        <Pressable onPress={refetch} style={globalStyles.mt_sm}>
-          <TextBody variant="body2" color="primary">
-            Ongera ugerageze
-          </TextBody>
-        </Pressable>
+        <View style={[flexBetween, globalStyles.w_50]}>
+          <IconButton icon="chevron-left" onPress={router.back} backgroundColor={colors.primary_light} iconFill={colors.text.primary} style={globalStyles.rounded_sm} />
+          <Button
+            size='md'
+            type='secondary'
+            onPress={refetch}
+            label="Ongera ugerageze"
+            textColor={colors.text.primary}
+            overRiddingStyles={[globalStyles.bg_transparent, globalStyles.flex_shrink]}
+          />
+        </View>
       </ThemedView>
     );
   }
@@ -70,11 +75,11 @@ const ChapterVideoScreen = () => {
   return (
     <ThemedView style={styles.container}>
       <ContentThumbnailHeader
+        subtitle="Videwo"
         onBack={router.back}
         title={chapter?.title ?? 'Igice'}
-        subtitle="Videwo"
-        thumbnailUrl={chapter?.thumbnail?.url}
         audioUrl={chapter?.audio_desc?.url}
+        thumbnailUrl={chapter?.thumbnail?.url}
       />
       <View style={[globalStyles.flex_1, { paddingBottom: insets.bottom }]}>
         {isLoading ? <View style={[centered, globalStyles.flex_1]}> <Loader color="primary" size="large" /> </View> : offlineVideoUri ? (

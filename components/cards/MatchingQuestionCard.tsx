@@ -18,6 +18,8 @@ export type AnswerPositionEntry = AnswerLayout & { id: string };
 type Props = {
   question: StrapiMatchingQuestion;
   isMatched: boolean;
+  /** When true, the question thumbnail sits on a wrong answer; drag from that answer instead. */
+  isPlacedWrong: boolean;
   isDraggingThis: boolean;
   ghostX: SharedValue<number>;
   ghostY: SharedValue<number>;
@@ -33,6 +35,7 @@ const CARD_SIZE = Dimensions.SCREEN_WIDTH * 0.36;
 const MatchingQuestionCard = ({
   question,
   isMatched,
+  isPlacedWrong,
   isDraggingThis,
   ghostX,
   ghostY,
@@ -46,7 +49,7 @@ const MatchingQuestionCard = ({
   const questionId = question.documentId;
 
   const pan = Gesture.Pan()
-    .enabled(!isMatched)
+    .enabled(!isMatched && !isPlacedWrong)
     .minDistance(4)
     .onBegin((e) => {
       ghostX.value = e.absoluteX - CARD_SIZE / 2;
@@ -88,8 +91,8 @@ const MatchingQuestionCard = ({
 
   return (
     <GestureDetector gesture={pan}>
-      <Animated.View style={[styles.card, dimmedStyle, isMatched && styles.cardMatched]}>
-        {thumbUri ? (
+      <Animated.View style={[styles.card, dimmedStyle]}>
+        {thumbUri && !isPlacedWrong ? (
           <Image source={{ uri: thumbUri }} style={styles.thumb} resizeMode="contain" />
         ) : (
           <View style={styles.thumbPlaceholder} />
@@ -118,17 +121,9 @@ const styles = StyleSheet.create({
   card: {
     width: CARD_SIZE,
     height: CARD_SIZE,
-    borderRadius: themeToken.borderRadius,
-    borderWidth: 1.5,
-    borderColor: colors.border.primary,
-    backgroundColor: colors.background.secondary,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  cardMatched: {
-    borderColor: colors.success.primary,
-    backgroundColor: colors.success.tertiary,
   },
   thumb: {
     width: '90%',

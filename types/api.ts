@@ -154,7 +154,7 @@ export type StrapiMatchingAnswer = {
   publishedAt: string | null;
   locale: string;
   thumbnail: StrapiMedia;
-  matching?: StrapiMatching | null;
+  matchings?: StrapiMatching[];
 };
 
 export type StrapiMatchingQuestion = {

@@ -190,6 +190,6 @@ export const useMatchingAnswers = () => {
 
 export const useMatchingAnswersByMatchingId = (matchingId: string) => {
   const { matchingAnswers, ...request } = useMatchingAnswers();
-  const answers = matchingAnswers.filter((a) => a.matching?.documentId === matchingId);
+  const answers = matchingAnswers.filter((a) => a.matchings?.some((m) => m.documentId === matchingId));
   return { ...request, answers };
 };

@@ -4,20 +4,51 @@ import { globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
 import { Image, StyleSheet, View } from 'react-native';
-import { useRef, useCallback } from 'react';
-import Animated, { useAnimatedStyle, withSpring, withTiming, type SharedValue } from 'react-native-reanimated';
+import { useRef, useCallback, useMemo } from 'react';
+import Animated, {
+  runOnJS,
+  useAnimatedStyle,
+  withSpring,
+  withTiming,
+  type SharedValue,
+} from 'react-native-reanimated';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import IconButton from '../buttons/iconButton';
-import { CARD_SIZE, type AnswerLayout } from './MatchingQuestionCard';
+import { CARD_SIZE, type AnswerLayout, type AnswerPositionEntry } from './MatchingQuestionCard';
 
 type Props = {
   answer: StrapiMatchingAnswer;
   isMatched: boolean;
   hoveredAnswerId: SharedValue<string>;
   onRegisterLayout: (answerId: string, layout: AnswerLayout) => void;
+  ghostX: SharedValue<number>;
+  ghostY: SharedValue<number>;
+  ghostVisible: SharedValue<boolean>;
+  answerPositionsShared: SharedValue<AnswerPositionEntry[]>;
+  wrongQuestionId: string | null;
+  wrongQuestionThumbUrl: string | null;
+  isDraggingWrongPiece: boolean;
+  onWrongDragStart: (questionId: string, thumbUri: string | null) => void;
+  onWrongDragEnd: (questionId: string, absoluteX: number, absoluteY: number) => void;
 };
 
-const MatchingAnswerCard = ({ answer, isMatched, hoveredAnswerId, onRegisterLayout }: Props) => {
+const MatchingAnswerCard = ({
+  answer,
+  isMatched,
+  hoveredAnswerId,
+  onRegisterLayout,
+  ghostX,
+  ghostY,
+  ghostVisible,
+  answerPositionsShared,
+  wrongQuestionId,
+  wrongQuestionThumbUrl,
+  isDraggingWrongPiece,
+  onWrongDragStart,
+  onWrongDragEnd,
+}: Props) => {
   const thumbUri = useOfflineAssetUri(answer.thumbnail?.url);
+  const wrongThumbUri = useOfflineAssetUri(wrongQuestionThumbUrl);
   const viewRef = useRef<View>(null);
   const answerId = answer.documentId;
 
@@ -31,55 +62,133 @@ const MatchingAnswerCard = ({ answer, isMatched, hoveredAnswerId, onRegisterLayo
     }, 150);
   }, [answerId, onRegisterLayout]);
 
+  const wrongPan = useMemo(() => {
+    if (!wrongQuestionId) {
+      return Gesture.Pan().enabled(false);
+    }
+    const qid = wrongQuestionId;
+    return Gesture.Pan()
+      .minDistance(4)
+      .onBegin((e) => {
+        ghostX.value = e.absoluteX - CARD_SIZE / 2;
+        ghostY.value = e.absoluteY - CARD_SIZE / 2;
+        ghostVisible.value = true;
+        runOnJS(onWrongDragStart)(qid, wrongThumbUri);
+      })
+      .onUpdate((e) => {
+        ghostX.value = e.absoluteX - CARD_SIZE / 2;
+        ghostY.value = e.absoluteY - CARD_SIZE / 2;
+
+        const cx = e.absoluteX;
+        const cy = e.absoluteY;
+        const positions = answerPositionsShared.value;
+        let found = '';
+        for (let i = 0; i < positions.length; i++) {
+          const p = positions[i];
+          if (cx >= p.x && cx <= p.x + p.width && cy >= p.y && cy <= p.y + p.height) {
+            found = p.id;
+            break;
+          }
+        }
+        hoveredAnswerId.value = found;
+      })
+      .onEnd((e) => {
+        ghostVisible.value = false;
+        hoveredAnswerId.value = '';
+        runOnJS(onWrongDragEnd)(qid, e.absoluteX, e.absoluteY);
+      })
+      .onFinalize(() => {
+        ghostVisible.value = false;
+        hoveredAnswerId.value = '';
+      });
+  }, [
+    wrongQuestionId,
+    wrongThumbUri,
+    ghostX,
+    ghostY,
+    ghostVisible,
+    hoveredAnswerId,
+    answerPositionsShared,
+    onWrongDragStart,
+    onWrongDragEnd,
+  ]);
+
   // Runs entirely on the UI thread — smooth haze effect with no JS-bridge round-trip
   const hoverStyle = useAnimatedStyle(() => {
     const isHovered = !isMatched && hoveredAnswerId.value === answerId;
     return {
-      borderColor: withTiming(
-        isHovered ? colors.primary : colors.border.primary,
-        { duration: 120 },
-      ),
-      borderWidth: withTiming(isHovered ? 2.5 : 1.5, { duration: 120 }),
       backgroundColor: withTiming(
-        isHovered ? colors.primary_light : colors.background.secondary,
+        isHovered ? colors.transparent : colors.background.primary,
         { duration: 120 },
       ),
-      transform: [
-        { scale: withSpring(isHovered ? 1.06 : 1, { damping: 14, stiffness: 260 }) },
-      ],
+      transform: [{ scale: withSpring(isHovered ? 1.06 : 1, { damping: 14, stiffness: 260 }) }],
     };
   });
+
+  const wrongOverlayDimStyle = useAnimatedStyle(() => ({
+    opacity: isDraggingWrongPiece ? 0.3 : 1,
+  }));
+
+  const showWrongOverlay = !!wrongQuestionId && !isMatched;
 
   return (
     <Animated.View
       ref={viewRef}
       onLayout={handleLayout}
-      style={[styles.card, isMatched && styles.cardMatched, hoverStyle]}
+      style={[
+        styles.card,
+        isMatched && styles.cardMatched,
+        showWrongOverlay && styles.cardWrong,
+        hoverStyle,
+      ]}
     >
-      {thumbUri ? (
-        <Image source={{ uri: thumbUri }} style={styles.thumb} resizeMode="contain" />
-      ) : (
-        <View style={styles.thumbPlaceholder} />
-      )}
+      {!showWrongOverlay ? (
+        thumbUri ? (
+          <Image source={{ uri: thumbUri }} style={styles.thumb} resizeMode="contain" />
+        ) : (
+          <View style={styles.thumbPlaceholder} />
+        )
+      ) : null}
+
+      {showWrongOverlay ? (
+        <GestureDetector gesture={wrongPan}>
+          <Animated.View style={[styles.wrongOverlay, wrongOverlayDimStyle]}>
+            {wrongThumbUri ? (
+              <Image source={{ uri: wrongThumbUri }} style={styles.thumb} resizeMode="contain" />
+            ) : (
+              <View style={styles.thumbPlaceholder} />
+            )}
+            <View style={styles.badgeWrong}>
+              <IconButton
+                size="sm"
+                icon="close"
+                iconType="antd"
+                style={globalStyles.self_start}
+                iconFill={colors.danger.primary}
+                backgroundColor={colors.danger.tertiary}
+              />
+            </View>
+          </Animated.View>
+        </GestureDetector>
+      ) : null}
+
       {isMatched ? (
         <View style={styles.badge}>
           <IconButton
-            icon="check"
             size="sm"
-            backgroundColor={colors.success.tertiary}
-            iconFill={colors.success.primary}
+            icon="check"
             style={globalStyles.self_start}
+            iconFill={colors.success.primary}
+            backgroundColor={colors.success.tertiary}
           />
         </View>
       ) : null}
 
-      {/* Haze overlay — sits on top of the image, fades in when hovered */}
       <HazeOverlay hoveredAnswerId={hoveredAnswerId} answerId={answerId} isMatched={isMatched} />
     </Animated.View>
   );
 };
 
-// Separated so the animated style is isolated to just this element
 const HazeOverlay = ({
   hoveredAnswerId,
   answerId,
@@ -105,10 +214,6 @@ const styles = StyleSheet.create({
   card: {
     width: CARD_SIZE,
     height: CARD_SIZE,
-    borderRadius: themeToken.borderRadius,
-    borderWidth: 1.5,
-    borderColor: colors.border.primary,
-    backgroundColor: colors.background.secondary,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
@@ -116,6 +221,11 @@ const styles = StyleSheet.create({
   cardMatched: {
     borderColor: colors.success.primary,
     backgroundColor: colors.success.tertiary,
+  },
+  cardWrong: {
+    borderWidth: 2,
+    borderColor: colors.danger.primary,
+    backgroundColor: colors.danger.tertiary,
   },
   thumb: {
     width: '90%',
@@ -131,6 +241,18 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     right: 4,
+  },
+  badgeWrong: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+  },
+  wrongOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: themeToken.borderRadius,
+    backgroundColor: colors.background.primary,
   },
   hazeOverlay: {
     backgroundColor: colors.primary_light,

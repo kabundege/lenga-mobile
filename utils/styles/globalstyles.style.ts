@@ -147,6 +147,8 @@ const globalStyles = StyleSheet.create({
   min_w_90: { minWidth: "90%" },
   min_w_95: { minWidth: "95%" },
   min_w_100: { minWidth: "100%" },
+  // min height
+  min_hs_30: { minHeight: Dimensions.SCREEN_HEIGHT * 0.3 },
   // scree width
   ws_20: { width: Dimensions.SCREEN_WIDTH * 0.2 },
   ws_30: { width: Dimensions.SCREEN_WIDTH * 0.3 },

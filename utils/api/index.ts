@@ -10,8 +10,8 @@ import axios, { AxiosInstance } from 'axios';
 function createApi(): AxiosInstance {
   const instance = axios.create({
     baseURL: API_URL,
-    timeout: 20000,
     headers: {
+      'Accept': 'application/json',
       'Content-Type': 'application/json',
     },
   });
