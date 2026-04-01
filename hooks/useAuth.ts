@@ -8,6 +8,7 @@ import { toast } from 'sonner-native';
 import * as lessonsService from '@/services/lessons.service';
 import { syncLessonMediaAssets } from '@/store/slices/offlineContentSlice';
 import { api_keys } from '@/hooks/useLessons';
+import { router } from 'expo-router';
 
 /** Query keys for auth; use getMeKeys() for invalidation. */
 export const AUTH_KEYS = {
@@ -73,7 +74,7 @@ async function warmCacheAndSync(
   dispatch(syncLessonMediaAssets({ queryClient, locale })).catch(() => null);
 }
 
-export function useLogin(options?: { onSuccess?: () => void }) {
+export function useLogin() {
   const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
   const locale = useAppSelector((s) => s.preferences.locale);
@@ -86,20 +87,17 @@ export function useLogin(options?: { onSuccess?: () => void }) {
       queryClient.setQueryData(AUTH_KEYS.ME, user);
       warmCacheAndSync(queryClient, dispatch, locale).catch(() => null);
       toast.success('Login successful');
-      options?.onSuccess?.();
+      router.replace('/lessons');
     },
     onError: handleAxiosError,
   });
 }
 
-export function useRegister(options?: { onSuccess?: () => void }) {
-  const dispatch = useAppDispatch();
-  const queryClient = useQueryClient();
-  const locale = useAppSelector((s) => s.preferences.locale);
-
+export function useRegister() {
   return useMutation({
     mutationFn: authService.register,
     onSuccess: () => {
+      router.replace('/login');
       toast.success('Registration successful');
     },
     onError: handleAxiosError,

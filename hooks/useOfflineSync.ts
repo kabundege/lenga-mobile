@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import { syncLessonMediaAssets } from '@/store/slices/offlineContentSlice';
@@ -19,44 +19,47 @@ export function useOfflineSync() {
   const locale = useAppSelector((s) => s.preferences.locale);
   const isSyncing = useAppSelector(selectIsAnySyncing);
   const started = useRef(false);
+  const syncAllLessonContent = useCallback(async () => {
+    await Promise.all([
+      queryClient.fetchQuery({
+        queryKey: api_keys.lessons(locale),
+        queryFn: () => lessonsService.getLessonsList(locale),
+        staleTime: 5 * 60 * 1000,
+      }),
+      queryClient.fetchQuery({
+        queryKey: api_keys.chapters(locale),
+        queryFn: () => lessonsService.getChaptersList(locale),
+        staleTime: 5 * 60 * 1000,
+      }),
+      queryClient.fetchQuery({
+        queryKey: api_keys.videos(locale),
+        queryFn: () => lessonsService.getVideosList(locale),
+        staleTime: 5 * 60 * 1000,
+      }),
+      queryClient.fetchQuery({
+        queryKey: api_keys.quizzes(locale),
+        queryFn: () => lessonsService.getQuizzesList(locale),
+        staleTime: 5 * 60 * 1000,
+      }),
+      queryClient.fetchQuery({
+        queryKey: api_keys.qas(locale),
+        queryFn: () => lessonsService.getQAsList(locale),
+        staleTime: 5 * 60 * 1000,
+      }),
+    ]);
+
+    await dispatch(syncLessonMediaAssets({ queryClient, locale })).unwrap();
+  }, [dispatch, locale, queryClient]);
 
   useEffect(() => {
     if (!jwt || isSyncing || started.current) return;
     started.current = true;
 
-    (async () => {
-      // Prefetch all five data sets in parallel so the QueryClient cache is
-      // warm before we kick off media downloads.
-      await Promise.all([
-        queryClient.prefetchQuery({
-          queryKey: api_keys.lessons(locale),
-          queryFn: () => lessonsService.getLessonsList(locale),
-          staleTime: 5 * 60 * 1000,
-        }),
-        queryClient.prefetchQuery({
-          queryKey: api_keys.chapters(locale),
-          queryFn: () => lessonsService.getChaptersList(locale),
-          staleTime: 5 * 60 * 1000,
-        }),
-        queryClient.prefetchQuery({
-          queryKey: api_keys.videos(locale),
-          queryFn: () => lessonsService.getVideosList(locale),
-          staleTime: 5 * 60 * 1000,
-        }),
-        queryClient.prefetchQuery({
-          queryKey: api_keys.quizzes(locale),
-          queryFn: () => lessonsService.getQuizzesList(locale),
-          staleTime: 5 * 60 * 1000,
-        }),
-        queryClient.prefetchQuery({
-          queryKey: api_keys.qas(locale),
-          queryFn: () => lessonsService.getQAsList(locale),
-          staleTime: 5 * 60 * 1000,
-        }),
-      ]);
+    syncAllLessonContent().catch(() => null);
+  }, [jwt, isSyncing, syncAllLessonContent]);
 
-      // Now download any missing media files.
-      dispatch(syncLessonMediaAssets({ queryClient, locale })).catch(() => null);
-    })().catch(() => null);
-  }, [jwt, locale, isSyncing, dispatch, queryClient]);
+  return {
+    isSyncing,
+    syncAllLessonContent,
+  };
 }

@@ -2,7 +2,7 @@ import { useMe } from '@/hooks/useAuth';
 import colors from '@/utils/theme/colors';
 import { StrapiLesson } from '@/types/api';
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useLessons } from '@/hooks/useLessons';
 import Spacer from '@/components/common/spacer';
 import { themeToken } from '@/utils/theme/styles';
@@ -21,15 +21,13 @@ import Animated, { CurvedTransition } from 'react-native-reanimated';
 import { ControlledInput } from '@/components/inputs/ControlledInput';
 import { ListRenderItemInfo, Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useAppSelector } from '@/hooks/useRedux';
 
 const LessonListScreen = () => {
-  useOfflineSync();
+  const [isRefreshingAll, setIsRefreshingAll] = useState(false);
+  const { isSyncing, syncAllLessonContent } = useOfflineSync();
   const { user } = useMe();
   const insets = useSafeAreaInsets();
-  const { byRemoteUrl } = useAppSelector(state => state.offlineAssets);
   const { lessons, isLoading, isRefetching, error, refetch } = useLessons();
-
 
   const { control } = useForm({
     defaultValues: {
@@ -42,17 +40,6 @@ const LessonListScreen = () => {
   const filteredLessons = useMemo(() => {
     return lessons.filter((lesson) => lesson.title.toLowerCase().includes(search?.toLowerCase() ?? ''));
   }, [lessons, search]);
-
-  if (error && lessons.length === 0) {
-    return (
-      <ThemedView style={styles.centered}>
-        <ThemedText type="defaultSemiBold">Hari ikitagenze neza mu kubona amasomo.</ThemedText>
-        <Pressable onPress={() => refetch()}>
-          <TextBody variant="body2" color="primary">Subiramo</TextBody>
-        </Pressable>
-      </ThemedView>
-    );
-  }
 
   const formattedUsername = useMemo(() => {
     return user?.email.split('@')[0].split('_').join(' ');
@@ -90,7 +77,6 @@ const LessonListScreen = () => {
     </SafeAreaView>
   ), [control, user]);
 
-
   const renderLessons = useCallback(({ item, index }: ListRenderItemInfo<StrapiLesson>) => (
     <LessonCard key={item.documentId} lesson={item} index={index} />
   ), []);
@@ -108,6 +94,28 @@ const LessonListScreen = () => {
     />
   ), [control]);
 
+  const onRefresh = useCallback(async () => {
+    setIsRefreshingAll(true);
+    try {
+      await syncAllLessonContent();
+    } catch {
+      await refetch();
+    } finally {
+      setIsRefreshingAll(false);
+    }
+  }, [refetch, syncAllLessonContent]);
+
+  if (error && lessons.length === 0) {
+    return (
+      <ThemedView style={styles.centered}>
+        <ThemedText type="defaultSemiBold">Hari ikitagenze neza mu kubona amasomo.</ThemedText>
+        <Pressable onPress={() => refetch()}>
+          <TextBody variant="body2" color="primary">Subiramo</TextBody>
+        </Pressable>
+      </ThemedView>
+    );
+  }
+
   if (isLoading && lessons.length === 0) {
     return (
       <ThemedView style={styles.container}>
@@ -123,10 +131,10 @@ const LessonListScreen = () => {
       <RenderHeader />
       <Animated.FlatList
         numColumns={2}
-        onRefresh={refetch}
+        onRefresh={onRefresh}
         data={filteredLessons}
         layout={CurvedTransition}
-        refreshing={isRefetching}
+        refreshing={isRefetching || isRefreshingAll || isSyncing}
         renderItem={renderLessons}
         keyExtractor={(item) => item.documentId}
         ListEmptyComponent={renderEmptyComponent}

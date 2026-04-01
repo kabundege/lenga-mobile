@@ -3,7 +3,6 @@ import { PressableScale } from 'pressto';
 import colors from '@/utils/theme/colors';
 import { useEffect, useState } from 'react';
 import IconButton from '../buttons/iconButton';
-import { API_URL } from '@/utils/functions/env';
 import { themeToken } from '@/utils/theme/styles';
 import { Image, StyleSheet, View } from 'react-native';
 import { useQAByDocumentId } from '@/hooks/useLessons';
@@ -12,9 +11,7 @@ import PlayAudioButton from '../buttons/playAudioButton';
 import { Dimensions, globalStyles } from '@/utils/styles';
 import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-
-const correctAnswerAudio = API_URL + "/uploads/correct_7f6e03656f.mp3"
-const wrongAnswerAudio = API_URL + "/uploads/wrong_044b26aa89.mp3"
+import { CORRECT_ANSWER_AUDIO_URL, WRONG_ANSWER_AUDIO_URL } from '@/screens/chapters/matching/constants';
 
 export type QuizQACardRevealState = 'idle' | 'correct' | 'wrong' | 'unknown';
 
@@ -34,12 +31,12 @@ const QuizQACard = ({ qaId, rightAnswerCallBack }: QuizQACardProps) => {
   const {
     audioLoaded: correctAudioLoaded,
     toggleAudio: toggleCorrectAnswerAudio,
-  } = useLessonAudio(correctAnswerAudio);
+  } = useLessonAudio(CORRECT_ANSWER_AUDIO_URL);
 
   const {
     audioLoaded: wrongAudioLoaded,
     toggleAudio: toggleWrongAnswerAudio,
-  } = useLessonAudio(wrongAnswerAudio);
+  } = useLessonAudio(WRONG_ANSWER_AUDIO_URL);
 
   const onPress = () => {
     if (selected) return;

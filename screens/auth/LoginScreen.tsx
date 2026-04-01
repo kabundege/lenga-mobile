@@ -18,9 +18,7 @@ import { useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 
 export default function LoginScreen() {
-  const loginMutation = useLogin({
-    onSuccess: () => router.replace('/lessons'),
-  });
+  const loginMutation = useLogin();
 
   const {
     control,

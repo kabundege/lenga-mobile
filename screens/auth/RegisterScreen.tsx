@@ -18,9 +18,7 @@ import { useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 
 export default function RegisterScreen() {
-  const registerMutation = useRegister({
-    onSuccess: () => router.replace('/login'),
-  });
+  const registerMutation = useRegister();
 
   const {
     control,
