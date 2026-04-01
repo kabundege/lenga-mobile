@@ -1,10 +1,56 @@
 import { useCallback, useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { type QueryKey, useQueryClient } from '@tanstack/react-query';
 import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import { syncLessonMediaAssets } from '@/store/slices/offlineContentSlice';
-import { selectIsAnySyncing } from '@/store/slices/offlineAssetsSlice';
+import { selectIsAnySyncing, resetSyncedOfflineAssets } from '@/store/slices/offlineAssetsSlice';
+import { resetOfflineMediaDownloads } from '@/store/slices/offlineMediaSlice';
 import * as lessonsService from '@/services/lessons.service';
 import { api_keys } from '@/hooks/useLessons';
+import { clearOfflineMediaDirectory } from '@/utils/offlineMedia';
+
+const STALE_TIME_MS = 5 * 60 * 1000;
+
+type LessonContentQuerySpec = {
+  queryKey: QueryKey;
+  queryFn: () => Promise<unknown>;
+};
+
+function getLessonContentQuerySpecs(locale: string): LessonContentQuerySpec[] {
+  return [
+    {
+      queryKey: api_keys.lessons(locale),
+      queryFn: () => lessonsService.getLessonsList(locale),
+    },
+    {
+      queryKey: api_keys.chapters(locale),
+      queryFn: () => lessonsService.getChaptersList(locale),
+    },
+    {
+      queryKey: api_keys.videos(locale),
+      queryFn: () => lessonsService.getVideosList(locale),
+    },
+    {
+      queryKey: api_keys.quizzes(locale),
+      queryFn: () => lessonsService.getQuizzesList(locale),
+    },
+    {
+      queryKey: api_keys.qas(locale),
+      queryFn: () => lessonsService.getQAsList(locale),
+    },
+    {
+      queryKey: api_keys.matchings(locale),
+      queryFn: () => lessonsService.getMatchingsList(locale),
+    },
+    {
+      queryKey: api_keys.matchingQuestions(locale),
+      queryFn: () => lessonsService.getMatchingQuestionsList(locale),
+    },
+    {
+      queryKey: api_keys.matchingAnswers(locale),
+      queryFn: () => lessonsService.getMatchingAnswersList(locale),
+    },
+  ];
+}
 
 /**
  * On mount (when authenticated), ensures all API data is in the TanStack Query
@@ -19,36 +65,48 @@ export function useOfflineSync() {
   const locale = useAppSelector((s) => s.preferences.locale);
   const isSyncing = useAppSelector(selectIsAnySyncing);
   const started = useRef(false);
+
   const syncAllLessonContent = useCallback(async () => {
-    await Promise.all([
-      queryClient.fetchQuery({
-        queryKey: api_keys.lessons(locale),
-        queryFn: () => lessonsService.getLessonsList(locale),
-        staleTime: 5 * 60 * 1000,
-      }),
-      queryClient.fetchQuery({
-        queryKey: api_keys.chapters(locale),
-        queryFn: () => lessonsService.getChaptersList(locale),
-        staleTime: 5 * 60 * 1000,
-      }),
-      queryClient.fetchQuery({
-        queryKey: api_keys.videos(locale),
-        queryFn: () => lessonsService.getVideosList(locale),
-        staleTime: 5 * 60 * 1000,
-      }),
-      queryClient.fetchQuery({
-        queryKey: api_keys.quizzes(locale),
-        queryFn: () => lessonsService.getQuizzesList(locale),
-        staleTime: 5 * 60 * 1000,
-      }),
-      queryClient.fetchQuery({
-        queryKey: api_keys.qas(locale),
-        queryFn: () => lessonsService.getQAsList(locale),
-        staleTime: 5 * 60 * 1000,
-      }),
-    ]);
+    const specs = getLessonContentQuerySpecs(locale);
+    await Promise.all(
+      specs.map((spec) =>
+        queryClient.fetchQuery({
+          ...spec,
+          staleTime: STALE_TIME_MS,
+        }),
+      ),
+    );
 
     await dispatch(syncLessonMediaAssets({ queryClient, locale })).unwrap();
+  }, [dispatch, locale, queryClient]);
+
+  /**
+   * Pull-to-refresh: load fresh API data from the network, wipe persisted
+   * offline file mappings and on-disk `offline-media`, then re-download assets.
+   * Returns false when the network fetch fails (offline); caller should fall back to cache refetch.
+   */
+  const refreshAllLessonOfflineData = useCallback(async (): Promise<boolean> => {
+    const specs = getLessonContentQuerySpecs(locale);
+    try {
+      await Promise.all(
+        specs.map((spec) =>
+          queryClient.fetchQuery({
+            ...spec,
+            staleTime: 0,
+            networkMode: 'online',
+          }),
+        ),
+      );
+    } catch {
+      return false;
+    }
+
+    dispatch(resetSyncedOfflineAssets());
+    dispatch(resetOfflineMediaDownloads());
+    clearOfflineMediaDirectory();
+
+    await dispatch(syncLessonMediaAssets({ queryClient, locale })).unwrap();
+    return true;
   }, [dispatch, locale, queryClient]);
 
   useEffect(() => {
@@ -61,5 +119,6 @@ export function useOfflineSync() {
   return {
     isSyncing,
     syncAllLessonContent,
+    refreshAllLessonOfflineData,
   };
 }

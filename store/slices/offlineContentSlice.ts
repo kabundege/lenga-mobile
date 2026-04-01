@@ -12,6 +12,8 @@ import type {
   StrapiLesson,
   StrapiLessonChapter,
   StrapiLessonVideo,
+  StrapiMatching,
+  StrapiMatchingQuestion,
   StrapiQA,
   StrapiQuiz,
 } from '@/types/api';
@@ -72,8 +74,30 @@ function collectQAMedia(qa: StrapiQA, bag: Set<string>) {
   push(bag, qa.audio_desc?.url);
 }
 
+/** Matching game media for one chapter (audio + question/answer thumbnails). */
+function collectMatchingMediaForChapter(
+  chapterDocumentId: string,
+  matchings: StrapiMatching[],
+  matchingQuestions: StrapiMatchingQuestion[],
+  bag: Set<string>,
+) {
+  const chapterMatchings = matchings.filter(
+    (m) => m.lesson_chapter?.documentId === chapterDocumentId,
+  );
+  chapterMatchings.forEach((matching) => {
+    push(bag, matching.audio_desc?.url);
+    const mid = matching.documentId;
+    matchingQuestions
+      .filter((q) => q.matching?.documentId === mid)
+      .forEach((q) => {
+        push(bag, q.thumbnail?.url);
+        push(bag, q.matching_answer?.thumbnail?.url);
+      });
+  });
+}
+
 /**
- * Walks the full lesson tree (lesson → chapters → videos → quizzes → QAs)
+ * Walks the full lesson tree (lesson → chapters → videos → quizzes → QAs → matchings)
  * and returns every unique absolute media URL that needs to be downloaded.
  */
 function collectAllMediaForLesson(
@@ -82,6 +106,8 @@ function collectAllMediaForLesson(
   videos: StrapiLessonVideo[],
   quizzes: StrapiQuiz[],
   qas: StrapiQA[],
+  matchings: StrapiMatching[],
+  matchingQuestions: StrapiMatchingQuestion[],
 ): string[] {
   const bag = new Set<string>();
 
@@ -110,6 +136,13 @@ function collectAllMediaForLesson(
       qas
         .filter((qa) => qa.quiz && quizIds.has(qa.quiz.documentId))
         .forEach((qa) => collectQAMedia(qa, bag));
+
+      collectMatchingMediaForChapter(
+        chapter.documentId,
+        matchings,
+        matchingQuestions,
+        bag,
+      );
     });
 
   return Array.from(bag);
@@ -149,11 +182,24 @@ export const downloadLessonAssets = createAsyncThunk<
     const videos = getListFromCache<StrapiLessonVideo>(queryClient, ['videos', { locale }]);
     const quizzes = getListFromCache<StrapiQuiz>(queryClient, ['quizzes', { locale }]);
     const qas = getListFromCache<StrapiQA>(queryClient, ['qas', { locale }]);
+    const matchings = getListFromCache<StrapiMatching>(queryClient, ['matchings', { locale }]);
+    const matchingQuestions = getListFromCache<StrapiMatchingQuestion>(queryClient, [
+      'matching-questions',
+      { locale },
+    ]);
 
     const lesson = lessons.find((l) => l.documentId === lessonId);
     if (!lesson) return { lessonId };
 
-    const mediaUrls = collectAllMediaForLesson(lesson, chapters, videos, quizzes, qas);
+    const mediaUrls = collectAllMediaForLesson(
+      lesson,
+      chapters,
+      videos,
+      quizzes,
+      qas,
+      matchings,
+      matchingQuestions,
+    );
 
     thunkApi.dispatch(
       setLessonSync({

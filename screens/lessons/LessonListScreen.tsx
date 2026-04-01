@@ -24,7 +24,7 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 
 const LessonListScreen = () => {
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
-  const { isSyncing, syncAllLessonContent } = useOfflineSync();
+  const { isSyncing, refreshAllLessonOfflineData } = useOfflineSync();
   const { user } = useMe();
   const insets = useSafeAreaInsets();
   const { lessons, isLoading, isRefetching, error, refetch } = useLessons();
@@ -97,13 +97,16 @@ const LessonListScreen = () => {
   const onRefresh = useCallback(async () => {
     setIsRefreshingAll(true);
     try {
-      await syncAllLessonContent();
+      const refreshed = await refreshAllLessonOfflineData();
+      if (!refreshed) {
+        await refetch();
+      }
     } catch {
       await refetch();
     } finally {
       setIsRefreshingAll(false);
     }
-  }, [refetch, syncAllLessonContent]);
+  }, [refetch, refreshAllLessonOfflineData]);
 
   if (error && lessons.length === 0) {
     return (

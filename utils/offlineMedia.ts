@@ -11,6 +11,15 @@ export function ensureOfflineDir() {
   return dir;
 }
 
+/** Removes all files under offline-media and recreates the directory (sync + per-lesson downloads). */
+export function clearOfflineMediaDirectory() {
+  const dir = getOfflineDir();
+  if (dir.exists) {
+    dir.delete();
+  }
+  ensureOfflineDir();
+}
+
 export function guessExtensionFromUrl(url: string) {
   const clean = url.split('?')[0] ?? '';
   const last = clean.split('/').pop() ?? '';

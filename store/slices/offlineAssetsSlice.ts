@@ -42,10 +42,16 @@ const offlineAssetsSlice = createSlice({
     clearSyncQueue: (state) => {
       state.lessonSyncQueue = {};
     },
+    /** Clears remote→local URI map and per-lesson sync progress (e.g. full offline refresh). */
+    resetSyncedOfflineAssets: (state) => {
+      state.byRemoteUrl = {};
+      state.lessonSyncQueue = {};
+    },
   },
 });
 
-export const { setAsset, setLessonSync, clearSyncQueue } = offlineAssetsSlice.actions;
+export const { setAsset, setLessonSync, clearSyncQueue, resetSyncedOfflineAssets } =
+  offlineAssetsSlice.actions;
 export const offlineAssetsReducer = offlineAssetsSlice.reducer;
 
 // ─── Selectors ───────────────────────────────────────────────────────────────

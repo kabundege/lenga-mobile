@@ -190,10 +190,21 @@ export const offlineMediaSlice = createSlice({
       const { lessonId } = action.payload;
       delete state.byLessonId[lessonId];
     },
+    /** Clears saved-lesson video entries after wiping offline-media files on disk. */
+    resetOfflineMediaDownloads: (state) => {
+      state.byLessonId = {};
+    },
   },
 });
 
-export const { startSaving, updateProgress, markSaved, markError, markNotSaved } = offlineMediaSlice.actions;
+export const {
+  startSaving,
+  updateProgress,
+  markSaved,
+  markError,
+  markNotSaved,
+  resetOfflineMediaDownloads,
+} = offlineMediaSlice.actions;
 export const offlineMediaReducer = offlineMediaSlice.reducer;
 
 export const selectSavedOfflineMediaEntries = createSelector(
