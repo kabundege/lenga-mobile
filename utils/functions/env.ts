@@ -7,7 +7,7 @@ const getEnvVar = (key: string, fallback?: string): string => {
   return typeof value === 'string' ? value : '';
 };
 
-export const API_URL = getEnvVar('EXPO_PUBLIC_API_URL', 'http://13.245.28.20:1337');
+export const API_URL = getEnvVar('EXPO_PUBLIC_API_URL', 'https://api.lenga.site');
 
 export type Env = {
   API_URL: string;

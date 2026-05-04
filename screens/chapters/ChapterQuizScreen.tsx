@@ -2,7 +2,6 @@ import colors from '@/utils/theme/colors';
 import Button from '@/components/buttons/button';
 import { themeToken } from '@/utils/theme/styles';
 import { TextBody } from '@/components/typography';
-import { getChapterVideoUrl } from './chapterVideo';
 import { ThemedView } from '@/components/themed-view';
 import QuizQACard from '@/components/cards/QuizQACard';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -10,24 +9,62 @@ import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ContentThumbnailHeader from '@/components/headers/ContentThumbnailHeader';
 import { Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { useChapterByDocumentId, useChapterMatchings, useChapterQuizzes, useChapterVideo } from '@/hooks/useLessons';
+import { useChapterByDocumentId, useChapterMatchings, useChapterQuizzes } from '@/hooks/useLessons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EmptyListWithSkeleton } from '@/components/empty-states';
+import type { StrapiMatching, StrapiQuiz } from '@/types/api';
+import { MatchingGameBoard } from './matching/MatchingGameBoard';
+import { MatchingGhostCard } from './matching/MatchingGhostCard';
+import { chapterMatchingStyles as matchingStyles } from './matching/chapterMatchingStyles';
+import { useSharedValue } from 'react-native-reanimated';
+
+type ChapterSlide = { kind: 'quiz'; quiz: StrapiQuiz } | { kind: 'matching'; matching: StrapiMatching };
+
+const buildChapterSlides = (chapterQuizzes: StrapiQuiz[], chapterMatchings: StrapiMatching[]): ChapterSlide[] => {
+  const sortedQuizzes = chapterQuizzes.slice().sort((a, b) => a.order - b.order);
+  const entries: { order: number; slide: ChapterSlide }[] = [
+    ...sortedQuizzes.map((quiz) => ({ order: quiz.order, slide: { kind: 'quiz' as const, quiz } })),
+    ...chapterMatchings.map((matching) => ({
+      order: matching.order,
+      slide: { kind: 'matching' as const, matching },
+    })),
+  ];
+  entries.sort((a, b) => {
+    if (a.order !== b.order) return a.order - b.order;
+    if (a.slide.kind !== b.slide.kind) return a.slide.kind === 'quiz' ? -1 : 1;
+    const idA = a.slide.kind === 'quiz' ? a.slide.quiz.documentId : a.slide.matching.documentId;
+    const idB = b.slide.kind === 'quiz' ? b.slide.quiz.documentId : b.slide.matching.documentId;
+    return idA.localeCompare(idB);
+  });
+  return entries.map((e) => e.slide);
+};
 
 const ChapterQuizScreen = () => {
   const [hasQuizRightAnswer, setHasQuizRightAnswer] = useState(false);
-  const [activeQuizIndex, setActiveQuizIndex] = useState(0);
-  const [pickedQaId, setPickedQaId] = useState('');
+  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const [allMatchedForCurrent, setAllMatchedForCurrent] = useState(false);
+  const [ghostThumb, setGhostThumb] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
 
-  const params = useLocalSearchParams<{ chapterId: string; lessonId?: string; quizId?: string }>();
-  const chapterId = typeof params.chapterId === 'string' ? params.chapterId : '';
-  const lessonId = typeof params.lessonId === 'string' ? params.lessonId : '';
-  const quizId = typeof params.quizId === 'string' ? params.quizId : '';
+  const ghostX = useSharedValue(0);
+  const ghostY = useSharedValue(0);
+  const ghostVisible = useSharedValue(false);
 
-  const { chapter, isLoading: isChapterLoading, isRefetching: isChapterRefetching, error: chapterError, refetch: chapterRefetch } = useChapterByDocumentId(chapterId);
-  const { chapterVideo, isLoading: isChapterVideoLoading, isRefetching: isChapterVideoRefetching, error: chapterVideoError, refetch: chapterVideoRefetch } =
-    useChapterVideo(chapterId);
+  const handleDragStartGhost = useCallback((thumbUri: string | null) => {
+    setGhostThumb(thumbUri);
+  }, []);
+
+  const handleDragEndGhost = useCallback(() => {
+    setGhostThumb(null);
+  }, []);
+
+  const params = useLocalSearchParams<{ chapterId: string; quizId?: string; matchingId?: string }>();
+  const chapterId = typeof params.chapterId === 'string' ? params.chapterId : '';
+  const quizId = typeof params.quizId === 'string' ? params.quizId : '';
+  const matchingId = typeof params.matchingId === 'string' ? params.matchingId : '';
+
+  const { chapter, isLoading: isChapterLoading, isRefetching: isChapterRefetching, error: chapterError, refetch: chapterRefetch } =
+    useChapterByDocumentId(chapterId);
   const {
     chapterQuizzes,
     error: chapterQuizzesError,
@@ -36,71 +73,104 @@ const ChapterQuizScreen = () => {
     isRefetching: isChapterQuizzesRefetching,
   } = useChapterQuizzes(chapterId);
 
-  const { chapterMatchings } = useChapterMatchings(chapterId);
+  const {
+    chapterMatchings,
+    error: chapterMatchingsError,
+    refetch: chapterMatchingsRefetch,
+    isLoading: isChapterMatchingsLoading,
+    isRefetching: isChapterMatchingsRefetching,
+  } = useChapterMatchings(chapterId);
 
-  const isLoading = isChapterLoading || isChapterVideoLoading || isChapterQuizzesLoading;
-  const isRefetching = isChapterRefetching || isChapterVideoRefetching || isChapterQuizzesRefetching;
-  const error = chapterError ?? chapterVideoError ?? chapterQuizzesError;
+  const chapterSlides = useMemo(
+    () => buildChapterSlides(chapterQuizzes, chapterMatchings),
+    [chapterQuizzes, chapterMatchings],
+  );
+
+  const isLoading = isChapterLoading || isChapterQuizzesLoading || isChapterMatchingsLoading;
+  const isRefetching =
+    isChapterRefetching || isChapterQuizzesRefetching || isChapterMatchingsRefetching;
+  const error = chapterError ?? chapterQuizzesError ?? chapterMatchingsError;
 
   const refetch = useCallback(() => {
     chapterRefetch();
-    chapterVideoRefetch();
     chapterQuizzesRefetch();
-  }, [chapterRefetch, chapterVideoRefetch, chapterQuizzesRefetch]);
+    chapterMatchingsRefetch();
+  }, [chapterRefetch, chapterQuizzesRefetch, chapterMatchingsRefetch]);
 
   const refreshControl = useMemo(
     () => <RefreshControl refreshing={isRefetching} onRefresh={refetch} tintColor={colors.primary} />,
-    [isRefetching, refetch]
+    [isRefetching, refetch],
   );
 
-  const activeQuiz = useMemo(() => chapterQuizzes[activeQuizIndex], [chapterQuizzes, activeQuizIndex]);
+  const activeSlide = chapterSlides[activeSlideIndex];
+  const activeQuiz = activeSlide?.kind === 'quiz' ? activeSlide.quiz : undefined;
+  const activeMatching = activeSlide?.kind === 'matching' ? activeSlide.matching : undefined;
   const qas = useMemo(() => activeQuiz?.qas ?? [], [activeQuiz]);
-  const videoUrl = useMemo(() => getChapterVideoUrl(chapterVideo ?? null), [chapterVideo]);
+
   const qasScrollRef = useRef<ScrollView>(null);
+  const matchingScrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
     if (!quizId) return;
-    const idx = chapterQuizzes.findIndex((q) => q.documentId === quizId);
-    if (idx >= 0 && idx !== activeQuizIndex) setActiveQuizIndex(idx);
-  }, [quizId, chapterQuizzes, activeQuizIndex]);
+    const idx = chapterSlides.findIndex((s) => s.kind === 'quiz' && s.quiz.documentId === quizId);
+    if (idx >= 0 && idx !== activeSlideIndex) setActiveSlideIndex(idx);
+  }, [quizId, chapterSlides, activeSlideIndex]);
 
   useEffect(() => {
-    setPickedQaId('');
+    if (!matchingId) return;
+    const idx = chapterSlides.findIndex((s) => s.kind === 'matching' && s.matching.documentId === matchingId);
+    if (idx >= 0 && idx !== activeSlideIndex) setActiveSlideIndex(idx);
+  }, [matchingId, chapterSlides, activeSlideIndex]);
+
+  useEffect(() => {
+    setHasQuizRightAnswer(false);
+    setAllMatchedForCurrent(false);
     qasScrollRef.current?.scrollTo({ y: 0, animated: true });
-  }, [activeQuizIndex]);
+    matchingScrollRef.current?.scrollTo({ y: 0, animated: true });
+  }, [activeSlideIndex]);
 
-  const onPickQaId = useCallback((qaId: string) => setPickedQaId(qaId), []);
-
-  const pushQuizByIndex = useCallback(
-    (nextIndex: number) => {
-      const nextQuiz = chapterQuizzes[nextIndex];
-      if (!nextQuiz) return;
-      setHasQuizRightAnswer(false);
-      setActiveQuizIndex(nextIndex);
-    },
-    [chapterQuizzes, chapterId, lessonId]
-  );
+  const pushSlideByIndex = useCallback((nextIndex: number) => {
+    if (!chapterSlides[nextIndex]) return;
+    setActiveSlideIndex(nextIndex);
+  }, [chapterSlides]);
 
   const backButton = useMemo(() => {
-    const isDisabled = activeQuizIndex <= 0;
+    const isDisabled = activeSlideIndex <= 0;
     if (isDisabled) return { isDisabled, color: colors.text.tertiary, bgStyles: globalStyles.bg_tertiary };
     return { isDisabled, color: colors.text.default, bgStyles: globalStyles.bg_primary_light };
-  }, [activeQuizIndex]);
+  }, [activeSlideIndex]);
 
-  const isLastQuiz = activeQuizIndex >= chapterQuizzes.length - 1;
-  const hasMatchings = chapterMatchings.length > 0;
+  const isLastSlide = activeSlideIndex >= chapterSlides.length - 1;
+
+  const canProceedCurrentSlide = useMemo(() => {
+    if (!activeSlide) return false;
+    if (activeSlide.kind === 'quiz') {
+      const qCount = activeSlide.quiz.qas?.length ?? 0;
+      return qCount === 0 || hasQuizRightAnswer;
+    }
+    return allMatchedForCurrent;
+  }, [activeSlide, hasQuizRightAnswer, allMatchedForCurrent]);
 
   const nextButton = useMemo(() => {
-    const isDisabled = !hasQuizRightAnswer;
+    const isDisabled = !canProceedCurrentSlide;
     if (isDisabled) return { isDisabled, color: colors.text.tertiary, bgStyles: globalStyles.bg_tertiary };
     return { isDisabled, color: colors.text.default, bgStyles: globalStyles.bg_primary_light };
-  }, [hasQuizRightAnswer]);
+  }, [canProceedCurrentSlide]);
 
   const RenderQas = useCallback(() => {
     return qas.map((qa) => (
       <QuizQACard key={qa.documentId} qaId={qa.documentId} rightAnswerCallBack={() => setHasQuizRightAnswer(true)} />
     ));
-  }, [qas, pickedQaId, onPickQaId]);
+  }, [qas]);
+
+  const headerTitle = activeQuiz?.title ?? activeMatching?.title ?? chapter?.title ?? 'Igice';
+  const headerSubtitle =
+    activeSlide && chapterSlides.length > 0
+      ? activeSlide.kind === 'quiz'
+        ? `Umwitozo wa ${activeSlideIndex + 1}`
+        : `Guhuzanya kwa ${activeSlideIndex + 1}`
+      : undefined;
+  const headerAudioUrl = activeQuiz?.audio_desc?.url ?? activeMatching?.audio_desc?.url ?? chapter?.audio_desc?.url;
 
   if (!chapterId) return <ThemedView style={[styles.container, globalStyles.center]} />;
 
@@ -119,30 +189,62 @@ const ChapterQuizScreen = () => {
     );
   }
 
+  /** Multi-slide flow, or a single matching (matching screen always showed chapter nav). */
+  const showMainNav =
+    chapterSlides.length > 1 || (chapterSlides.length === 1 && activeSlide?.kind === 'matching');
+
   return (
     <ThemedView style={styles.container}>
       <ContentThumbnailHeader
         onBack={router.back}
-        title={activeQuiz?.title ?? chapter?.title ?? 'Igice'}
-        subtitle={activeQuiz ? `Umwitozo wa ${activeQuizIndex + 1}` : undefined}
+        title={headerTitle}
+        subtitle={headerSubtitle}
         thumbnailUrl={chapter?.thumbnail?.url}
-        audioUrl={activeQuiz?.audio_desc?.url ?? chapter?.audio_desc?.url}
+        audioUrl={headerAudioUrl}
       />
 
-      {qas.length ? (
+      {activeSlide?.kind === 'quiz' && qas.length > 0 ? (
         <ScrollView style={globalStyles.flex_1} contentContainerStyle={styles.grid} ref={qasScrollRef} refreshControl={refreshControl}>
           <RenderQas />
         </ScrollView>
-      ) : !isLoading ? (
+      ) : activeSlide?.kind === 'matching' && activeMatching ? (
+        <ScrollView
+          ref={matchingScrollRef}
+          style={globalStyles.flex_1}
+          contentContainerStyle={matchingStyles.content}
+          refreshControl={refreshControl}
+        >
+          <MatchingGameBoard
+            key={activeMatching.documentId}
+            matchingId={activeMatching.documentId}
+            onAllMatched={() => setAllMatchedForCurrent(true)}
+            ghostX={ghostX}
+            ghostY={ghostY}
+            ghostVisible={ghostVisible}
+            onDragStartGhost={handleDragStartGhost}
+            onDragEndGhost={handleDragEndGhost}
+          />
+        </ScrollView>
+      ) : !isLoading && chapterSlides.length === 0 ? (
         <EmptyListWithSkeleton
-          title={quizId ? 'Nta bibazo biboneka' : 'Nta myitozo iboneka'}
-          description={quizId ? 'Nta bibazo biboneka muri uyu mwitozo.' : 'Nta myitozo iboneka muri iki gice.'}
+          title="Nta myitozo iboneka"
+          description="Nta myitozo iboneka muri iki gice."
+          containerStyles={styles.emptyState}
+        />
+      ) : !isLoading && activeSlide?.kind === 'quiz' && qas.length === 0 ? (
+        <EmptyListWithSkeleton
+          title="Nta bibazo biboneka"
+          description="Nta bibazo biboneka muri uyu mwitozo."
           containerStyles={styles.emptyState}
         />
       ) : null}
 
-      {chapterQuizzes.length > 1 || hasMatchings ? (
-        <View style={[flexBetween, globalStyles.px_md, { paddingBottom: insets.bottom }]}>
+      {activeSlide?.kind === 'matching' ? (
+        <MatchingGhostCard ghostX={ghostX} ghostY={ghostY} ghostVisible={ghostVisible} thumbUri={ghostThumb} />
+      ) : null}
+
+      {showMainNav ? (
+        <View style={[flexBetween, globalStyles.px_md, { paddingBottom: insets.bottom + themeToken.paddingSm }]}>
           <Button
             size="sm"
             type="primary"
@@ -150,32 +252,25 @@ const ChapterQuizScreen = () => {
             textStyles={globalStyles.w_auto}
             textColor={backButton.color}
             disabled={backButton.isDisabled}
-            onPress={() => pushQuizByIndex(Math.max(0, activeQuizIndex - 1))}
+            onPress={() => pushSlideByIndex(Math.max(0, activeSlideIndex - 1))}
             leftIcon={{ name: 'chevron-left', color: backButton.color }}
             overRiddingStyles={[globalStyles.w_40, backButton.bgStyles]}
           />
           <Button
             size="sm"
             type="primary"
-            label={isLastQuiz ? (hasMatchings ? 'Guhuzanya' : 'Sohoka') : 'Ibikurikira'}
+            label={isLastSlide ? 'Sohoka' : 'Ibikurikira'}
             textColor={nextButton.color}
             textStyles={globalStyles.w_auto}
             disabled={nextButton.isDisabled}
             overRiddingStyles={[globalStyles.w_40, nextButton.bgStyles]}
             rightIcon={{ name: 'chevron-right', color: nextButton.color }}
             onPress={() => {
-              if (isLastQuiz) {
-                if (hasMatchings) {
-                  router.push({
-                    pathname: '/lessons/chapters/[chapterId]/matching',
-                    params: { chapterId, lessonId },
-                  });
-                } else {
-                  router.back();
-                }
+              if (isLastSlide) {
+                router.back();
                 return;
               }
-              pushQuizByIndex(Math.min(chapterQuizzes.length - 1, activeQuizIndex + 1));
+              pushSlideByIndex(Math.min(chapterSlides.length - 1, activeSlideIndex + 1));
             }}
           />
         </View>
@@ -218,4 +313,3 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background.secondary,
   },
 });
-

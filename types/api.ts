@@ -130,6 +130,7 @@ export type StrapiQuiz = {
   updatedAt: string;
   locale: string;
   qas?: StrapiQA[];
+  order: number;
   publishedAt: string | null;
   audio_desc?: StrapiMedia | null;
   lesson_chapter?: StrapiLessonChapter | null;

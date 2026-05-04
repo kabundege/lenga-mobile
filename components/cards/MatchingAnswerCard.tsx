@@ -19,6 +19,12 @@ import { CARD_SIZE, type AnswerLayout, type AnswerPositionEntry } from './Matchi
 type Props = {
   answer: StrapiMatchingAnswer;
   isMatched: boolean;
+  /** Green check + matched card styling — only for strict CMS pairs on this slot (hidden for wildcard-only matches). */
+  showMatchedCheck?: boolean;
+  /** Red X on wrong overlay; false on wildcard boards. */
+  showWrongCheck?: boolean;
+  /** Strong wrong border on the answer card. */
+  emphasizeWrongCard?: boolean;
   /** Questions correctly dropped on this answer (can be several per bucket). */
   matchedQuestions: StrapiMatchingQuestion[];
   hoveredAnswerId: SharedValue<string>;
@@ -39,6 +45,9 @@ const MATCHED_THUMB = Math.round(CARD_SIZE * 0.38);
 const MatchingAnswerCard = ({
   answer,
   isMatched,
+  showMatchedCheck = true,
+  showWrongCheck = true,
+  emphasizeWrongCard = true,
   matchedQuestions,
   hoveredAnswerId,
   onRegisterLayout,
@@ -138,6 +147,7 @@ const MatchingAnswerCard = ({
   const showWrongOverlay = !!wrongQuestionId;
   /** Keep matched chips visible alongside the wrong overlay when both exist. */
   const showMatchedList = matchedQuestions.length > 0;
+  const useMatchedSuccessStyle = isMatched && showMatchedCheck;
 
   return (
     <Animated.View
@@ -145,8 +155,8 @@ const MatchingAnswerCard = ({
       onLayout={handleLayout}
       style={[
         styles.card,
-        isMatched && styles.cardMatched,
-        showWrongOverlay && styles.cardWrong,
+        useMatchedSuccessStyle && styles.cardMatched,
+        showWrongOverlay && emphasizeWrongCard && styles.cardWrong,
         hoverStyle,
       ]}
     >
@@ -167,21 +177,23 @@ const MatchingAnswerCard = ({
               ) : (
                 <View style={styles.thumbPlaceholder} />
               )}
-              <View style={styles.badgeWrong}>
-                <IconButton
-                  size="sm"
-                  icon="close"
-                  iconType="antd"
-                  style={globalStyles.self_start}
-                  iconFill={colors.danger.primary}
-                  backgroundColor={colors.danger.tertiary}
-                />
-              </View>
+              {showWrongCheck ? (
+                <View style={styles.badgeWrong}>
+                  <IconButton
+                    size="sm"
+                    icon="close"
+                    iconType="antd"
+                    style={globalStyles.self_start}
+                    iconFill={colors.danger.primary}
+                    backgroundColor={colors.danger.tertiary}
+                  />
+                </View>
+              ) : null}
             </Animated.View>
           </GestureDetector>
         ) : null}
 
-        {isMatched ? (
+        {isMatched && showMatchedCheck ? (
           <View style={styles.badge}>
             <IconButton
               size="sm"

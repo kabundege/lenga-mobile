@@ -34,6 +34,8 @@ const ChapterCard = ({ chapter: embeddedChapter, height }: ChapterCardProps) => 
   const thumbnailUrl = useOfflineAssetUri(chapter.thumbnail?.url);
   const quizzesCount = chapter.quizzes?.length ?? 0;
   const matchingsCount = chapterMatchings.length;
+  /** Regular quizzes plus matching exercises shown under the same activity count when both exist. */
+  const quizCount = quizzesCount + matchingsCount;
 
   const animatedStyles = useAnimatedStyle(() => ({
     marginRight: Dimensions.SIZE_M,
@@ -42,7 +44,7 @@ const ChapterCard = ({ chapter: embeddedChapter, height }: ChapterCardProps) => 
 
   return (
     <PressableScale
-      onPress={() => router.push(`/lessons/chapters/${chapterId}/${chapterVideo ? 'video' : matchingsCount > 0 ? 'matching' : 'quiz'}`)}
+      onPress={() => router.push(`/lessons/chapters/${chapterId}/${chapterVideo ? 'video' : 'quiz'}`)}
       style={animatedStyles}
     >
       <View style={styles.card}>
@@ -87,7 +89,7 @@ const ChapterCard = ({ chapter: embeddedChapter, height }: ChapterCardProps) => 
               {chapterVideo
                 ? 'Reba Video'
                 : quizzesCount
-                  ? `Imyitozi ${quizzesCount}`
+                  ? `Imyitozi ${quizCount}`
                   : matchingsCount > 0
                     ? `Guhuza ${matchingsCount}`
                     : 'Nta Mwitozo wabonetse'}

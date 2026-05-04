@@ -18,6 +18,8 @@ export type AnswerPositionEntry = AnswerLayout & { id: string };
 type Props = {
   question: StrapiMatchingQuestion;
   isMatched: boolean;
+  /** Green check — only when match is the CMS-designated pair (hidden for wildcard matches). */
+  showMatchedCheck?: boolean;
   /** When true, the question thumbnail sits on a wrong answer; drag from that answer instead. */
   isPlacedWrong: boolean;
   isDraggingThis: boolean;
@@ -35,6 +37,7 @@ const CARD_SIZE = Dimensions.SCREEN_WIDTH * 0.3;
 const MatchingQuestionCard = ({
   question,
   isMatched,
+  showMatchedCheck = true,
   isPlacedWrong,
   isDraggingThis,
   ghostX,
@@ -92,12 +95,12 @@ const MatchingQuestionCard = ({
   return (
     <GestureDetector gesture={pan}>
       <Animated.View style={[styles.card, dimmedStyle]}>
-        {thumbUri && !isPlacedWrong ? (
+        {thumbUri && !isPlacedWrong && !isMatched ? (
           <Image source={{ uri: thumbUri }} style={styles.thumb} resizeMode="contain" />
         ) : (
           <View style={styles.thumbPlaceholder} />
         )}
-        {isMatched ? (
+        {isMatched && showMatchedCheck ? (
           <View style={styles.badge}>
             <IconButton
               icon="check"

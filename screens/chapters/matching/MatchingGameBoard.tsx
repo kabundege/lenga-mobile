@@ -119,7 +119,14 @@ export const MatchingGameBoard = ({
         if (!hit) continue;
 
         const question = questions.find((q) => q.documentId === questionId);
-        const isCorrect = question?.matching_answer?.documentId === answerId;
+        const designatedAnswerId = question?.matching_answer?.documentId;
+        const isStrictPair =
+          !!designatedAnswerId && designatedAnswerId === answerId;
+        /** Question has no linked answer in CMS — user may drop on any answer slot. */
+        const isWildQuestion = !designatedAnswerId;
+        /** No question in this game names this answer as its pair — slot accepts any question. */
+        const isWildAnswer = !questions.some((q) => q.matching_answer?.documentId === answerId);
+        const isCorrect = isStrictPair || isWildQuestion || isWildAnswer;
 
         if (isCorrect) {
           clearWrongForQuestion(questionId);
@@ -169,25 +176,40 @@ export const MatchingGameBoard = ({
     return map;
   }, [questions, matchedPairs]);
 
+  /** Exercise mixes default pairs with CMS “open” sides — hide ✓/✗ affordances for free pairings. */
+  const boardHasWildcard = useMemo(() => {
+    const hasWildQuestion = questions.some((q) => !q.matching_answer?.documentId);
+    const designated = new Set(
+      questions.map((q) => q.matching_answer?.documentId).filter(Boolean) as string[],
+    );
+    const hasWildAnswer = answers.some((a) => !designated.has(a.documentId));
+    return hasWildQuestion || hasWildAnswer;
+  }, [questions, answers]);
+
   return (
     <View style={styles.columns}>
       <View style={styles.column}>
-        {questions.map((q) => (
-          <MatchingQuestionCard
-            key={q.documentId}
-            question={q}
-            isMatched={!!matchedPairs[q.documentId]}
-            isPlacedWrong={Object.values(wrongPlacements).includes(q.documentId)}
-            isDraggingThis={draggingQuestion === q.documentId}
-            ghostX={ghostX}
-            ghostY={ghostY}
-            ghostVisible={ghostVisible}
-            hoveredAnswerId={hoveredAnswerId}
-            answerPositionsShared={answerPositionsShared}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-          />
-        ))}
+        {questions.map((q) => {
+          const matchedAid = matchedPairs[q.documentId];
+          const showMatchedCheck = !!matchedAid && q.matching_answer?.documentId === matchedAid;
+          return (
+            <MatchingQuestionCard
+              key={q.documentId}
+              question={q}
+              isMatched={!!matchedAid}
+              showMatchedCheck={showMatchedCheck}
+              isPlacedWrong={Object.values(wrongPlacements).includes(q.documentId)}
+              isDraggingThis={draggingQuestion === q.documentId}
+              ghostX={ghostX}
+              ghostY={ghostY}
+              ghostVisible={ghostVisible}
+              hoveredAnswerId={hoveredAnswerId}
+              answerPositionsShared={answerPositionsShared}
+              onDragStart={handleDragStart}
+              onDragEnd={handleDragEnd}
+            />
+          );
+        })}
       </View>
 
       <View style={styles.separator} />
@@ -196,12 +218,17 @@ export const MatchingGameBoard = ({
         {shuffledAnswers.map((a) => {
           const wrongQid = wrongPlacements[a.documentId];
           const wrongQ = wrongQid ? questions.find((q) => q.documentId === wrongQid) : undefined;
+          const mqList = matchedQuestionsByAnswerId[a.documentId] ?? [];
+          const showMatchedCheck = mqList.some((mq) => mq.matching_answer?.documentId === a.documentId);
           return (
             <MatchingAnswerCard
               key={a.documentId}
               answer={a}
               isMatched={matchedAnswerIds.has(a.documentId)}
-              matchedQuestions={matchedQuestionsByAnswerId[a.documentId] ?? []}
+              showMatchedCheck={showMatchedCheck}
+              showWrongCheck={!boardHasWildcard}
+              emphasizeWrongCard={!boardHasWildcard}
+              matchedQuestions={mqList}
               hoveredAnswerId={hoveredAnswerId}
               onRegisterLayout={registerAnswerLayout}
               ghostX={ghostX}
