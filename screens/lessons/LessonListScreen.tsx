@@ -109,7 +109,7 @@ const LessonListScreen = () => {
           <ControlledInput
             control={control}
             editable={editable}
-            placeholder="Amasono akunogeye"
+            placeholder="Amasomo akunogeye"
             name="search"
             icon="search"
             iconType="antd"

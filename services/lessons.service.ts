@@ -1,74 +1,115 @@
 import type { StrapiLesson, StrapiLessonChapter, StrapiLessonVideo, StrapiListResponse, StrapiMatching, StrapiMatchingAnswer, StrapiMatchingQuestion, StrapiQA, StrapiQuiz } from '@/types/api';
 import api from '@/utils/api';
 
-const ALL_ITEMS_PAGE_SIZE = 1000;
+/**
+ * Must match Strapi `api.rest.maxLimit` (e.g. lenga-api/config/api.ts). Larger
+ * `pagination[pageSize]` values are capped server-side, so we page until all
+ * records are loaded for offline sync and in-app lists.
+ */
+const STRAPI_MAX_PAGE_SIZE = 100;
 
-export function getLessonsList(locale: string) {
-  return api.get<StrapiListResponse<StrapiLesson>>('/api/lessons', {
-    params: {
-      locale,
-      populate: '*',
-      sort: 'createdAt:asc',
-      'pagination[pageSize]': ALL_ITEMS_PAGE_SIZE,
+type StrapiListParams = Record<string, string | number>;
+
+async function fetchStrapiListAllPages<T>(
+  path: string,
+  baseParams: StrapiListParams,
+): Promise<StrapiListResponse<T>> {
+  const aggregated: T[] = [];
+  let page = 1;
+  let total = 0;
+
+  while (true) {
+    const res = await api.get<StrapiListResponse<T>>(path, {
+      params: {
+        ...baseParams,
+        'pagination[page]': page,
+        'pagination[pageSize]': STRAPI_MAX_PAGE_SIZE,
+      },
+    });
+    const batch = Array.isArray(res.data.data) ? res.data.data : [];
+    aggregated.push(...batch);
+    const pag = res.data.meta?.pagination;
+    total = pag?.total ?? aggregated.length;
+    if (!pag || page >= pag.pageCount || batch.length === 0) {
+      break;
+    }
+    page += 1;
+  }
+
+  return {
+    data: aggregated,
+    meta: {
+      pagination: {
+        page: 1,
+        pageCount: 1,
+        pageSize: aggregated.length,
+        total,
+      },
     },
-  });
+  };
 }
 
-
-export function getChaptersList(locale: string) {
-  return api.get<StrapiListResponse<StrapiLessonChapter>>('/api/lesson-chapters', {
-    params: {
-      locale,
-      populate: '*',
-      'pagination[pageSize]': ALL_ITEMS_PAGE_SIZE,
-    },
+export async function getLessonsList(locale: string) {
+  const data = await fetchStrapiListAllPages<StrapiLesson>('/api/lessons', {
+    locale,
+    populate: '*',
+    sort: 'createdAt:asc',
   });
+  return { data };
 }
 
-export function getVideosList(locale: string) {
-  return api.get<StrapiListResponse<StrapiLessonVideo>>('/api/lesson-videos', {
-    params: {
-      locale,
-      populate: '*',
-      'pagination[pageSize]': ALL_ITEMS_PAGE_SIZE,
-    },
+export async function getChaptersList(locale: string) {
+  const data = await fetchStrapiListAllPages<StrapiLessonChapter>('/api/lesson-chapters', {
+    locale,
+    populate: '*',
   });
+  return { data };
 }
 
-export function getQuizzesList(locale: string) {
-  return api.get<StrapiListResponse<StrapiQuiz>>('/api/quizzes', {
-    params: {
-      locale,
-      populate: '*',
-      'pagination[pageSize]': ALL_ITEMS_PAGE_SIZE,
-    },
+export async function getVideosList(locale: string) {
+  const data = await fetchStrapiListAllPages<StrapiLessonVideo>('/api/lesson-videos', {
+    locale,
+    populate: '*',
   });
+  return { data };
 }
 
-export function getQAsList(locale: string) {
-  return api.get<StrapiListResponse<StrapiQA>>('/api/qas', {
-    params: {
-      locale,
-      populate: '*',
-      'pagination[pageSize]': ALL_ITEMS_PAGE_SIZE,
-    },
+export async function getQuizzesList(locale: string) {
+  const data = await fetchStrapiListAllPages<StrapiQuiz>('/api/quizzes', {
+    locale,
+    populate: '*',
   });
+  return { data };
 }
 
-export function getMatchingsList(locale: string) {
-  return api.get<StrapiListResponse<StrapiMatching>>('/api/matchings', {
-    params: { locale, populate: '*', 'pagination[pageSize]': ALL_ITEMS_PAGE_SIZE },
+export async function getQAsList(locale: string) {
+  const data = await fetchStrapiListAllPages<StrapiQA>('/api/qas', {
+    locale,
+    populate: '*',
   });
+  return { data };
 }
 
-export function getMatchingQuestionsList(locale: string) {
-  return api.get<StrapiListResponse<StrapiMatchingQuestion>>('/api/matching-questions', {
-    params: { locale, populate: '*', 'pagination[pageSize]': ALL_ITEMS_PAGE_SIZE },
+export async function getMatchingsList(locale: string) {
+  const data = await fetchStrapiListAllPages<StrapiMatching>('/api/matchings', {
+    locale,
+    populate: '*',
   });
+  return { data };
 }
 
-export function getMatchingAnswersList(locale: string) {
-  return api.get<StrapiListResponse<StrapiMatchingAnswer>>('/api/matching-answers', {
-    params: { locale, populate: '*', 'pagination[pageSize]': ALL_ITEMS_PAGE_SIZE },
+export async function getMatchingQuestionsList(locale: string) {
+  const data = await fetchStrapiListAllPages<StrapiMatchingQuestion>('/api/matching-questions', {
+    locale,
+    populate: '*',
   });
+  return { data };
+}
+
+export async function getMatchingAnswersList(locale: string) {
+  const data = await fetchStrapiListAllPages<StrapiMatchingAnswer>('/api/matching-answers', {
+    locale,
+    populate: '*',
+  });
+  return { data };
 }

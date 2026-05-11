@@ -126,6 +126,7 @@ export type StrapiQuiz = {
   id: StrapiEntityId;
   documentId: string;
   title: string;
+  description?: string | null;
   createdAt: string;
   updatedAt: string;
   locale: string;
@@ -133,6 +134,8 @@ export type StrapiQuiz = {
   order: number;
   publishedAt: string | null;
   audio_desc?: StrapiMedia | null;
+  title_image?: StrapiMedia | null;
+  title_image_audio?: StrapiMedia | null;
   lesson_chapter?: StrapiLessonChapter | null;
 };
 

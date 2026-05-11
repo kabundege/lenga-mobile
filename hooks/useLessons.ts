@@ -121,6 +121,9 @@ export const useQAs = () => {
     queryKey: api_keys.qas(locale),
     queryFn: () => lessonsService.getQAsList(locale),
   });
+
+  console.log({ requestDataLength: request.data?.data.data.length });
+
   const qas = getListFromResponse<StrapiQA>(request.data);
   return { ...request, qas };
 };

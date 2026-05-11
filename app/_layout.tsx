@@ -3,7 +3,6 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native
 import * as Haptics from 'expo-haptics';
 import { SplashScreen, Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { KeyboardProvider } from 'react-native-keyboard-controller';
 import 'react-native-reanimated';
 import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-context';
 import { Toaster } from 'sonner-native';
@@ -33,16 +32,14 @@ const PressablesProvider = ({ children }: { children: React.ReactNode }) => (
 
 const AppShell = ({ children }: { children: React.ReactNode }) => (
   <GestureHandlerRootView style={globalStyles.flex_1}>
-    <KeyboardProvider>
-      <PressablesProvider>
-        <SafeAreaProvider initialMetrics={initialWindowMetrics}>
-          <BottomSheetModalProvider>
-            {children}
-            <Toaster position="bottom-center" />
-          </BottomSheetModalProvider>
-        </SafeAreaProvider>
-      </PressablesProvider>
-    </KeyboardProvider>
+    <PressablesProvider>
+      <SafeAreaProvider initialMetrics={initialWindowMetrics}>
+        <BottomSheetModalProvider>
+          {children}
+          <Toaster position="bottom-center" />
+        </BottomSheetModalProvider>
+      </SafeAreaProvider>
+    </PressablesProvider>
   </GestureHandlerRootView>
 );
 

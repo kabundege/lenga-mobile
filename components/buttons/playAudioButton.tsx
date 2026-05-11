@@ -1,12 +1,21 @@
-import IconButton, { IconButtonProps } from '@/components/buttons/iconButton';
-import { useLessonAudio } from '@/hooks/useLessonAudio';
-import colors from '@/utils/theme/colors';
-import { SizeVariants } from '@/utils/types/theme';
-import { useEffect } from 'react';
-import { StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import IconButton, { IconButtonProps } from "@/components/buttons/iconButton";
+import { useLessonAudio } from "@/hooks/useLessonAudio";
+import colors from "@/utils/theme/colors";
+import { SizeVariants } from "@/utils/types/theme";
+import { useEffect } from "react";
+import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
+import Animated, {
+  Easing,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 
-interface PlayAudioButtonProps extends Omit<IconButtonProps, 'icon' | 'iconType'> {
+interface PlayAudioButtonProps extends Omit<
+  IconButtonProps,
+  "icon" | "iconType"
+> {
   style?: StyleProp<ViewStyle>;
   size?: SizeVariants;
   audioUrl?: string;
@@ -15,7 +24,7 @@ interface PlayAudioButtonProps extends Omit<IconButtonProps, 'icon' | 'iconType'
 const PlayAudioButton = ({
   style,
   audioUrl,
-  size = 'md',
+  size = "md",
   backgroundColor = colors.primary_light,
   ...iconButtonProps
 }: PlayAudioButtonProps) => {
@@ -34,7 +43,7 @@ const PlayAudioButton = ({
         easing: Easing.linear,
       }),
       -1,
-      false
+      false,
     );
   }, [audioLoaded, rotation]);
 
@@ -42,6 +51,8 @@ const PlayAudioButton = ({
     transform: [{ rotate: `${rotation.value}deg` }],
     opacity: audioLoaded ? 0 : 1,
   }));
+
+  if (!audioUrl) return null;
 
   return (
     <View style={[styles.wrapper, style]}>
@@ -53,9 +64,14 @@ const PlayAudioButton = ({
         styles={iconButtonProps.styles}
         backgroundColor={backgroundColor}
         iconType={audioPlaying ? "ionicons" : "entypo"}
-        icon={audioPlaying ? 'pause' : audioLoaded ? 'sound' : 'warning'}
+        icon={audioPlaying ? "pause" : audioLoaded ? "sound" : "warning"}
       />
-      {!audioLoaded ? <Animated.View pointerEvents="none" style={[styles.loadingRing, loadingRingStyle]} /> : null}
+      {!audioLoaded ? (
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.loadingRing, loadingRingStyle]}
+        />
+      ) : null}
     </View>
   );
 };
@@ -64,16 +80,16 @@ export default PlayAudioButton;
 
 const styles = StyleSheet.create({
   wrapper: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   loadingRing: {
     width: 42,
     height: 42,
     borderWidth: 2,
     borderRadius: 21,
-    position: 'absolute',
+    position: "absolute",
     borderColor: colors.primary,
-    borderTopColor: 'transparent',
+    borderTopColor: "transparent",
   },
 });

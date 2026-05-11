@@ -1,8 +1,8 @@
 import type {
+  StrapiUser,
   LoginPayload,
   RegisterPayload,
   StrapiAuthResponse,
-  StrapiUser,
   UpdateProfilePayload,
 } from '@/types/api';
 import api from '@/utils/api';
