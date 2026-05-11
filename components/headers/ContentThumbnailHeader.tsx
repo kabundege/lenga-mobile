@@ -1,12 +1,21 @@
-import IconButton from '@/components/buttons/iconButton';
-import PlayAudioButton from '@/components/buttons/playAudioButton';
-import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
-import { TextBody, TextHeading } from '@/components/typography';
-import { flexBetween, globalStyles } from '@/utils/styles';
-import colors from '@/utils/theme/colors';
-import { SafeAreaView, type SafeAreaViewProps } from 'react-native-safe-area-context';
-import { Image, ImageBackground, StyleSheet, View, type ImageSourcePropType } from 'react-native';
-import { scale } from 'react-native-size-matters';
+import IconButton from "@/components/buttons/iconButton";
+import PlayAudioButton from "@/components/buttons/playAudioButton";
+import { TextBody, TextHeading } from "@/components/typography";
+import { useOfflineAssetUri } from "@/hooks/useOfflineAssetUri";
+import { flexBetween, globalStyles } from "@/utils/styles";
+import colors from "@/utils/theme/colors";
+import {
+  Image,
+  ImageBackground,
+  StyleSheet,
+  View,
+  type ImageSourcePropType,
+} from "react-native";
+import {
+  SafeAreaView,
+  type SafeAreaViewProps,
+} from "react-native-safe-area-context";
+import { scale } from "react-native-size-matters";
 
 type Props = {
   title: string;
@@ -14,7 +23,9 @@ type Props = {
   thumbnailUrl?: string | null;
   audioUrl?: string | null;
   onBack: () => void;
-  edges?: SafeAreaViewProps['edges'];
+  edges?: SafeAreaViewProps["edges"];
+  /** Location path under the top bar, e.g. lesson › chapter › activity */
+  breadcrumbItems?: string[];
 };
 
 export default function ContentThumbnailHeader({
@@ -23,27 +34,52 @@ export default function ContentThumbnailHeader({
   thumbnailUrl,
   audioUrl,
   onBack,
-  edges = ['top'],
+  edges = ["top"],
+  breadcrumbItems,
 }: Props) {
   const img = useOfflineAssetUri(thumbnailUrl);
-  const source: ImageSourcePropType | undefined = img ? { uri: img } : undefined;
+  const source: ImageSourcePropType | undefined = img
+    ? { uri: img }
+    : undefined;
 
   return (
     <View style={[globalStyles.bg_primary_light]}>
-
-      {source ? <ImageBackground source={source} style={styles.thumbnailBackground} /> : null}
-      <SafeAreaView edges={edges} style={[globalStyles.p_md, globalStyles.gap_sm]}>
+      {source ? (
+        <ImageBackground source={source} style={styles.thumbnailBackground} />
+      ) : null}
+      <SafeAreaView
+        edges={edges}
+        style={[globalStyles.p_md, globalStyles.gap_sm]}
+      >
         <View>
           <View style={flexBetween}>
-            <IconButton onPress={onBack} icon="chevron-left" iconType="feather" backgroundColor={colors.primary_light} iconFill={colors.primary} />
+            <IconButton
+              onPress={onBack}
+              icon="chevron-left"
+              iconType="feather"
+              backgroundColor={colors.primary_light}
+              iconFill={colors.primary}
+            />
             <PlayAudioButton audioUrl={audioUrl ?? undefined} />
           </View>
 
           <View style={[flexBetween, globalStyles.gap_sm, globalStyles.mt_sm]}>
-            {source ? <Image resizeMode="contain" source={source} style={styles.thumbnail} /> : <View style={styles.thumbnailPlaceholder} />}
+            {source ? (
+              <Image
+                resizeMode="contain"
+                source={source}
+                style={styles.thumbnail}
+              />
+            ) : (
+              <View style={styles.thumbnailPlaceholder} />
+            )}
             <View style={globalStyles.flex_1}>
               {subtitle ? (
-                <TextBody variant="body2" color="primary" style={globalStyles.mt_xs}>
+                <TextBody
+                  variant="body2"
+                  color="primary"
+                  style={globalStyles.mt_xs}
+                >
                   {subtitle}
                 </TextBody>
               ) : null}
@@ -57,6 +93,27 @@ export default function ContentThumbnailHeader({
 }
 
 const styles = StyleSheet.create({
+  breadcrumbScroll: {
+    maxHeight: 22,
+    marginTop: 6,
+  },
+  breadcrumbContent: {
+    flexDirection: "row",
+    alignItems: "center",
+    flexWrap: "nowrap",
+    paddingRight: 8,
+  },
+  breadcrumbSegment: {
+    flexDirection: "row",
+    alignItems: "center",
+    maxWidth: 280,
+  },
+  breadcrumbSep: {
+    marginHorizontal: 6,
+  },
+  breadcrumbLabel: {
+    flexShrink: 1,
+  },
   thumbnail: {
     width: scale(60),
     height: scale(60),
@@ -74,4 +131,3 @@ const styles = StyleSheet.create({
     ...globalStyles.opacity_025,
   },
 });
-

@@ -1,19 +1,19 @@
-import colors from "@/utils/theme/colors";
 import {
   useChapterByDocumentId,
   useChapterMatchings,
   useChapterQuizzes,
   useQAs,
 } from "@/hooks/useLessons";
+import type { StrapiQA } from "@/types/api";
 import { globalStyles } from "@/utils/styles";
+import colors from "@/utils/theme/colors";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RefreshControl, ScrollView } from "react-native";
 import { useSharedValue } from "react-native-reanimated";
-import type { StrapiQA } from "@/types/api";
 import {
-  unwrapStrapiRelationList,
   buildChapterSlides,
+  unwrapStrapiRelationList,
 } from "../utils/buildChapterSlides";
 
 export const useChapterQuizScreen = () => {
@@ -217,7 +217,7 @@ export const useChapterQuizScreen = () => {
     activeSlide && chapterSlides.length > 0
       ? activeSlide.kind === "quiz"
         ? `Umwitozo wa ${activeSlideIndex + 1}`
-        : `Guhuzanya kwa ${activeSlideIndex + 1}`
+        : `Umwitozo wo guhuza wa ${activeSlideIndex + 1}`
       : undefined;
   const headerAudioUrl =
     activeQuiz?.audio_desc?.url ??

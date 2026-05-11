@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import {
+  createTransform,
   FLUSH,
   PAUSE,
   PERSIST,
@@ -24,6 +25,12 @@ const authPersistConfig: PersistConfig<AuthState> = {
 const preferencesPersistConfig: PersistConfig<PreferencesState> = {
   key: 'lenga:preferences',
   storage: AsyncStorage,
+  transforms: [
+    createTransform(
+      (state: PreferencesState) => ({ ...state, locale: 'rw' as const }),
+      (state: PreferencesState) => ({ ...state, locale: 'rw' as const }),
+    ),
+  ],
 };
 
 const offlineMediaPersistConfig: PersistConfig<OfflineMediaState> = {

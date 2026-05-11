@@ -1,5 +1,4 @@
 import * as lessonsService from '@/services/lessons.service';
-import { useQuery } from '@tanstack/react-query';
 import type {
   StrapiLesson,
   StrapiLessonChapter,
@@ -10,6 +9,7 @@ import type {
   StrapiQA,
   StrapiQuiz,
 } from '@/types/api';
+import { useQuery } from '@tanstack/react-query';
 import { useAppSelector } from './useRedux';
 
 export const API_KEYS = {
@@ -56,7 +56,19 @@ export const useLessonByDocumentId = (documentId: string) => {
   const { lessons, ...request } = useLessons();
   const lesson = lessons.find((l) => l.documentId === documentId);
   const lessonChapters = (lesson?.lesson_chapters ?? []).slice().sort((a, b) => a.order - b.order);
-  return { ...request, lesson, lessonChapters };
+  const lessonListIndex = documentId ? lessons.findIndex((l) => l.documentId === documentId) : -1;
+  const lessonListPosition = lessonListIndex >= 0 ? lessonListIndex + 1 : undefined;
+  const lessonsTotal = lessons.length;
+  return { ...request, lesson, lessonChapters, lessonListPosition, lessonsTotal };
+};
+
+/** Parent lesson that contains `chapterDocumentId`, from cached lessons list. */
+export const useLessonForChapter = (chapterDocumentId?: string) => {
+  const { lessons, ...request } = useLessons();
+  const lesson = chapterDocumentId
+    ? lessons.find((l) => (l.lesson_chapters ?? []).some((c) => c.documentId === chapterDocumentId))
+    : undefined;
+  return { ...request, lesson };
 };
 
 // ─── Chapters ────────────────────────────────────────────────────────────────
@@ -121,8 +133,6 @@ export const useQAs = () => {
     queryKey: api_keys.qas(locale),
     queryFn: () => lessonsService.getQAsList(locale),
   });
-
-  console.log({ requestDataLength: request.data?.data.data.length });
 
   const qas = getListFromResponse<StrapiQA>(request.data);
   return { ...request, qas };

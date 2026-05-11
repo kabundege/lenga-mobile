@@ -120,13 +120,16 @@ export const MatchingGameBoard = ({
 
         const question = questions.find((q) => q.documentId === questionId);
         const designatedAnswerId = question?.matching_answer?.documentId;
-        const isStrictPair =
-          !!designatedAnswerId && designatedAnswerId === answerId;
-        /** Question has no linked answer in CMS — user may drop on any answer slot. */
+        const isStrictPair = !!designatedAnswerId && designatedAnswerId === answerId;
+        /** Question has no linked answer in CMS. */
         const isWildQuestion = !designatedAnswerId;
-        /** No question in this game names this answer as its pair — slot accepts any question. */
+        /** No question in this game names this answer as its pair. */
         const isWildAnswer = !questions.some((q) => q.matching_answer?.documentId === answerId);
-        const isCorrect = isStrictPair || isWildQuestion || isWildAnswer;
+        /**
+         * Free/random pairing is valid only when both sides are wildcard.
+         * If either side has a designated pair, enforce strict matching.
+         */
+        const isCorrect = isStrictPair || (isWildQuestion && isWildAnswer);
 
         if (isCorrect) {
           clearWrongForQuestion(questionId);
@@ -176,16 +179,6 @@ export const MatchingGameBoard = ({
     return map;
   }, [questions, matchedPairs]);
 
-  /** Exercise mixes default pairs with CMS “open” sides — hide ✓/✗ affordances for free pairings. */
-  const boardHasWildcard = useMemo(() => {
-    const hasWildQuestion = questions.some((q) => !q.matching_answer?.documentId);
-    const designated = new Set(
-      questions.map((q) => q.matching_answer?.documentId).filter(Boolean) as string[],
-    );
-    const hasWildAnswer = answers.some((a) => !designated.has(a.documentId));
-    return hasWildQuestion || hasWildAnswer;
-  }, [questions, answers]);
-
   return (
     <View style={styles.columns}>
       <View style={styles.column}>
@@ -226,8 +219,8 @@ export const MatchingGameBoard = ({
               answer={a}
               isMatched={matchedAnswerIds.has(a.documentId)}
               showMatchedCheck={showMatchedCheck}
-              showWrongCheck={!boardHasWildcard}
-              emphasizeWrongCard={!boardHasWildcard}
+              showWrongCheck
+              emphasizeWrongCard
               matchedQuestions={mqList}
               hoveredAnswerId={hoveredAnswerId}
               onRegisterLayout={registerAnswerLayout}

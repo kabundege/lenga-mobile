@@ -1,25 +1,25 @@
-import Loader from "../loader";
-import { PressableScale } from "pressto";
-import colors from "@/utils/theme/colors";
-import { useEffect, useMemo, useState } from "react";
-import IconButton from "../buttons/iconButton";
-import { themeToken } from "@/utils/theme/styles";
-import { Image, StyleSheet, View } from "react-native";
-import { useQAByDocumentId } from "@/hooks/useLessons";
 import { useLessonAudio } from "@/hooks/useLessonAudio";
-import PlayAudioButton from "../buttons/playAudioButton";
-import { Dimensions, globalStyles } from "@/utils/styles";
+import { useQAByDocumentId } from "@/hooks/useLessons";
 import { useOfflineAssetUri } from "@/hooks/useOfflineAssetUri";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming,
-} from "react-native-reanimated";
 import {
   CORRECT_ANSWER_AUDIO_URL,
   WRONG_ANSWER_AUDIO_URL,
 } from "@/screens/chapters/matching/constants";
 import type { StrapiQA } from "@/types/api";
+import { Dimensions, globalStyles } from "@/utils/styles";
+import colors from "@/utils/theme/colors";
+import { themeToken } from "@/utils/theme/styles";
+import { PressableScale } from "pressto";
+import { useEffect, useMemo, useState } from "react";
+import { Image, StyleSheet, View } from "react-native";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import IconButton from "../buttons/iconButton";
+import PlayAudioButton from "../buttons/playAudioButton";
+import Loader from "../loader";
 
 export type QuizQACardRevealState = "idle" | "correct" | "wrong" | "unknown";
 
@@ -64,10 +64,6 @@ const QuizQACard = ({
   const [selected, setSelected] = useState(false);
   const thumbnailUrl = useOfflineAssetUri(qa?.thumbnail?.url);
   const contextThumbnail = useOfflineAssetUri(contextThumbnailUrl);
-
-  if (isContextOnly) {
-    console.log({ contextThumbnailUrl, contextAudioUrl, contextDescription });
-  }
 
   const {
     audioLoaded: correctAudioLoaded,

@@ -1,11 +1,10 @@
 {
+  "errors": {
+    "generic": "Hari ikintu kitagenze neza."
+  },
   "buttons": {
     "confirm": "Emeza",
     "cancel": "hagarika",
     "close": "Funga"
-  },
-  "language": {
-    "hint": "Language",
-    "label": "Use the App in English"
   }
 }

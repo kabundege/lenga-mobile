@@ -1,6 +1,7 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
+import { createSlice } from '@reduxjs/toolkit';
 
-export type Locale = 'en' | 'fr' | 'rw';
+/** Strapi + UI content locale; app is Kinyarwanda-only. */
+export type Locale = 'rw';
 
 export type PreferencesState = {
   locale: Locale;
@@ -13,12 +14,7 @@ const initialState: PreferencesState = {
 export const preferencesSlice = createSlice({
   name: 'preferences',
   initialState,
-  reducers: {
-    setLocale: (state, action: PayloadAction<Locale>) => {
-      state.locale = action.payload;
-    },
-  },
+  reducers: {},
 });
 
-export const { setLocale } = preferencesSlice.actions;
 export const preferencesReducer = preferencesSlice.reducer;

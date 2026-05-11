@@ -13,13 +13,16 @@ import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { centered, flexBetween, globalStyles } from '@/utils/styles';
-import { useChapterByDocumentId, useChapterVideo } from '@/hooks/useLessons';
+import { useChapterByDocumentId, useChapterVideo, useLessonForChapter } from '@/hooks/useLessons';
+import { useTranslation } from 'react-i18next';
 import ContentThumbnailHeader from '@/components/headers/ContentThumbnailHeader';
 
 const ChapterVideoScreen = () => {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ chapterId: string; lessonId?: string }>();
   const chapterId = typeof params.chapterId === 'string' ? params.chapterId : '';
+  const { lesson } = useLessonForChapter(chapterId);
   const { chapter, isLoading: isChapterLoading, error: chapterError, refetch: chapterRefetch } = useChapterByDocumentId(chapterId);
   const { chapterVideo, isLoading: isVideoLoading, error: videoError, refetch: videoRefetch } = useChapterVideo(chapterId);
 
@@ -35,6 +38,15 @@ const ChapterVideoScreen = () => {
   const offlineVideoUri = useOfflineAssetUri(videoUrl);
   const videoPlayer = useVideoPlayer(videoUrl);
   const [videoPlaybackError, setVideoPlaybackError] = useState(false);
+
+  const breadcrumbItems = useMemo(
+    () => [
+      lesson?.title ?? t('lessons.lessonTitleFallback'),
+      chapter?.title ?? t('lessons.chapterTitleFallback'),
+      t('lessons.breadcrumb.video'),
+    ],
+    [lesson?.title, chapter?.title, t],
+  );
 
   useEffect(() => {
     const sub = videoPlayer.addListener('statusChange', ({ status, error, oldStatus }) => {
@@ -74,6 +86,7 @@ const ChapterVideoScreen = () => {
   return (
     <ThemedView style={styles.container}>
       <ContentThumbnailHeader
+        breadcrumbItems={breadcrumbItems}
         subtitle="Videwo"
         onBack={router.back}
         title={chapter?.title ?? 'Igice'}

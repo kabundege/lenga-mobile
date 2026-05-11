@@ -1,6 +1,10 @@
 import { AxiosError } from 'axios';
 import { toast } from 'sonner-native';
 
+import i18n from '@/translations/i18n';
+
+const genericErrorMessage = () => i18n.t('global.errors.generic');
+
 /**
  * Extract user-facing message from an Axios error.
  */
@@ -10,10 +14,10 @@ export function getAxiosErrorMessage(error: unknown): string {
       (error.response?.data as { error?: { message?: string }; message?: string })?.message ??
       (error.response?.data as { error?: { message?: string } })?.error?.message ??
       error.message ??
-      'Something went wrong'
+      genericErrorMessage()
     );
   }
-  return error instanceof Error ? error.message : 'Something went wrong';
+  return error instanceof Error ? error.message : genericErrorMessage();
 }
 
 /**

@@ -5,6 +5,7 @@ import type { UpdateProfilePayload } from '@/types/api';
 import { handleAxiosError } from '@/utils/error.util';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner-native';
+import i18n from '@/translations/i18n';
 import * as lessonsService from '@/services/lessons.service';
 import { syncLessonMediaAssets } from '@/store/slices/offlineContentSlice';
 import { api_keys } from '@/hooks/useLessons';
@@ -86,7 +87,7 @@ export function useLogin() {
       dispatch(setCredentials({ jwt, user }));
       queryClient.setQueryData(AUTH_KEYS.ME, user);
       warmCacheAndSync(queryClient, dispatch, locale).catch(() => null);
-      toast.success('Login successful');
+      toast.success(i18n.t('profile.toasts.loginSuccess'));
       router.replace('/lessons');
     },
     onError: handleAxiosError,
@@ -98,7 +99,7 @@ export function useRegister() {
     mutationFn: authService.register,
     onSuccess: () => {
       router.replace('/login');
-      toast.success('Registration successful');
+      toast.success(i18n.t('profile.toasts.registrationSuccess'));
     },
     onError: handleAxiosError,
   });
@@ -127,7 +128,7 @@ export function useUpdateProfile(options?: { onSuccess?: () => void }) {
       const user = res.data;
       dispatch(setUser(user));
       queryClient.setQueryData(AUTH_KEYS.ME, user);
-      toast.success('Profile updated');
+      toast.success(i18n.t('profile.toasts.profileUpdated'));
       options?.onSuccess?.();
     },
     onError: handleAxiosError,

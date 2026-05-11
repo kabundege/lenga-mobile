@@ -9,7 +9,6 @@ import weekday from 'dayjs/plugin/weekday';
 
 import isoWeek from 'dayjs/plugin/isoWeek';
 
-import 'dayjs/locale/fr';
 import 'dayjs/locale/rw';
 
 dayjs.extend(isoWeek);
@@ -46,11 +45,11 @@ export const formatToDate = (date: number | string | Date | Dayjs, format: strin
   return dayjs(date).format(format);
 };
 
-/** Format a date using the given locale (e.g. 'en' | 'fr' | 'rw' for Kinyarwanda). */
+/** Format a date using the given locale (Kinyarwanda: `'rw'`). */
 export const formatToDateWithLocale = (
   date: number | string | Date | Dayjs,
   format: string = DATE_FORMAT,
-  locale: string = 'en'
+  locale: string = 'rw'
 ) => {
   return dayjs(date).locale(locale).format(format);
 };

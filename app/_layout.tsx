@@ -1,5 +1,5 @@
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { SplashScreen, Stack } from 'expo-router';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -8,7 +8,6 @@ import { SafeAreaProvider, initialWindowMetrics } from 'react-native-safe-area-c
 import { Toaster } from 'sonner-native';
 
 import { AppProviders } from '@/components/providers/AppProviders';
-import { useColorScheme } from '@/hooks/use-color-scheme';
 import useAppFont from '@/hooks/useAppFont';
 import '@/translations/i18n';
 import globalStyles from '@/utils/styles/globalstyles.style';
@@ -52,7 +51,6 @@ export const routes = {
 }
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const { fontsLoaded } = useAppFont();
 
   useEffect(() => {
@@ -64,7 +62,7 @@ export default function RootLayout() {
   return (
     <AppProviders>
       <AppShell>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <ThemeProvider value={DefaultTheme}>
           <Stack initialRouteName="splash" screenOptions={{ headerShown: false }}>
             {
               Object.entries(routes).map(([name]) => (

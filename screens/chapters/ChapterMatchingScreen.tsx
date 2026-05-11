@@ -1,20 +1,24 @@
-import Button from '@/components/buttons/button';
-import { EmptyListWithSkeleton } from '@/components/empty-states';
-import ContentThumbnailHeader from '@/components/headers/ContentThumbnailHeader';
-import { TextBody } from '@/components/typography';
-import { ThemedView } from '@/components/themed-view';
-import { router } from 'expo-router';
-import { flexBetween, globalStyles } from '@/utils/styles';
-import { themeToken } from '@/utils/theme/styles';
-import { Pressable, ScrollView, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { chapterMatchingStyles as styles } from './matching/chapterMatchingStyles';
-import { MatchingGameBoard } from './matching/MatchingGameBoard';
-import { MatchingGhostCard } from './matching/MatchingGhostCard';
-import { useChapterMatchingScreen } from './matching/useChapterMatchingScreen';
+import Button from "@/components/buttons/button";
+import { EmptyListWithSkeleton } from "@/components/empty-states";
+import ContentThumbnailHeader from "@/components/headers/ContentThumbnailHeader";
+import { ThemedView } from "@/components/themed-view";
+import { TextBody } from "@/components/typography";
+import { useLessonForChapter } from "@/hooks/useLessons";
+import { flexBetween, globalStyles } from "@/utils/styles";
+import { themeToken } from "@/utils/theme/styles";
+import { router } from "expo-router";
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { Pressable, ScrollView, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { chapterMatchingStyles as styles } from "./matching/chapterMatchingStyles";
+import { MatchingGameBoard } from "./matching/MatchingGameBoard";
+import { MatchingGhostCard } from "./matching/MatchingGhostCard";
+import { useChapterMatchingScreen } from "./matching/useChapterMatchingScreen";
 
 const ChapterMatchingScreen = () => {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const {
     chapterId,
     chapter,
@@ -38,7 +42,19 @@ const ChapterMatchingScreen = () => {
     handleDragEndGhost,
   } = useChapterMatchingScreen();
 
-  if (!chapterId) return <ThemedView style={[styles.container, globalStyles.center]} />;
+  const { lesson } = useLessonForChapter(chapterId);
+
+  const breadcrumbItems = useMemo(
+    () => [
+      lesson?.title ?? t("lessons.lessonTitleFallback"),
+      chapter?.title ?? t("lessons.chapterTitleFallback"),
+      t("lessons.breadcrumb.matching"),
+    ],
+    [lesson?.title, chapter?.title, t],
+  );
+
+  if (!chapterId)
+    return <ThemedView style={[styles.container, globalStyles.center]} />;
 
   if (error) {
     return (
@@ -59,10 +75,15 @@ const ChapterMatchingScreen = () => {
     <ThemedView style={styles.container}>
       <ContentThumbnailHeader
         onBack={router.back}
-        title={activeMatching?.title ?? chapter?.title ?? 'Guhuzanya'}
-        subtitle={activeMatching ? `Guhuzanya kwa ${activeMatchingIndex + 1}` : undefined}
+        breadcrumbItems={breadcrumbItems}
         thumbnailUrl={chapter?.thumbnail?.url}
+        title={activeMatching?.title ?? chapter?.title ?? "Guhuzanya"}
         audioUrl={activeMatching?.audio_desc?.url ?? chapter?.audio_desc?.url}
+        subtitle={
+          activeMatching
+            ? `Umwitozo wo guhuza wa ${activeMatchingIndex + 1}`
+            : undefined
+        }
       />
 
       {activeMatching ? (
@@ -84,8 +105,8 @@ const ChapterMatchingScreen = () => {
         </ScrollView>
       ) : !isLoading ? (
         <EmptyListWithSkeleton
-          title="Nta guhuzanya biboneka"
-          description="Nta guhuzanya biboneka muri iki gice."
+          title="Nta mwitozo wo guhuza waboneka"
+          description="Nta mwitozo wo guhuza wboneka muri iki gice."
           containerStyles={styles.emptyState}
         />
       ) : null}
@@ -112,25 +133,29 @@ const ChapterMatchingScreen = () => {
             textStyles={globalStyles.w_auto}
             textColor={backButton.color}
             disabled={backButton.isDisabled}
-            onPress={() => pushMatchingByIndex(Math.max(0, activeMatchingIndex - 1))}
-            leftIcon={{ name: 'chevron-left', color: backButton.color }}
+            onPress={() =>
+              pushMatchingByIndex(Math.max(0, activeMatchingIndex - 1))
+            }
+            leftIcon={{ name: "chevron-left", color: backButton.color }}
             overRiddingStyles={[globalStyles.w_40, backButton.bgStyles]}
           />
           <Button
             size="sm"
             type="primary"
-            label={isLastMatching ? 'Sohoka' : 'Ibikurikira'}
+            label={isLastMatching ? "Sohoka" : "Ibikurikira"}
             textColor={nextButton.color}
             textStyles={globalStyles.w_auto}
             disabled={nextButton.isDisabled}
             overRiddingStyles={[globalStyles.w_40, nextButton.bgStyles]}
-            rightIcon={{ name: 'chevron-right', color: nextButton.color }}
+            rightIcon={{ name: "chevron-right", color: nextButton.color }}
             onPress={() => {
               if (isLastMatching) {
                 router.back();
                 return;
               }
-              pushMatchingByIndex(Math.min(chapterMatchings.length - 1, activeMatchingIndex + 1));
+              pushMatchingByIndex(
+                Math.min(chapterMatchings.length - 1, activeMatchingIndex + 1),
+              );
             }}
           />
         </View>

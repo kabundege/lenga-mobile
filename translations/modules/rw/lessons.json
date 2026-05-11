@@ -13,6 +13,13 @@
   "savedForOffline": "Rabitswe kugira ngo ukoreshe offline.",
   "downloadFailed": "Ntago bishoboka kubika kugira ngo ukoreshe offline.",
   "lessonTitleFallback": "Isomo",
+  "chapterTitleFallback": "Igice",
+  "breadcrumb": {
+    "video": "Videwo",
+    "quiz": "Imyitozo",
+    "matching": "Umwitozo wo guhuza"
+  },
+  "lessonListSubtitle": "Isomo {{current}} muri {{total}}",
   "playbackError": "Ntibishobotse gukina iri somo.",
   "downloading": "Birakurwa...",
   "downloadingWithPercent": "Tegereza {{percent}}% ({{written}} / {{total}})",

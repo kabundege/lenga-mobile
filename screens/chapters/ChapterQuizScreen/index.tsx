@@ -1,8 +1,9 @@
-import { TextBody } from "@/components/typography";
-import { ThemedView } from "@/components/themed-view";
 import ContentThumbnailHeader from "@/components/headers/ContentThumbnailHeader";
-import { router } from "expo-router";
+import { ThemedView } from "@/components/themed-view";
+import { TextBody } from "@/components/typography";
 import { globalStyles } from "@/utils/styles";
+import { router } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { chapterQuizScreenStyles as styles } from "./chapterQuizScreen.styles";
@@ -12,6 +13,7 @@ import { useChapterQuizScreen } from "./hooks/useChapterQuizScreen";
 
 const ChapterQuizScreen = () => {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const {
     chapterId,
     error,

@@ -12,7 +12,8 @@ import { themeToken } from '@/utils/theme/styles';
 import Loader from '@/components/loader';
 import { StatusBar } from 'expo-status-bar';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AnimatedLegendList } from '@legendapp/list/reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LegendListRef, LegendListRenderItemProps } from '@legendapp/list';
@@ -20,6 +21,7 @@ import { CHAPTER_SNAP_INTERVAL, DEFAULT_LIST_HEIGHT } from './lessonLayout';
 import { LayoutChangeEvent, NativeScrollEvent, NativeSyntheticEvent, RefreshControl, StyleSheet, View } from 'react-native';
 
 const LessonDetailScreen = () => {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [loadedLayouts, setLoadedLayouts] = useState(0);
   const chapterListRef = useRef<LegendListRef | null>(null);
@@ -27,7 +29,29 @@ const LessonDetailScreen = () => {
   const [activeChapterIndex, setActiveChapterIndex] = useState(0);
   const [listHeight, setListHeight] = useState(DEFAULT_LIST_HEIGHT);
   const lessonId = typeof params.lessonId === 'string' ? params.lessonId : '';
-  const { lesson, isLoading, isRefetching, error, lessonChapters, refetch } = useLessonByDocumentId(lessonId);
+  const {
+    lesson,
+    isLoading,
+    isRefetching,
+    error,
+    lessonChapters,
+    refetch,
+    lessonListPosition,
+    lessonsTotal,
+  } = useLessonByDocumentId(lessonId);
+
+  useEffect(() => {
+    const max = Math.max(0, lessonChapters.length - 1);
+    setActiveChapterIndex((i) => Math.min(i, max));
+  }, [lessonChapters.length]);
+
+  const lessonListSubtitle = useMemo(() => {
+    if (lessonsTotal === 0 || lessonListPosition == null) return undefined;
+    return t('lessons.lessonListSubtitle', {
+      current: lessonListPosition,
+      total: lessonsTotal,
+    });
+  }, [lessonsTotal, lessonListPosition, t]);
 
   const refreshControl = useMemo(
     () => <RefreshControl refreshing={isRefetching} onRefresh={refetch} />,
@@ -111,9 +135,9 @@ const LessonDetailScreen = () => {
       <View onLayout={onLayout}>
         <ContentThumbnailHeader
           onBack={router.back}
-          subtitle="Igice cya 1"
           title={lesson?.title ?? 'Isomo'}
           audioUrl={lesson?.audio_desc?.url}
+          subtitle={lessonListSubtitle}
           thumbnailUrl={lesson?.thumbnail?.url}
         />
       </View>

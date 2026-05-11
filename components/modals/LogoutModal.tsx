@@ -1,10 +1,8 @@
-import { ThemedText } from '@/components/themed-text';
 import { TextBody } from '@/components/typography/textBody';
-import { useLanguageSwitch } from '@/hooks/useLanguageSwitch';
 import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import { logout } from '@/store/slices/authSlice';
 import { selectSavedOfflineMediaEntries } from '@/store/slices/offlineMediaSlice';
-import { flexBetween, globalStyles } from '@/utils/styles';
+import { globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
 import { themeToken } from '@/utils/theme/styles';
 import type { LogoutModalRef } from '@/utils/types/modals';
@@ -12,11 +10,12 @@ import type { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { BottomSheetView, useBottomSheetModal } from '@gorhom/bottom-sheet';
 import { router } from 'expo-router';
 import React, { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
-import { StyleSheet, Switch, View } from 'react-native';
-import { scale } from 'react-native-size-matters';
+import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Button from '../buttons/button';
 import IconButton from '../buttons/iconButton';
 import { TextHeading } from '../typography';
+import { ThemedText } from '@/components/themed-text';
 import BaseModal, { BaseModalProps } from './BaseModal';
 
 export type LogoutModalProps = Omit<BaseModalProps, 'children'>;
@@ -39,7 +38,7 @@ const LogoutModal = forwardRef<LogoutModalRef, LogoutModalProps>(
     const modalRef = useRef<BottomSheetModal>(null);
     const dispatch = useAppDispatch();
     const { dismiss } = useBottomSheetModal();
-    const { t, currentLanguage, setLanguage } = useLanguageSwitch();
+    const { t } = useTranslation();
     const savedEntries = useAppSelector(selectSavedOfflineMediaEntries);
     const savedCount = savedEntries.length;
     const totalStorageBytes = useMemo(
@@ -57,13 +56,6 @@ const LogoutModal = forwardRef<LogoutModalRef, LogoutModalProps>(
       dispatch(logout());
       router.replace('/login');
     };
-
-    const handleToggleLanguage = () => {
-      setLanguage(currentLanguage === 'en' ? 'rw' : 'en');
-      dismiss();
-    };
-
-    const isEnglish = useMemo(() => currentLanguage === 'en', [currentLanguage]);
 
     return (
       <BaseModal ref={modalRef} {...props}>
@@ -85,21 +77,8 @@ const LogoutModal = forwardRef<LogoutModalRef, LogoutModalProps>(
 
 
 
-          <View style={styles.languageSection}>
-            <View style={[flexBetween, globalStyles.w_full]}>
-              <View>
-                <TextHeading variant="subTitle" color='primary'>
-                  {
-                    t('global.language.hint')
-                  }
-                </TextHeading>
-                <TextBody variant="body2" color="secondary" style={styles.languageLabel}>
-                  {t('global.language.label')}
-                </TextBody>
-              </View>
-              <Switch value={isEnglish} onValueChange={handleToggleLanguage} trackColor={{ true: colors.primary, false: colors.background.secondary }} thumbColor={colors.text.inverted} />
-            </View>
-            <View style={[globalStyles.w_full, globalStyles.border_t, globalStyles.pt_sm]}>
+          <View style={styles.storageSection}>
+            <View style={[globalStyles.w_full]}>
               <TextHeading variant="subTitle" color="primary">
                 {t('profile.offlineStorage.title')}
               </TextHeading>
@@ -126,38 +105,13 @@ const styles = StyleSheet.create({
     paddingBottom: themeToken.paddingLg,
     paddingHorizontal: themeToken.paddingLg,
   },
-  languageSection: {
+  storageSection: {
     width: '100%',
     marginVertical: themeToken.spacingLg,
     backgroundColor: colors.primary_light,
     ...globalStyles.rounded_sm,
     ...globalStyles.px_md,
     ...globalStyles.py_xs,
-  },
-  languageLabel: {
-    marginBottom: themeToken.spacingSm,
-  },
-  languageOptions: {
-    flexDirection: 'row',
-    gap: themeToken.spacingSm,
-  },
-  languageOption: {
-    paddingVertical: themeToken.spacingSm,
-    paddingHorizontal: themeToken.padding,
-    borderRadius: themeToken.borderRadius,
-    backgroundColor: colors.background.tertiary,
-  },
-  languageOptionActive: {
-    backgroundColor: colors.primary,
-  },
-  iconWrap: {
-    width: scale(72),
-    height: scale(72),
-    borderRadius: scale(36),
-    backgroundColor: colors.danger.light,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: themeToken.spacing,
   },
   title: {
     marginBottom: themeToken.spacingSm,

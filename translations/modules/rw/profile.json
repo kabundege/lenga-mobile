@@ -1,4 +1,9 @@
 {
+  "toasts": {
+    "loginSuccess": "Kwinjira byagenze neza.",
+    "registrationSuccess": "Kwiyandikisha byagenze neza.",
+    "profileUpdated": "Umwirondoro wavuguruwe."
+  },
   "logout": {
     "title": "Gusohoka",
     "message": "Mbese urashaka guhagarika amasomo uguhindura konti urimo gukoresha",
