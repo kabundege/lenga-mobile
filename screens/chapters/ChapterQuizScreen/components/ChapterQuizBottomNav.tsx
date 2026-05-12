@@ -12,7 +12,6 @@ type NavButtonStyles = {
 
 type ChapterQuizBottomNavProps = {
   insets: EdgeInsets;
-  showMainNav: boolean;
   isLastSlide: boolean;
   backButton: NavButtonStyles;
   nextButton: NavButtonStyles;
@@ -22,15 +21,12 @@ type ChapterQuizBottomNavProps = {
 
 export const ChapterQuizBottomNav = ({
   insets,
-  showMainNav,
   isLastSlide,
   backButton,
   nextButton,
   onBack,
   onNext,
 }: ChapterQuizBottomNavProps) => {
-  if (!showMainNav) return null;
-
   return (
     <View
       style={[

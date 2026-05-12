@@ -3,6 +3,7 @@ import { ThemedView } from "@/components/themed-view";
 import { TextBody } from "@/components/typography";
 import { globalStyles } from "@/utils/styles";
 import { router } from "expo-router";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Pressable } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -42,9 +43,9 @@ const ChapterQuizScreen = () => {
     nextButton,
     isLastSlide,
     headerTitle,
+    lesson,
     headerSubtitle,
     headerAudioUrl,
-    showMainNav,
     setHasQuizRightAnswer,
     setAllMatchedForCurrent,
   } = useChapterQuizScreen();
@@ -67,14 +68,26 @@ const ChapterQuizScreen = () => {
     );
   }
 
+  const breadcrumbItems = useMemo(() => {
+    return [
+      lesson?.order
+        ? `${t("lessons.lesson")} ${lesson.order}`
+        : t("lessons.lessonTitleFallback"),
+      chapter?.order
+        ? `${t("lessons.chapter")} ${chapter.order}`
+        : t("lessons.chapterTitleFallback"),
+    ];
+  }, [lesson?.order, chapter?.order, t]);
+
   return (
     <ThemedView style={styles.container}>
       <ContentThumbnailHeader
         onBack={router.back}
         title={headerTitle}
         subtitle={headerSubtitle}
-        thumbnailUrl={chapter?.thumbnail?.url}
         audioUrl={headerAudioUrl}
+        breadcrumbItems={breadcrumbItems}
+        thumbnailUrl={chapter?.thumbnail?.url}
       />
 
       <ChapterQuizSlideArea
@@ -101,10 +114,9 @@ const ChapterQuizScreen = () => {
 
       <ChapterQuizBottomNav
         insets={insets}
-        showMainNav={showMainNav}
-        isLastSlide={isLastSlide}
         backButton={backButton}
         nextButton={nextButton}
+        isLastSlide={isLastSlide}
         onBack={() => pushSlideByIndex(Math.max(0, activeSlideIndex - 1))}
         onNext={() => {
           if (isLastSlide) {

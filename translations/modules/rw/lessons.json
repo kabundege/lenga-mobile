@@ -31,5 +31,7 @@
   "saveOfflineConfirmTitle": "Bika iyi video",
   "saveOfflineConfirmMessage": "Bika iri somo kuri telefoni yawe kugira ngo ube warikoresha nta murandasi ufite.",
   "removeOfflineConfirmTitle": "Rushaka gusiba iri somo?",
-  "removeOfflineConfirmMessage": "Iri somo riri bukurwe mu bubiko bwawe"
+  "removeOfflineConfirmMessage": "Iri somo riri bukurwe mu bubiko bwawe",
+  "lesson": "Isomo",
+  "chapter": "Igice"
 }

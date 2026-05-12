@@ -2,6 +2,7 @@ import {
   useChapterByDocumentId,
   useChapterMatchings,
   useChapterQuizzes,
+  useLessonForChapter,
   useQAs,
 } from "@/hooks/useLessons";
 import type { StrapiQA } from "@/types/api";
@@ -44,6 +45,7 @@ export const useChapterQuizScreen = () => {
   const quizId = typeof params.quizId === "string" ? params.quizId : "";
   const matchingId =
     typeof params.matchingId === "string" ? params.matchingId : "";
+  const { lesson } = useLessonForChapter(chapterId);
 
   const {
     chapter,
@@ -224,10 +226,6 @@ export const useChapterQuizScreen = () => {
     activeMatching?.audio_desc?.url ??
     chapter?.audio_desc?.url;
 
-  const showMainNav =
-    chapterSlides.length > 1 ||
-    (chapterSlides.length === 1 && activeSlide?.kind === "matching");
-
   return {
     chapterId,
     error,
@@ -235,6 +233,7 @@ export const useChapterQuizScreen = () => {
     refetch,
     refreshControl,
     chapter,
+    lesson,
     chapterSlides,
     activeSlideIndex,
     activeSlide,
@@ -258,7 +257,6 @@ export const useChapterQuizScreen = () => {
     headerTitle,
     headerSubtitle,
     headerAudioUrl,
-    showMainNav,
     setHasQuizRightAnswer,
     setAllMatchedForCurrent,
   };

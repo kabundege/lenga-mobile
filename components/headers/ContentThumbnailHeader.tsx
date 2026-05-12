@@ -75,12 +75,13 @@ export default function ContentThumbnailHeader({
             )}
             <View style={globalStyles.flex_1}>
               {subtitle ? (
-                <TextBody
-                  variant="body2"
-                  color="primary"
-                  style={globalStyles.mt_xs}
-                >
+                <TextBody variant="body2" color="primary">
                   {subtitle}
+                </TextBody>
+              ) : null}
+              {breadcrumbItems ? (
+                <TextBody variant="body2" color="tertiary" fontWeight="medium">
+                  {breadcrumbItems.map((item) => item).join(" / ")}
                 </TextBody>
               ) : null}
               <TextHeading variant="title">{title}</TextHeading>
