@@ -31,6 +31,7 @@ type ChapterQuizSlideAreaProps = {
   ghostThumb: string | null;
   handleDragStartGhost: (thumbUri: string | null) => void;
   handleDragEndGhost: () => void;
+  quizAnswered: boolean;
   onQuizRightAnswer: () => void;
   onMatchingAllMatched: () => void;
 };
@@ -53,6 +54,7 @@ export const ChapterQuizSlideArea = ({
   ghostThumb,
   handleDragStartGhost,
   handleDragEndGhost,
+  quizAnswered,
   onQuizRightAnswer,
   onMatchingAllMatched,
 }: ChapterQuizSlideAreaProps) => {
@@ -79,6 +81,7 @@ export const ChapterQuizSlideArea = ({
           <View style={styles.grid}>
             <ChapterQuizQAList
               qas={qas}
+              allAnswered={quizAnswered}
               onQuizRightAnswer={onQuizRightAnswer}
             />
           </View>

@@ -1,28 +1,28 @@
-import { TextBody } from '@/components/typography/textBody';
-import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
-import { logout } from '@/store/slices/authSlice';
-import { selectSavedOfflineMediaEntries } from '@/store/slices/offlineMediaSlice';
-import { globalStyles } from '@/utils/styles';
-import colors from '@/utils/theme/colors';
-import { themeToken } from '@/utils/theme/styles';
-import type { LogoutModalRef } from '@/utils/types/modals';
-import type { BottomSheetModal } from '@gorhom/bottom-sheet';
-import { BottomSheetView, useBottomSheetModal } from '@gorhom/bottom-sheet';
-import { router } from 'expo-router';
-import React, { forwardRef, useImperativeHandle, useMemo, useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
-import { useTranslation } from 'react-i18next';
-import Button from '../buttons/button';
-import IconButton from '../buttons/iconButton';
-import { TextHeading } from '../typography';
-import { ThemedText } from '@/components/themed-text';
-import BaseModal, { BaseModalProps } from './BaseModal';
+import { ThemedText } from "@/components/themed-text";
+import { TextBody } from "@/components/typography/textBody";
+import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
+import { logout } from "@/store/slices/authSlice";
+import { selectSavedOfflineMediaEntries } from "@/store/slices/offlineMediaSlice";
+import { globalStyles } from "@/utils/styles";
+import colors from "@/utils/theme/colors";
+import { themeToken } from "@/utils/theme/styles";
+import type { LogoutModalRef } from "@/utils/types/modals";
+import type { BottomSheetModal } from "@gorhom/bottom-sheet";
+import { BottomSheetView, useBottomSheetModal } from "@gorhom/bottom-sheet";
+import { router } from "expo-router";
+import React, { forwardRef, useImperativeHandle, useMemo, useRef } from "react";
+import { useTranslation } from "react-i18next";
+import { StyleSheet, View } from "react-native";
+import Button from "../buttons/button";
+import IconButton from "../buttons/iconButton";
+import { TextHeading } from "../typography";
+import BaseModal, { BaseModalProps } from "./BaseModal";
 
-export type LogoutModalProps = Omit<BaseModalProps, 'children'>;
+export type LogoutModalProps = Omit<BaseModalProps, "children">;
 
 function formatBytes(bytes: number) {
-  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
-  const units = ['B', 'KB', 'MB', 'GB'];
+  if (!Number.isFinite(bytes) || bytes <= 0) return "0 B";
+  const units = ["B", "KB", "MB", "GB"];
   let v = bytes;
   let i = 0;
   while (v >= 1024 && i < units.length - 1) {
@@ -43,7 +43,7 @@ const LogoutModal = forwardRef<LogoutModalRef, LogoutModalProps>(
     const savedCount = savedEntries.length;
     const totalStorageBytes = useMemo(
       () => savedEntries.reduce((sum, e) => sum + (e.fileSize ?? 0), 0),
-      [savedEntries]
+      [savedEntries],
     );
 
     useImperativeHandle(ref, () => ({
@@ -54,47 +54,62 @@ const LogoutModal = forwardRef<LogoutModalRef, LogoutModalProps>(
     const handleLogout = () => {
       dismiss();
       dispatch(logout());
-      router.replace('/login');
+      router.replace("/login");
     };
 
     return (
       <BaseModal ref={modalRef} {...props}>
         <BottomSheetView style={styles.content}>
           <View style={globalStyles.self_end}>
-            <IconButton onPress={() => dismiss()} icon="close" iconType="antd" size="sm" backgroundColor={colors.primary_light} style={globalStyles.border_dashed} />
+            <IconButton
+              onPress={() => dismiss()}
+              icon="close"
+              iconType="antd"
+              size="sm"
+              backgroundColor={colors.primary_light}
+              style={globalStyles.border_dashed}
+            />
           </View>
 
-          <View style={globalStyles.items_center}>
+          <View
+            style={[
+              globalStyles.items_center,
+              globalStyles.border_b,
+              globalStyles.pb_md,
+              globalStyles.mb_md,
+            ]}
+          >
             <ThemedText type="subtitle" style={globalStyles.line_height_4xl}>
-              {t('profile.logout.title')}
+              {t("profile.logout.title")}
             </ThemedText>
             <TextBody variant="body1" color="tertiary" style={styles.message}>
-              {t('profile.logout.message')}
+              {t("profile.logout.message")}
             </TextBody>
-            <Button type="primary" size="md" label={t('profile.logout.confirmButton')} onPress={handleLogout} />
+            <Button
+              type="primary"
+              size="md"
+              label={t("profile.logout.confirmButton")}
+              onPress={handleLogout}
+            />
           </View>
-
-
-
 
           <View style={styles.storageSection}>
             <View style={[globalStyles.w_full]}>
               <TextHeading variant="subTitle" color="primary">
-                {t('profile.offlineStorage.title')}
+                {t("profile.offlineStorage.title")}
               </TextHeading>
               <TextBody variant="body2" color="secondary">
-                {t('profile.offlineStorage.stats', {
+                {t("profile.offlineStorage.stats", {
                   count: savedCount,
                   storage: formatBytes(totalStorageBytes),
                 })}
               </TextBody>
             </View>
           </View>
-
         </BottomSheetView>
       </BaseModal>
     );
-  }
+  },
 );
 
 export default LogoutModal;
@@ -106,8 +121,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: themeToken.paddingLg,
   },
   storageSection: {
-    width: '100%',
-    marginVertical: themeToken.spacingLg,
+    width: "100%",
     backgroundColor: colors.primary_light,
     ...globalStyles.rounded_sm,
     ...globalStyles.px_md,
@@ -117,20 +131,20 @@ const styles = StyleSheet.create({
     marginBottom: themeToken.spacingSm,
   },
   message: {
-    textAlign: 'center',
-    marginBottom: themeToken.spacingLg,
+    textAlign: "center",
+    marginBottom: themeToken.spacing,
   },
   actions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: themeToken.spacing,
-    width: '100%',
+    width: "100%",
   },
   button: {
     flex: 1,
     paddingVertical: themeToken.controlHeight.md * 0.5,
     borderRadius: themeToken.borderRadius,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   buttonCancel: {
     backgroundColor: colors.background.tertiary,

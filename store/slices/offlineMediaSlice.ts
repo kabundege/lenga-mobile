@@ -1,12 +1,12 @@
+import type { RootState } from '@/store';
+import { fileExists, getOfflinePathForLesson } from '@/utils/offlineMedia';
 import {
   createAsyncThunk,
+  createSelector,
   createSlice,
   type PayloadAction,
-  createSelector,
 } from '@reduxjs/toolkit';
 import { File } from 'expo-file-system';
-import { fileExists, getOfflinePathForLesson } from '@/utils/offlineMedia';
-import type { RootState } from '@/store';
 
 export type OfflineMediaStatus = 'not_saved' | 'saving' | 'saved' | 'error';
 

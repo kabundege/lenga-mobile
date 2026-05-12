@@ -192,8 +192,7 @@ export const useChapterQuizScreen = () => {
   const canProceedCurrentSlide = useMemo(() => {
     if (!activeSlide) return false;
     if (activeSlide.kind === "quiz") {
-      const qCount = qas.length;
-      return qCount === 0 || hasQuizRightAnswer;
+      return qas.length === 0 || hasQuizRightAnswer;
     }
     return allMatchedForCurrent;
   }, [activeSlide, qas.length, hasQuizRightAnswer, allMatchedForCurrent]);
@@ -257,6 +256,7 @@ export const useChapterQuizScreen = () => {
     headerTitle,
     headerSubtitle,
     headerAudioUrl,
+    hasQuizRightAnswer,
     setHasQuizRightAnswer,
     setAllMatchedForCurrent,
   };

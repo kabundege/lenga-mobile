@@ -6,8 +6,8 @@
   },
   "logout": {
     "title": "Gusohoka",
-    "message": "Mbese urashaka guhagarika amasomo uguhindura konti urimo gukoresha",
-    "confirmButton": "Emeza"
+    "message": "Urashaka gusohoka cyangwa guhindura konti urimo gukoresha",
+    "confirmButton": "Emeza Gusohoka"
   },
   "offlineStorage": {
     "title": "Ububiko bwakoreshejwe",

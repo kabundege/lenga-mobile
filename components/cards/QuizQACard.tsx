@@ -28,6 +28,7 @@ type QuizQACardProps = {
   qa?: StrapiQA | null;
   qaId?: string;
   rightAnswerCallBack?: () => void;
+  disabled?: boolean;
   isContextOnly?: boolean;
   contextThumbnailUrl?: string | null;
   contextAudioUrl?: string | null;
@@ -40,12 +41,14 @@ const QuizQACard = ({
   qa: qaProp,
   qaId,
   rightAnswerCallBack,
+  disabled = false,
   isContextOnly = false,
   contextThumbnailUrl,
   contextAudioUrl,
   contextDescription,
 }: QuizQACardProps) => {
   const opacity = useSharedValue(1);
+  const cardOpacity = useSharedValue(1);
   const qaDocId = qaProp?.documentId ?? qaId ?? "";
   const { qa: qaFromCache } = useQAByDocumentId(qaDocId);
   const qa = useMemo((): StrapiQA | null => {
@@ -74,7 +77,7 @@ const QuizQACard = ({
     useLessonAudio(WRONG_ANSWER_AUDIO_URL);
 
   const onPress = () => {
-    if (isContextOnly || selected) return;
+    if (isContextOnly || selected || disabled) return;
     setSelected(true);
     if (qa?.is_correct_answer) {
       rightAnswerCallBack?.();
@@ -96,11 +99,19 @@ const QuizQACard = ({
     }
   }, [selected]);
 
-  const ImageAnimatedStyle = useAnimatedStyle(() => {
-    return {
-      opacity: opacity.value,
-    };
-  });
+  useEffect(() => {
+    cardOpacity.value = withTiming(disabled && !selected ? 0.3 : 1, {
+      duration: 350,
+    });
+  }, [disabled, selected]);
+
+  const ImageAnimatedStyle = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  const cardStyle = useAnimatedStyle(() => ({
+    opacity: cardOpacity.value,
+  }));
 
   if (isContextOnly) {
     return (
@@ -122,39 +133,42 @@ const QuizQACard = ({
   if (!qa) return <Loader />;
 
   return (
-    <PressableScale
-      onPress={onPress}
-      enabled={!selected}
-      style={globalStyles.w_50}
-    >
-      <AnimatedImage
-        source={{ uri: thumbnailUrl }}
-        style={[styles.thumbnail, ImageAnimatedStyle]}
-      />
-      <PlayAudioButton
-        styles={globalStyles.border_secondary}
-        audioUrl={qa.audio_desc?.url ?? ""}
-        style={styles.audioButton}
-        backgroundColor={colors.background.tertiary}
-      />
-      {selected ? (
-        <View style={styles.selectBtn}>
-          <IconButton
-            backgroundColor={
-              qa.is_correct_answer
-                ? colors.success.tertiary
-                : colors.danger.light
-            }
-            iconFill={
-              qa.is_correct_answer ? colors.success.primary : colors.text.danger
-            }
-            icon={qa?.is_correct_answer ? "check" : "close"}
-            style={globalStyles.self_start}
-            size="lg"
-          />
-        </View>
-      ) : null}
-    </PressableScale>
+    <Animated.View style={[globalStyles.w_50, cardStyle]}>
+      <PressableScale
+        onPress={onPress}
+        enabled={!selected && !disabled}
+      >
+        <AnimatedImage
+          source={{ uri: thumbnailUrl }}
+          style={[styles.thumbnail, ImageAnimatedStyle]}
+        />
+        <PlayAudioButton
+          styles={globalStyles.border_secondary}
+          audioUrl={qa.audio_desc?.url ?? ""}
+          style={styles.audioButton}
+          backgroundColor={colors.background.tertiary}
+        />
+        {selected ? (
+          <View style={styles.selectBtn}>
+            <IconButton
+              backgroundColor={
+                qa.is_correct_answer
+                  ? colors.success.tertiary
+                  : colors.danger.light
+              }
+              iconFill={
+                qa.is_correct_answer
+                  ? colors.success.primary
+                  : colors.text.danger
+              }
+              icon={qa?.is_correct_answer ? "check" : "close"}
+              style={globalStyles.self_start}
+              size="lg"
+            />
+          </View>
+        ) : null}
+      </PressableScale>
+    </Animated.View>
   );
 };
 

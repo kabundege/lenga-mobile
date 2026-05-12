@@ -3,11 +3,13 @@ import type { StrapiQA } from "@/types/api";
 
 type ChapterQuizQAListProps = {
   qas: StrapiQA[];
+  allAnswered: boolean;
   onQuizRightAnswer: () => void;
 };
 
 export const ChapterQuizQAList = ({
   qas,
+  allAnswered,
   onQuizRightAnswer,
 }: ChapterQuizQAListProps) => (
   <>
@@ -16,6 +18,7 @@ export const ChapterQuizQAList = ({
         key={qaItem.documentId}
         qa={qaItem}
         qaId={qaItem.documentId}
+        disabled={allAnswered}
         rightAnswerCallBack={onQuizRightAnswer}
       />
     ))}
