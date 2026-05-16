@@ -38,6 +38,7 @@ type Props = {
   isDraggingWrongPiece: boolean;
   onWrongDragStart: (questionId: string, thumbUri: string | null) => void;
   onWrongDragEnd: (questionId: string, absoluteX: number, absoluteY: number) => void;
+  onWrongReset: (questionId: string) => void;
 };
 
 const MATCHED_THUMB = Math.round(CARD_SIZE * 0.38);
@@ -60,6 +61,7 @@ const MatchingAnswerCard = ({
   isDraggingWrongPiece,
   onWrongDragStart,
   onWrongDragEnd,
+  onWrongReset,
 }: Props) => {
   const thumbUri = useOfflineAssetUri(answer.thumbnail?.url);
   const wrongThumbUri = useOfflineAssetUri(wrongQuestionThumbUrl);
@@ -76,12 +78,17 @@ const MatchingAnswerCard = ({
     }, 150);
   }, [answerId, onRegisterLayout]);
 
-  const wrongPan = useMemo(() => {
+  const wrongGesture = useMemo(() => {
     if (!wrongQuestionId) {
       return Gesture.Pan().enabled(false);
     }
     const qid = wrongQuestionId;
-    return Gesture.Pan()
+
+    const tap = Gesture.Tap().onEnd(() => {
+      runOnJS(onWrongReset)(qid);
+    });
+
+    const pan = Gesture.Pan()
       .minDistance(4)
       .onBegin((e) => {
         ghostX.value = e.absoluteX - CARD_SIZE / 2;
@@ -115,6 +122,9 @@ const MatchingAnswerCard = ({
         ghostVisible.value = false;
         hoveredAnswerId.value = '';
       });
+
+    // Tap wins for short presses; pan activates once minDistance is exceeded
+    return Gesture.Exclusive(tap, pan);
   }, [
     wrongQuestionId,
     wrongThumbUri,
@@ -125,6 +135,7 @@ const MatchingAnswerCard = ({
     answerPositionsShared,
     onWrongDragStart,
     onWrongDragEnd,
+    onWrongReset,
   ]);
 
   // Runs entirely on the UI thread — smooth haze effect with no JS-bridge round-trip
@@ -170,7 +181,7 @@ const MatchingAnswerCard = ({
         ) : null}
 
         {showWrongOverlay ? (
-          <GestureDetector gesture={wrongPan}>
+          <GestureDetector gesture={wrongGesture}>
             <Animated.View style={[styles.wrongOverlay, wrongOverlayDimStyle]}>
               {wrongThumbUri ? (
                 <Image source={{ uri: wrongThumbUri }} style={styles.thumb} resizeMode="contain" />

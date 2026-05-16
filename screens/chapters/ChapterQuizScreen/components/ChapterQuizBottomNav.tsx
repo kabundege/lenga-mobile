@@ -26,37 +26,35 @@ export const ChapterQuizBottomNav = ({
   nextButton,
   onBack,
   onNext,
-}: ChapterQuizBottomNavProps) => {
-  return (
-    <View
-      style={[
-        flexBetween,
-        globalStyles.px_md,
-        { paddingBottom: insets.bottom + themeToken.paddingSm },
-      ]}
-    >
-      <Button
-        size="sm"
-        type="primary"
-        label="Ibibanza"
-        textStyles={globalStyles.w_auto}
-        textColor={backButton.color}
-        disabled={backButton.isDisabled}
-        onPress={onBack}
-        leftIcon={{ name: "chevron-left", color: backButton.color }}
-        overRiddingStyles={[globalStyles.w_40, backButton.bgStyles]}
-      />
-      <Button
-        size="sm"
-        type="primary"
-        label={isLastSlide ? "Sohoka" : "Ibikurikira"}
-        textColor={nextButton.color}
-        textStyles={globalStyles.w_auto}
-        disabled={nextButton.isDisabled}
-        overRiddingStyles={[globalStyles.w_40, nextButton.bgStyles]}
-        rightIcon={{ name: "chevron-right", color: nextButton.color }}
-        onPress={onNext}
-      />
-    </View>
-  );
-};
+}: ChapterQuizBottomNavProps) => (
+  <View
+    style={[
+      flexBetween,
+      globalStyles.px_md,
+      { paddingBottom: insets.bottom + themeToken.paddingSm },
+    ]}
+  >
+    <Button
+      size="sm"
+      type="primary"
+      label="Ibibanza"
+      onPress={onBack}
+      textColor={backButton.color}
+      textStyles={globalStyles.w_auto}
+      disabled={backButton.isDisabled}
+      leftIcon={{ name: "chevron-left", color: backButton.color }}
+      overRiddingStyles={[globalStyles.w_40, backButton.bgStyles]}
+    />
+    <Button
+      size="sm"
+      type="primary"
+      label={isLastSlide ? "Sohoka" : "Ibikurikira"}
+      textColor={nextButton.color}
+      textStyles={globalStyles.w_auto}
+      disabled={nextButton.isDisabled}
+      overRiddingStyles={[globalStyles.w_40, nextButton.bgStyles]}
+      rightIcon={{ name: "chevron-right", color: nextButton.color }}
+      onPress={onNext}
+    />
+  </View>
+);

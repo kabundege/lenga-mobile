@@ -18,7 +18,7 @@ import {
 } from "../utils/buildChapterSlides";
 
 export const useChapterQuizScreen = () => {
-  const [hasQuizRightAnswer, setHasQuizRightAnswer] = useState(false);
+  const [correctAnswerCount, setCorrectAnswerCount] = useState(0);
   const [activeSlideIndex, setActiveSlideIndex] = useState(0);
   const [allMatchedForCurrent, setAllMatchedForCurrent] = useState(false);
   const [ghostThumb, setGhostThumb] = useState<string | null>(null);
@@ -158,7 +158,7 @@ export const useChapterQuizScreen = () => {
   }, [matchingId, chapterSlides, activeSlideIndex]);
 
   useEffect(() => {
-    setHasQuizRightAnswer(false);
+    setCorrectAnswerCount(0);
     setAllMatchedForCurrent(false);
     qasScrollRef.current?.scrollTo({ y: 0, animated: true });
     matchingScrollRef.current?.scrollTo({ y: 0, animated: true });
@@ -189,13 +189,22 @@ export const useChapterQuizScreen = () => {
 
   const isLastSlide = activeSlideIndex >= chapterSlides.length - 1;
 
+  const totalCorrectQAs = useMemo(
+    () => qas.filter((qa) => qa.is_correct_answer).length,
+    [qas],
+  );
+
   const canProceedCurrentSlide = useMemo(() => {
     if (!activeSlide) return false;
     if (activeSlide.kind === "quiz") {
-      return qas.length === 0 || hasQuizRightAnswer;
+      if (qas.length === 0 || totalCorrectQAs === 0) return true;
+      const allOptionsAreCorrect = totalCorrectQAs === qas.length;
+      return allOptionsAreCorrect
+        ? correctAnswerCount >= 1
+        : correctAnswerCount >= totalCorrectQAs;
     }
     return allMatchedForCurrent;
-  }, [activeSlide, qas.length, hasQuizRightAnswer, allMatchedForCurrent]);
+  }, [activeSlide, qas.length, totalCorrectQAs, correctAnswerCount, allMatchedForCurrent]);
 
   const nextButton = useMemo(() => {
     const isDisabled = !canProceedCurrentSlide;
@@ -256,8 +265,8 @@ export const useChapterQuizScreen = () => {
     headerTitle,
     headerSubtitle,
     headerAudioUrl,
-    hasQuizRightAnswer,
-    setHasQuizRightAnswer,
+    quizAnswered: activeSlide?.kind === "quiz" && canProceedCurrentSlide,
+    incrementCorrectAnswerCount: () => setCorrectAnswerCount((n) => n + 1),
     setAllMatchedForCurrent,
   };
 };

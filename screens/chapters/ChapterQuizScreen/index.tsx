@@ -46,8 +46,8 @@ const ChapterQuizScreen = () => {
     lesson,
     headerSubtitle,
     headerAudioUrl,
-    hasQuizRightAnswer,
-    setHasQuizRightAnswer,
+    quizAnswered,
+    incrementCorrectAnswerCount,
     setAllMatchedForCurrent,
   } = useChapterQuizScreen();
 
@@ -109,8 +109,8 @@ const ChapterQuizScreen = () => {
         ghostThumb={ghostThumb}
         handleDragStartGhost={handleDragStartGhost}
         handleDragEndGhost={handleDragEndGhost}
-        quizAnswered={hasQuizRightAnswer}
-        onQuizRightAnswer={() => setHasQuizRightAnswer(true)}
+        quizAnswered={quizAnswered}
+        onQuizRightAnswer={incrementCorrectAnswerCount}
         onMatchingAllMatched={() => setAllMatchedForCurrent(true)}
       />
 

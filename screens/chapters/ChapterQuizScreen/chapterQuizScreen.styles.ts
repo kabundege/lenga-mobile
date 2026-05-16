@@ -1,5 +1,5 @@
-import colors from "@/utils/theme/colors";
 import { Dimensions, globalStyles } from "@/utils/styles";
+import colors from "@/utils/theme/colors";
 import { themeToken } from "@/utils/theme/styles";
 import { StyleSheet } from "react-native";
 
@@ -19,6 +19,7 @@ export const chapterQuizScreenStyles = StyleSheet.create({
     rowGap: themeToken.spacing,
   },
   quizContextWrap: {
+    marginBottom: themeToken.spacing,
     marginHorizontal: themeToken.padding,
   },
   quizCard: {

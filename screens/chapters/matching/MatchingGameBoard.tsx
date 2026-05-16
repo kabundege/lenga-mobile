@@ -104,6 +104,13 @@ export const MatchingGameBoard = ({
     });
   }, []);
 
+  const handleWrongReset = useCallback(
+    (questionId: string) => {
+      clearWrongForQuestion(questionId);
+    },
+    [clearWrongForQuestion],
+  );
+
   const handleDragEnd = useCallback(
     (questionId: string, absoluteX: number, absoluteY: number) => {
       setDraggingQuestion(null);
@@ -233,6 +240,7 @@ export const MatchingGameBoard = ({
               isDraggingWrongPiece={wrongQid != null && draggingQuestion === wrongQid}
               onWrongDragStart={handleDragStart}
               onWrongDragEnd={handleDragEnd}
+              onWrongReset={handleWrongReset}
             />
           );
         })}
