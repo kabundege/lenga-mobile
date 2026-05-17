@@ -33,5 +33,20 @@
   "removeOfflineConfirmTitle": "Rushaka gusiba iri somo?",
   "removeOfflineConfirmMessage": "Iri somo riri bukurwe mu bubiko bwawe",
   "lesson": "Isomo",
-  "chapter": "Igice"
+  "chapter": "Igice",
+  "contentManagement": {
+    "title": "Ububiko bw'amafayili",
+    "lesson": "Isomo",
+    "chapter": "Igice",
+    "quiz": "Ikibazo",
+    "chapterNumber": "Igice {{order}}",
+    "quizNumber": "Ikibazo {{order}}",
+    "preview": "Reba",
+    "retryDownload": "Ongera ukurure",
+    "complete": "Byose bikuwe",
+    "noMedia": "Nta fayili",
+    "progress": "{{downloaded}} muri {{total}}",
+    "refreshAll": "Hindura hose",
+    "retryFailed": "Ntago gukurura byakunze."
+  }
 }

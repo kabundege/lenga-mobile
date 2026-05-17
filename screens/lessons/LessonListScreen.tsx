@@ -16,6 +16,7 @@ import { flexBetween, globalStyles } from "@/utils/styles";
 import colors from "@/utils/theme/colors";
 import { themeToken } from "@/utils/theme/styles";
 import { StatusBar } from "expo-status-bar";
+import { router } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { ListRenderItemInfo, Pressable, StyleSheet, View } from "react-native";
@@ -79,19 +80,30 @@ const LessonListScreen = () => {
               {formattedUsername}
             </TextBody>
           </View>
-          <LogoutModal
-            toggleBtn={({ onPress }) => (
-              <IconButton
-                size="sm"
-                icon="user"
-                iconType="antd"
-                onPress={onPress}
-                iconFill={colors.text.inverted}
-                backgroundColor={colors.primary}
-                style={[globalStyles.border_primary, globalStyles.p_sm]}
-              />
-            )}
-          />
+          <View style={[globalStyles.flex_row, globalStyles.gap_xs]}>
+            <IconButton
+              size="sm"
+              icon="folder"
+              iconType="material"
+              onPress={() => router.push("/lessons/content-management")}
+              iconFill={colors.text.primary}
+              backgroundColor={colors.primary_light}
+              style={[globalStyles.border_secondary, globalStyles.p_sm]}
+            />
+            <LogoutModal
+              toggleBtn={({ onPress }) => (
+                <IconButton
+                  size="sm"
+                  icon="user"
+                  iconType="antd"
+                  onPress={onPress}
+                  iconFill={colors.text.inverted}
+                  backgroundColor={colors.primary}
+                  style={[globalStyles.border_primary, globalStyles.p_sm]}
+                />
+              )}
+            />
+          </View>
         </View>
 
         <View>

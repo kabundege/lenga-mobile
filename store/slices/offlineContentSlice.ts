@@ -18,20 +18,20 @@ import type {
   StrapiQuiz,
 } from '@/types/api';
 import {
-  fileExists,
-  getOfflinePathForRemoteUrl,
-  toAbsoluteMediaUrl,
-} from '@/utils/offlineMedia';
+  collectAllMediaForLesson,
+  collectChapterSubtreeMedia,
+  collectQuizSubtreeMedia,
+} from '@/utils/offlineMediaInventory';
+import { ensureOfflineAsset } from '@/utils/offlineMedia';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { File } from 'expo-file-system';
 import type { QueryClient } from '@tanstack/react-query';
+import type { AxiosResponse } from 'axios';
 import type { RootState } from '@/store';
 import { setAsset, setLessonSync } from './offlineAssetsSlice';
-import type { AxiosResponse } from 'axios';
 
 // ─── Cache helpers ────────────────────────────────────────────────────────────
 
-function getListFromCache<T>(
+export function getLessonContentListFromCache<T>(
   queryClient: QueryClient,
   queryKey: readonly unknown[],
 ): T[] {
@@ -39,128 +39,61 @@ function getListFromCache<T>(
   return Array.isArray(cached?.data?.data) ? cached.data.data : [];
 }
 
-// ─── Per-level media collectors ───────────────────────────────────────────────
-
-function push(bag: Set<string>, url?: string | null) {
-  const abs = toAbsoluteMediaUrl(url);
-  if (abs) bag.add(abs);
-}
-
-/** Media that belongs directly to a lesson (thumbnail, audio description). */
-function collectLessonMedia(lesson: StrapiLesson, bag: Set<string>) {
-  push(bag, lesson.thumbnail?.url);
-  push(bag, lesson.audio_desc?.url);
-}
-
-/** Media that belongs to a single chapter (thumbnail, audio description, video). */
-function collectChapterMedia(
-  chapter: StrapiLessonChapter,
-  video: StrapiLessonVideo | undefined,
-  bag: Set<string>,
+async function runMediaDownloadsForLesson(
+  dispatch: (action: unknown) => unknown,
+  lessonId: string,
+  mediaUrls: string[],
 ) {
-  push(bag, chapter.thumbnail?.url);
-  push(bag, chapter.audio_desc?.url);
-  if (video) push(bag, video.lesson_video?.url);
-}
+  if (mediaUrls.length === 0) {
+    dispatch(
+      setLessonSync({
+        lessonId,
+        status: 'done',
+        totalAssets: 0,
+        downloadedAssets: 0,
+      }),
+    );
+    return;
+  }
 
-/** Media that belongs to a single quiz (audio description). */
-function collectQuizMedia(quiz: StrapiQuiz, bag: Set<string>) {
-  push(bag, quiz.audio_desc?.url);
-}
-
-/** Media that belongs to a single Q&A (thumbnail, audio description). */
-function collectQAMedia(qa: StrapiQA, bag: Set<string>) {
-  push(bag, qa.thumbnail?.url);
-  push(bag, qa.audio_desc?.url);
-}
-
-/** Matching game media for one chapter (audio + question/answer thumbnails). */
-function collectMatchingMediaForChapter(
-  chapterDocumentId: string,
-  matchings: StrapiMatching[],
-  matchingQuestions: StrapiMatchingQuestion[],
-  bag: Set<string>,
-) {
-  const chapterMatchings = matchings.filter(
-    (m) => m.lesson_chapter?.documentId === chapterDocumentId,
+  dispatch(
+    setLessonSync({
+      lessonId,
+      status: 'downloading',
+      totalAssets: mediaUrls.length,
+      downloadedAssets: 0,
+    }),
   );
-  chapterMatchings.forEach((matching) => {
-    push(bag, matching.audio_desc?.url);
-    const mid = matching.documentId;
-    matchingQuestions
-      .filter((q) => q.matching?.documentId === mid)
-      .forEach((q) => {
-        push(bag, q.thumbnail?.url);
-        push(bag, q.matching_answer?.thumbnail?.url);
-      });
-  });
-}
 
-/**
- * Walks the full lesson tree (lesson → chapters → videos → quizzes → QAs → matchings)
- * and returns every unique absolute media URL that needs to be downloaded.
- */
-function collectAllMediaForLesson(
-  lesson: StrapiLesson,
-  chapters: StrapiLessonChapter[],
-  videos: StrapiLessonVideo[],
-  quizzes: StrapiQuiz[],
-  qas: StrapiQA[],
-  matchings: StrapiMatching[],
-  matchingQuestions: StrapiMatchingQuestion[],
-): string[] {
-  const bag = new Set<string>();
+  let downloaded = 0;
+  for (const url of mediaUrls) {
+    try {
+      const result = await ensureOfflineAsset(url);
+      if (result) {
+        dispatch(setAsset({ remoteUrl: result.remoteUrl, localUri: result.localUri }));
+      }
+    } catch {
+      // One asset failing must not block the rest.
+    }
+    downloaded += 1;
+    dispatch(
+      setLessonSync({
+        lessonId,
+        status: 'downloading',
+        totalAssets: mediaUrls.length,
+        downloadedAssets: downloaded,
+      }),
+    );
+  }
 
-  // Lesson-level media
-  collectLessonMedia(lesson, bag);
-
-  const chapterIds = new Set((lesson.lesson_chapters ?? []).map((c) => c.documentId));
-
-  // Chapter-level media (thumbnail + audio + video)
-  chapters
-    .filter((c) => chapterIds.has(c.documentId))
-    .forEach((chapter) => {
-      const video = videos.find(
-        (v) => v.lesson_chapter && v.lesson_chapter.documentId === chapter.documentId,
-      );
-      collectChapterMedia(chapter, video, bag);
-
-      // Quiz-level media under this chapter
-      const chapterQuizzes = quizzes.filter(
-        (q) => q.lesson_chapter && q.lesson_chapter.documentId === chapter.documentId,
-      );
-      const quizIds = new Set(chapterQuizzes.map((q) => q.documentId));
-      chapterQuizzes.forEach((quiz) => collectQuizMedia(quiz, bag));
-
-      // QA-level media under each quiz
-      qas
-        .filter((qa) => qa.quiz && quizIds.has(qa.quiz.documentId))
-        .forEach((qa) => collectQAMedia(qa, bag));
-
-      collectMatchingMediaForChapter(
-        chapter.documentId,
-        matchings,
-        matchingQuestions,
-        bag,
-      );
-    });
-
-  return Array.from(bag);
-}
-
-// ─── Download helper ──────────────────────────────────────────────────────────
-
-async function ensureOfflineAsset(
-  remoteUrl: string,
-): Promise<{ remoteUrl: string; localUri: string } | null> {
-  const abs = toAbsoluteMediaUrl(remoteUrl);
-  if (!abs) return null;
-  const targetUri = getOfflinePathForRemoteUrl(abs);
-  if (fileExists(targetUri)) return { remoteUrl: abs, localUri: targetUri };
-  const result = await File.downloadFileAsync(abs, new File(targetUri), {
-    idempotent: true,
-  });
-  return { remoteUrl: abs, localUri: result.uri };
+  dispatch(
+    setLessonSync({
+      lessonId,
+      status: 'done',
+      totalAssets: mediaUrls.length,
+      downloadedAssets: mediaUrls.length,
+    }),
+  );
 }
 
 // ─── Thunks ──────────────────────────────────────────────────────────────────
@@ -177,13 +110,25 @@ export const downloadLessonAssets = createAsyncThunk<
 >(
   'offlineContent/downloadLessonAssets',
   async ({ lessonId, queryClient, locale }, thunkApi) => {
-    const lessons = getListFromCache<StrapiLesson>(queryClient, ['lessons', { locale }]);
-    const chapters = getListFromCache<StrapiLessonChapter>(queryClient, ['chapters', { locale }]);
-    const videos = getListFromCache<StrapiLessonVideo>(queryClient, ['videos', { locale }]);
-    const quizzes = getListFromCache<StrapiQuiz>(queryClient, ['quizzes', { locale }]);
-    const qas = getListFromCache<StrapiQA>(queryClient, ['qas', { locale }]);
-    const matchings = getListFromCache<StrapiMatching>(queryClient, ['matchings', { locale }]);
-    const matchingQuestions = getListFromCache<StrapiMatchingQuestion>(queryClient, [
+    const lessons = getLessonContentListFromCache<StrapiLesson>(queryClient, [
+      'lessons',
+      { locale },
+    ]);
+    const chapters = getLessonContentListFromCache<StrapiLessonChapter>(queryClient, [
+      'chapters',
+      { locale },
+    ]);
+    const videos = getLessonContentListFromCache<StrapiLessonVideo>(queryClient, [
+      'videos',
+      { locale },
+    ]);
+    const quizzes = getLessonContentListFromCache<StrapiQuiz>(queryClient, ['quizzes', { locale }]);
+    const qas = getLessonContentListFromCache<StrapiQA>(queryClient, ['qas', { locale }]);
+    const matchings = getLessonContentListFromCache<StrapiMatching>(queryClient, [
+      'matchings',
+      { locale },
+    ]);
+    const matchingQuestions = getLessonContentListFromCache<StrapiMatchingQuestion>(queryClient, [
       'matching-questions',
       { locale },
     ]);
@@ -201,48 +146,93 @@ export const downloadLessonAssets = createAsyncThunk<
       matchingQuestions,
     );
 
-    thunkApi.dispatch(
-      setLessonSync({
-        lessonId,
-        status: 'downloading',
-        totalAssets: mediaUrls.length,
-        downloadedAssets: 0,
-      }),
-    );
-
-    let downloaded = 0;
-    for (const url of mediaUrls) {
-      try {
-        const result = await ensureOfflineAsset(url);
-        if (result) {
-          thunkApi.dispatch(
-            setAsset({ remoteUrl: result.remoteUrl, localUri: result.localUri }),
-          );
-        }
-      } catch {
-        // One asset failing must not block the rest.
-      }
-      downloaded += 1;
-      thunkApi.dispatch(
-        setLessonSync({
-          lessonId,
-          status: 'downloading',
-          totalAssets: mediaUrls.length,
-          downloadedAssets: downloaded,
-        }),
-      );
-    }
-
-    thunkApi.dispatch(
-      setLessonSync({
-        lessonId,
-        status: 'done',
-        totalAssets: mediaUrls.length,
-        downloadedAssets: mediaUrls.length,
-      }),
-    );
+    await runMediaDownloadsForLesson(thunkApi.dispatch, lessonId, mediaUrls);
 
     return { lessonId };
+  },
+);
+
+/**
+ * Downloads all media for one chapter (video, quizzes, Q&A, matching) using the parent
+ * lesson only for progress bookkeeping in `lessonSyncQueue`.
+ */
+export const downloadChapterAssets = createAsyncThunk<
+  { lessonId: string; chapterDocumentId: string },
+  { lessonId: string; chapterDocumentId: string; queryClient: QueryClient; locale: string },
+  { state: RootState }
+>(
+  'offlineContent/downloadChapterAssets',
+  async ({ lessonId, chapterDocumentId, queryClient, locale }, thunkApi) => {
+    const lessons = getLessonContentListFromCache<StrapiLesson>(queryClient, [
+      'lessons',
+      { locale },
+    ]);
+    const lesson = lessons.find((l) => l.documentId === lessonId);
+    const chapterIds = new Set((lesson?.lesson_chapters ?? []).map((c) => c.documentId));
+    if (!lesson || !chapterIds.has(chapterDocumentId)) {
+      return { lessonId, chapterDocumentId };
+    }
+
+    const chapters = getLessonContentListFromCache<StrapiLessonChapter>(queryClient, [
+      'chapters',
+      { locale },
+    ]);
+    const chapter = chapters.find((c) => c.documentId === chapterDocumentId);
+    if (!chapter) return { lessonId, chapterDocumentId };
+
+    const videos = getLessonContentListFromCache<StrapiLessonVideo>(queryClient, [
+      'videos',
+      { locale },
+    ]);
+    const video = videos.find(
+      (v) => v.lesson_chapter && v.lesson_chapter.documentId === chapter.documentId,
+    );
+    const quizzes = getLessonContentListFromCache<StrapiQuiz>(queryClient, ['quizzes', { locale }]);
+    const qas = getLessonContentListFromCache<StrapiQA>(queryClient, ['qas', { locale }]);
+    const matchings = getLessonContentListFromCache<StrapiMatching>(queryClient, [
+      'matchings',
+      { locale },
+    ]);
+    const matchingQuestions = getLessonContentListFromCache<StrapiMatchingQuestion>(queryClient, [
+      'matching-questions',
+      { locale },
+    ]);
+
+    const mediaUrls = collectChapterSubtreeMedia(
+      chapter,
+      video,
+      quizzes,
+      qas,
+      matchings,
+      matchingQuestions,
+    );
+
+    await runMediaDownloadsForLesson(thunkApi.dispatch, lessonId, mediaUrls);
+
+    return { lessonId, chapterDocumentId };
+  },
+);
+
+/**
+ * Downloads quiz + Q&A media for one quiz; progress is tracked under the parent lesson id.
+ */
+export const downloadQuizAssets = createAsyncThunk<
+  { lessonId: string; quizDocumentId: string },
+  { lessonId: string; quizDocumentId: string; queryClient: QueryClient; locale: string },
+  { state: RootState }
+>(
+  'offlineContent/downloadQuizAssets',
+  async ({ lessonId, quizDocumentId, queryClient, locale }, thunkApi) => {
+    const quizzes = getLessonContentListFromCache<StrapiQuiz>(queryClient, ['quizzes', { locale }]);
+    const quiz = quizzes.find((q) => q.documentId === quizDocumentId);
+    if (!quiz) return { lessonId, quizDocumentId };
+
+    const qas = getLessonContentListFromCache<StrapiQA>(queryClient, ['qas', { locale }]);
+    const mediaUrls = collectQuizSubtreeMedia(quiz, qas);
+
+    await runMediaDownloadsForLesson(thunkApi.dispatch, lessonId, mediaUrls);
+
+    return { lessonId, quizDocumentId };
   },
 );
 
@@ -257,10 +247,12 @@ export const syncLessonMediaAssets = createAsyncThunk<
 >(
   'offlineContent/syncLessonMediaAssets',
   async ({ queryClient, locale }, thunkApi) => {
-    const lessons = getListFromCache<StrapiLesson>(queryClient, ['lessons', { locale }]);
+    const lessons = getLessonContentListFromCache<StrapiLesson>(queryClient, [
+      'lessons',
+      { locale },
+    ]);
     const sorted = lessons.slice().sort((a, b) => a.order - b.order);
 
-    // Mark all as queued first so cards show the indicator immediately.
     sorted.forEach((lesson) =>
       thunkApi.dispatch(
         setLessonSync({

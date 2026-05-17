@@ -64,3 +64,17 @@ export function getOfflinePathForRemoteUrl(remoteUrl: string) {
   return new File(dir, safeName).uri;
 }
 
+/** Download a remote asset into the hashed offline path; skips if already on disk. */
+export async function ensureOfflineAsset(
+  remoteUrl: string,
+): Promise<{ remoteUrl: string; localUri: string } | null> {
+  const abs = toAbsoluteMediaUrl(remoteUrl);
+  if (!abs) return null;
+  const targetUri = getOfflinePathForRemoteUrl(abs);
+  if (fileExists(targetUri)) return { remoteUrl: abs, localUri: targetUri };
+  const result = await File.downloadFileAsync(abs, new File(targetUri), {
+    idempotent: true,
+  });
+  return { remoteUrl: abs, localUri: result.uri };
+}
+

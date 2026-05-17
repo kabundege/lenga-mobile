@@ -29,7 +29,10 @@ const PlayAudioButton = ({
   ...iconButtonProps
 }: PlayAudioButtonProps) => {
   const rotation = useSharedValue(0);
-  const { audioLoaded, audioPlaying, toggleAudio } = useLessonAudio(audioUrl);
+  const { audioLoaded, audioPlaying, playbackState, toggleAudio } = useLessonAudio(audioUrl);
+
+  const showIdlePlaybackIcon =
+    audioLoaded && !audioPlaying && playbackState === "idle";
 
   useEffect(() => {
     if (audioLoaded) {
@@ -63,8 +66,16 @@ const PlayAudioButton = ({
         iconFill={colors.primary}
         styles={iconButtonProps.styles}
         backgroundColor={backgroundColor}
-        iconType={audioPlaying ? "ionicons" : "entypo"}
-        icon={audioPlaying ? "pause" : audioLoaded ? "sound" : "warning"}
+        iconType={audioPlaying || showIdlePlaybackIcon ? "ionicons" : "entypo"}
+        icon={
+          audioPlaying
+            ? "pause"
+            : showIdlePlaybackIcon
+              ? "play-outline"
+              : audioLoaded
+                ? "sound"
+                : "warning"
+        }
       />
       {!audioLoaded ? (
         <Animated.View
