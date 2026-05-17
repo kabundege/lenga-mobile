@@ -19,7 +19,9 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "permissions": ["WAKE_LOCK"],
+      "permissions": [
+        "WAKE_LOCK"
+      ],
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.kabundege.lengarn"
@@ -40,7 +42,8 @@
         }
       ],
       "expo-video",
-      "expo-audio"
+      "expo-audio",
+      "expo-sqlite"
     ],
     "experiments": {
       "typedRoutes": true,

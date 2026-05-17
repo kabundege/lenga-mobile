@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DbProvider } from '@/components/providers/DbProvider';
 import { NetworkProvider } from '@/components/providers/NetworkProvider';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import { QueryClient } from '@tanstack/react-query';
@@ -42,19 +43,21 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <NetworkProvider>
-          <PersistQueryClientProvider
-            client={queryClient}
-            persistOptions={{
-              persister: asyncStoragePersister,
-              maxAge: ONE_WEEK_MS,
-              dehydrateOptions: {
-                shouldDehydrateQuery: (query) =>
-                  query.state.status === 'success',
-              },
-            }}
-          >
-            {children}
-          </PersistQueryClientProvider>
+          <DbProvider>
+            <PersistQueryClientProvider
+              client={queryClient}
+              persistOptions={{
+                persister: asyncStoragePersister,
+                maxAge: ONE_WEEK_MS,
+                dehydrateOptions: {
+                  shouldDehydrateQuery: (query) =>
+                    query.state.status === 'success',
+                },
+              }}
+            >
+              {children}
+            </PersistQueryClientProvider>
+          </DbProvider>
         </NetworkProvider>
       </PersistGate>
     </Provider>
