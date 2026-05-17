@@ -13,6 +13,7 @@ import {
   useVideos,
 } from '@/hooks/useLessons';
 import { useOfflineSync } from '@/hooks/useOfflineSync';
+import { useNetworkStatus } from '@/components/providers/NetworkProvider';
 import type { StrapiLesson, StrapiLessonChapter, StrapiQuiz } from '@/types/api';
 import { flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
@@ -72,6 +73,7 @@ const ContentManagementScreen = () => {
   const { matchingQuestions } = useMatchingQuestions();
 
   const { refreshAllLessonOfflineData, isSyncing } = useOfflineSync();
+  const { isOffline } = useNetworkStatus();
 
   const [rowLoadingKey, setRowLoadingKey] = useState<string | null>(null);
   const [refreshingAll, setRefreshingAll] = useState(false);
@@ -234,6 +236,11 @@ const ContentManagementScreen = () => {
       </View>
 
       <View style={styles.toolbar}>
+        {isOffline ? (
+          <TextBody variant="caption" color="secondary" style={styles.offlineBanner}>
+            {t('lessons.offlineStatusShort')}
+          </TextBody>
+        ) : null}
         <Button
           type="outlined"
           size="sm"
@@ -422,6 +429,10 @@ const styles = StyleSheet.create({
   toolbar: {
     paddingHorizontal: themeToken.paddingLg,
     paddingVertical: themeToken.spacing,
+    gap: themeToken.spacing,
+  },
+  offlineBanner: {
+    textAlign: 'center',
   },
   scrollContent: {
     paddingHorizontal: themeToken.paddingLg,

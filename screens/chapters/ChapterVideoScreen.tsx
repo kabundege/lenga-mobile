@@ -10,6 +10,8 @@ import { useVideoPlayer, VideoView } from 'expo-video';
 import IconButton from '@/components/buttons/iconButton';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
+import { useNetworkStatus } from '@/components/providers/NetworkProvider';
+import { playbackRequiresNetwork } from '@/utils/playbackConnectivity';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { centered, flexBetween, globalStyles } from '@/utils/styles';
@@ -28,6 +30,7 @@ const ChapterVideoScreen = () => {
 
   const isLoading = isChapterLoading || isVideoLoading;
   const error = chapterError ?? videoError;
+  const { isOffline } = useNetworkStatus();
 
   const refetch = useCallback(() => {
     chapterRefetch();
@@ -35,8 +38,12 @@ const ChapterVideoScreen = () => {
   }, [chapterRefetch, videoRefetch]);
 
   const videoUrl = useMemo(() => getChapterVideoUrl(chapterVideo ?? null), [chapterVideo]);
-  const offlineVideoUri = useOfflineAssetUri(videoUrl);
-  const videoPlayer = useVideoPlayer(videoUrl);
+  const resolvedVideoUri = useOfflineAssetUri(videoUrl);
+  const playbackBlockedOffline = Boolean(
+    resolvedVideoUri && isOffline && playbackRequiresNetwork(resolvedVideoUri),
+  );
+  const videoSourceUri = playbackBlockedOffline ? null : (resolvedVideoUri || null);
+  const videoPlayer = useVideoPlayer(videoSourceUri);
   const [videoPlaybackError, setVideoPlaybackError] = useState(false);
 
   const breadcrumbItems = useMemo(
@@ -49,16 +56,16 @@ const ChapterVideoScreen = () => {
   );
 
   useEffect(() => {
-    const sub = videoPlayer.addListener('statusChange', ({ status, error, oldStatus }) => {
+    const sub = videoPlayer.addListener('statusChange', ({ status }) => {
       if (status === 'error') setVideoPlaybackError(true);
     });
     return () => sub.remove();
   }, [videoPlayer]);
 
   useEffect(() => {
-    if (!offlineVideoUri) return;
+    if (!videoSourceUri || playbackBlockedOffline) return;
     videoPlayer.play();
-  }, [offlineVideoUri, videoPlayer]);
+  }, [playbackBlockedOffline, videoPlayer, videoSourceUri]);
 
   if (!chapterId || isLoading) return <ThemedView style={[styles.container, globalStyles.center]}> <Loader color="primary" size="large" /> </ThemedView>;
 
@@ -94,7 +101,13 @@ const ChapterVideoScreen = () => {
         thumbnailUrl={chapter?.thumbnail?.url}
       />
       <View style={[globalStyles.flex_1, { paddingBottom: insets.bottom }]}>
-        {isLoading ? <View style={[centered, globalStyles.flex_1]}> <Loader color="primary" size="large" /> </View> : offlineVideoUri ? (
+        {playbackBlockedOffline ? (
+          <View style={[centered, globalStyles.flex_1]}>
+            <TextBody variant="body2" color="secondary" style={globalStyles.text_center}>
+              {t('lessons.offlinePlaybackNeedsConnection')}
+            </TextBody>
+          </View>
+        ) : resolvedVideoUri ? (
           <VideoView player={videoPlayer} nativeControls style={styles.video} contentFit="contain" />
         ) : null}
       </View>
@@ -125,4 +138,3 @@ const styles = StyleSheet.create({
     height: '100%',
   },
 });
-

@@ -21,6 +21,8 @@
   },
   "lessonListSubtitle": "Isomo {{current}} muri {{total}}",
   "playbackError": "Ntibishobotse gukina iri somo.",
+  "offlinePlaybackNeedsConnection": "Iyi videwo ntabwo yarafashwe mu bubiko bwawe — kenosha ko ufite murandasi kugira ngo uyikine, cyangwa ukure mu rubuga rw'amafayili.",
+  "offlineStatusShort": "Nta murandasi",
   "downloading": "Birakurwa...",
   "downloadingWithPercent": "Tegereza {{percent}}% ({{written}} / {{total}})",
   "downloadingWithWritten": "Tegereza ({{written}})",

@@ -1,4 +1,6 @@
 import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
+import { useNetworkStatus } from '@/components/providers/NetworkProvider';
+import { playbackRequiresNetwork } from '@/utils/playbackConnectivity';
 import { activateSingleAudio, clearActiveSoundIf } from '@/utils/singleAudioPlayer';
 import { createAudioPlayer, setAudioModeAsync, type AudioPlayer, type AudioStatus } from 'expo-audio';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -9,6 +11,8 @@ interface UseLessonAudioResult {
   audioPlaying: boolean;
   /** From expo-audio, e.g. `idle`, `ready` */
   playbackState: string | null;
+  /** HTTP(S) source while the device reports no connectivity — playback is disabled until cached or online. */
+  playbackBlockedOffline: boolean;
   toggleAudio: () => Promise<void>;
 }
 
@@ -22,12 +26,19 @@ export const useLessonAudio = (rawAudioUrl?: string | null): UseLessonAudioResul
   const [audioPlaying, setAudioPlaying] = useState(false);
   const [audioFinished, setAudioFinished] = useState(false);
   const [playbackState, setPlaybackState] = useState<string | null>(null);
+  const { isOffline } = useNetworkStatus();
 
-  const resolvedAudioUri = useOfflineAssetUri(rawAudioUrl);
+  const resolvedAudioUri = useOfflineAssetUri(rawAudioUrl ?? undefined);
   const audioUrl = useMemo(() => (resolvedAudioUri ? resolvedAudioUri : null), [resolvedAudioUri]);
+  const playbackBlockedOffline = useMemo(
+    () => isOffline && playbackRequiresNetwork(resolvedAudioUri || undefined),
+    [isOffline, resolvedAudioUri],
+  );
   const prefetchRemoteAudio = useMemo(
-    () => Boolean(audioUrl && /^https?:\/\//i.test(audioUrl)),
-    [audioUrl],
+    () =>
+      !playbackBlockedOffline &&
+      Boolean(audioUrl && /^https?:\/\//i.test(audioUrl)),
+    [audioUrl, playbackBlockedOffline],
   );
 
   const unloadAudio = useCallback(async () => {
@@ -56,7 +67,7 @@ export const useLessonAudio = (rawAudioUrl?: string | null): UseLessonAudioResul
 
   useEffect(() => {
     unloadAudio().catch(() => null);
-    if (!audioUrl) return;
+    if (playbackBlockedOffline || !audioUrl) return;
     let cancelled = false;
 
     (async () => {
@@ -123,16 +134,13 @@ export const useLessonAudio = (rawAudioUrl?: string | null): UseLessonAudioResul
       cancelled = true;
       unloadAudio().catch(() => null);
     };
-  }, [audioUrl, prefetchRemoteAudio, unloadAudio]);
+  }, [audioUrl, playbackBlockedOffline, prefetchRemoteAudio, unloadAudio]);
 
   const toggleAudio = useCallback(async () => {
     try {
       const sound = soundRef.current;
-      if (!sound || !playbackReadyRef.current) return;
+      if (!sound || !playbackReadyRef.current || playbackBlockedOffline) return;
       const status = latestStatusRef.current ?? sound.currentStatus;
-
-      console.log({ status });
-
 
       if (!status.isLoaded) return;
 
@@ -142,25 +150,23 @@ export const useLessonAudio = (rawAudioUrl?: string | null): UseLessonAudioResul
         const didJustFinish = status.didJustFinish === true;
 
         if (audioFinished || didJustFinish) {
-          // Ensure subsequent play starts from the beginning.
           await sound.seekTo(0);
           setAudioFinished(false);
         }
-        // Ensure only one audio track can play at a time.
         await activateSingleAudio(sound);
         sound.play();
       }
-    } catch (error) {
-      console.error({ error });
+    } catch {
       // ignore
     }
-  }, [audioFinished]);
+  }, [audioFinished, playbackBlockedOffline]);
 
   return {
     audioUrl,
     audioLoaded,
     audioPlaying,
     playbackState,
+    playbackBlockedOffline,
     toggleAudio,
   };
 };

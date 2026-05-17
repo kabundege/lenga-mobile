@@ -29,13 +29,14 @@ const PlayAudioButton = ({
   ...iconButtonProps
 }: PlayAudioButtonProps) => {
   const rotation = useSharedValue(0);
-  const { audioLoaded, audioPlaying, playbackState, toggleAudio } = useLessonAudio(audioUrl);
+  const { audioLoaded, audioPlaying, playbackState, playbackBlockedOffline, toggleAudio } =
+    useLessonAudio(audioUrl);
 
   const showIdlePlaybackIcon =
     audioLoaded && !audioPlaying && playbackState === "idle";
 
   useEffect(() => {
-    if (audioLoaded) {
+    if (playbackBlockedOffline || audioLoaded) {
       rotation.value = 0;
       return;
     }
@@ -48,7 +49,7 @@ const PlayAudioButton = ({
       -1,
       false,
     );
-  }, [audioLoaded, rotation]);
+  }, [audioLoaded, playbackBlockedOffline, rotation]);
 
   const loadingRingStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotation.value}deg` }],
@@ -62,22 +63,26 @@ const PlayAudioButton = ({
       <IconButton
         size={size}
         onPress={toggleAudio}
-        disabled={!audioLoaded}
+        disabled={!audioLoaded || playbackBlockedOffline}
         iconFill={colors.primary}
         styles={iconButtonProps.styles}
         backgroundColor={backgroundColor}
-        iconType={audioPlaying || showIdlePlaybackIcon ? "ionicons" : "entypo"}
+        iconType={
+          playbackBlockedOffline || audioPlaying || showIdlePlaybackIcon ? "ionicons" : "entypo"
+        }
         icon={
-          audioPlaying
-            ? "pause"
-            : showIdlePlaybackIcon
-              ? "play-outline"
-              : audioLoaded
-                ? "sound"
-                : "warning"
+          playbackBlockedOffline
+            ? "cloud-offline-outline"
+            : audioPlaying
+              ? "pause"
+              : showIdlePlaybackIcon
+                ? "play-outline"
+                : audioLoaded
+                  ? "sound"
+                  : "warning"
         }
       />
-      {!audioLoaded ? (
+      {!audioLoaded && !playbackBlockedOffline ? (
         <Animated.View
           pointerEvents="none"
           style={[styles.loadingRing, loadingRingStyle]}

@@ -23,6 +23,8 @@ import { StyleSheet, View } from 'react-native';
 import { toast } from 'sonner-native';
 import Icon from '../common/icon';
 import BaseModal, { BaseModalProps } from './BaseModal';
+import { useNetworkStatus } from '@/components/providers/NetworkProvider';
+import { playbackRequiresNetwork } from '@/utils/playbackConnectivity';
 
 export type LessonPlayerModalProps = Omit<BaseModalProps, 'children'> & {
   lesson: StrapiLessonMinimal | null;
@@ -95,10 +97,24 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       if (isSaved && savedEntry?.localUri) return savedEntry.localUri;
       return mediaUrl;
     }, [isSaved, savedEntry?.localUri, mediaUrl]);
-    const videoPlayer = useVideoPlayer(playableUri || null);
+
+    const { isOffline } = useNetworkStatus();
+    const playbackBlockedOffline = useMemo(
+      () => isOffline && playbackRequiresNetwork(playableUri || ''),
+      [isOffline, playableUri],
+    );
 
     const descriptionText = lesson?.lesson_description?.text_description ?? null;
     const descriptionAudioUrl = lesson?.lesson_description?.audio_description_url ?? null;
+    const descriptionAudioBlockedOffline = useMemo(
+      () =>
+        Boolean(
+          descriptionAudioUrl &&
+          isOffline &&
+          playbackRequiresNetwork(descriptionAudioUrl),
+        ),
+      [descriptionAudioUrl, isOffline],
+    );
 
     const lessonDurationSeconds =
       lesson?.video_lesson_details?.duration_seconds ??
@@ -120,10 +136,17 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
       return /\.(mp3|m4a|aac|wav|ogg)(\?.*)?$/i.test(mediaUrl);
     }, [lessonType, mediaUrl]);
 
+    const videoUriForPlayer = useMemo(
+      () =>
+        playableUri && !playbackBlockedOffline && !isAudio ? playableUri : null,
+      [isAudio, playbackBlockedOffline, playableUri],
+    );
+    const videoPlayer = useVideoPlayer(videoUriForPlayer);
+
     useEffect(() => {
-      if (!playableUri || isAudio) return;
+      if (!playableUri || playbackBlockedOffline || isAudio) return;
       videoPlayer.play();
-    }, [isAudio, playableUri, videoPlayer]);
+    }, [isAudio, playbackBlockedOffline, playableUri, videoPlayer]);
 
     useEffect(() => {
       if (!lessonId) return;
@@ -197,7 +220,7 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
     useEffect(() => {
       // Ensure previous audio is torn down when switching lessons/types.
       unloadAudio().catch(() => null);
-      if (!lesson || !playableUri || !isAudio) return;
+      if (!lesson || !playableUri || !isAudio || playbackBlockedOffline) return;
 
       let cancelled = false;
 
@@ -239,11 +262,11 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
         unloadAudio().catch(() => null);
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [lesson?.documentId, playableUri, isAudio]);
+    }, [lesson?.documentId, playableUri, isAudio, playbackBlockedOffline]);
 
     useEffect(() => {
       unloadDescriptionAudio().catch(() => null);
-      if (!lesson || !descriptionAudioUrl) return;
+      if (!lesson || !descriptionAudioUrl || descriptionAudioBlockedOffline) return;
 
       let cancelled = false;
 
@@ -278,7 +301,7 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
         unloadDescriptionAudio().catch(() => null);
       };
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [lesson?.documentId, descriptionAudioUrl]);
+    }, [lesson?.documentId, descriptionAudioUrl, descriptionAudioBlockedOffline]);
 
     useEffect(() => {
       return () => {
@@ -472,6 +495,12 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
                 {t('lessons.lessonNoMedia')}
               </TextBody>
             </View>
+          ) : playbackBlockedOffline ? (
+            <View style={styles.centered}>
+              <TextBody variant="body2" color="secondary" style={globalStyles.text_center}>
+                {t('lessons.offlinePlaybackNeedsConnection')}
+              </TextBody>
+            </View>
           ) : isAudio ? (
             <ThemedView style={styles.audioCard}>
               <View style={[flexBetween, globalStyles.p_md]}>
@@ -510,20 +539,26 @@ const LessonPlayerModal = forwardRef<LessonPlayerModalRef, LessonPlayerModalProp
             <>
               <Spacer height={themeToken.spacing} />
               <ThemedView style={styles.audioCard}>
-                <View style={[flexBetween, globalStyles.p_md]}>
-                  <TextBody variant="body2" color="secondary">
-                    {descriptionAudioLoaded ? 'Audio description' : t('lessons.loading')}
+                {descriptionAudioBlockedOffline ? (
+                  <TextBody variant="body2" color="secondary" style={[globalStyles.p_md, globalStyles.text_center]}>
+                    {t('lessons.offlinePlaybackNeedsConnection')}
                   </TextBody>
-                  <IconButton
-                    icon={descriptionAudioPlaying ? 'pause' : 'play'}
-                    iconType="ionicons"
-                    onPress={toggleDescriptionAudio}
-                    disabled={!descriptionAudioLoaded}
-                    backgroundColor={colors.primary_light}
-                    iconFill={colors.primary}
-                    style={globalStyles.p_md}
-                  />
-                </View>
+                ) : (
+                  <View style={[flexBetween, globalStyles.p_md]}>
+                    <TextBody variant="body2" color="secondary">
+                      {descriptionAudioLoaded ? 'Audio description' : t('lessons.loading')}
+                    </TextBody>
+                    <IconButton
+                      icon={descriptionAudioPlaying ? 'pause' : 'play'}
+                      iconType="ionicons"
+                      onPress={toggleDescriptionAudio}
+                      disabled={!descriptionAudioLoaded}
+                      backgroundColor={colors.primary_light}
+                      iconFill={colors.primary}
+                      style={globalStyles.p_md}
+                    />
+                  </View>
+                )}
               </ThemedView>
             </>
           ) : null}
