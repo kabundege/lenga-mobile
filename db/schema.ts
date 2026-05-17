@@ -44,3 +44,20 @@ export const localAssets = sqliteTable('local_assets', {
   attemptCount: integer('attempt_count').notNull().default(0),
   updatedAt: text('updated_at'),
 });
+
+/**
+ * Large-file download queue with Expo `DownloadResumable` persistence.
+ * `resumeToken` is populated after `pauseAsync()` (and best-effort on backgrounding), not on every progress tick.
+ */
+export const fileDownloads = sqliteTable('file_downloads', {
+  id: text('id').primaryKey(),
+  fileUrl: text('file_url').notNull(),
+  localPath: text('local_path').notNull(),
+  status: text('status').notNull().default('pending'),
+  progressPercent: integer('progress_percent').notNull().default(0),
+  resumeToken: text('resume_token'),
+  bytesWritten: integer('bytes_written').notNull().default(0),
+  bytesExpected: integer('bytes_expected'),
+  lastError: text('last_error'),
+  updatedAt: text('updated_at').notNull(),
+});

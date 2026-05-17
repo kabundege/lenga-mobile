@@ -1,5 +1,6 @@
 import Loader from '@/components/loader';
 import { db } from '@/db/client';
+import { useDownloadsStore } from '@/downloads/downloadsStore';
 import migrations from '@/drizzle/migrations.js';
 import { useMigrations } from 'drizzle-orm/expo-sqlite/migrator';
 import { useEffect } from 'react';
@@ -17,6 +18,11 @@ export function DbProvider({ children }: { children: React.ReactNode }) {
       console.error('[DbProvider] SQLite migrations failed:', error);
     }
   }, [error]);
+
+  useEffect(() => {
+    if (!success) return;
+    void useDownloadsStore.getState().initStore();
+  }, [success]);
 
   if (error) {
     return <>{children}</>;
