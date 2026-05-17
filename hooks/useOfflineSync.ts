@@ -5,8 +5,11 @@ import { syncLessonMediaAssets } from '@/store/slices/offlineContentSlice';
 import { selectIsAnySyncing, resetSyncedOfflineAssets } from '@/store/slices/offlineAssetsSlice';
 import { resetOfflineMediaDownloads } from '@/store/slices/offlineMediaSlice';
 import * as lessonsService from '@/services/lessons.service';
+import { hydrateLessonQueryCacheFromSQLite } from '@/db/sync/hydrateLessonQueryCacheFromSQLite';
 import { persistLessonContentQueryCache } from '@/db/sync/persistLessonContentQueryCache';
+import { useNetworkStatus } from '@/components/providers/NetworkProvider';
 import { api_keys } from '@/hooks/useLessons';
+import { lessonRootListCacheIsEmpty } from '@/utils/lessonContentQueryCache';
 import { clearOfflineMediaDirectory } from '@/utils/offlineMedia';
 
 const STALE_TIME_MS = 5 * 60 * 1000;
@@ -65,6 +68,7 @@ export function useOfflineSync() {
   const jwt = useAppSelector((s) => s.auth.jwt);
   const locale = useAppSelector((s) => s.preferences.locale);
   const isSyncing = useAppSelector(selectIsAnySyncing);
+  const { isOffline } = useNetworkStatus();
   const started = useRef(false);
 
   const syncAllLessonContent = useCallback(async () => {
@@ -121,6 +125,16 @@ export function useOfflineSync() {
     await dispatch(syncLessonMediaAssets({ queryClient, locale })).unwrap();
     return true;
   }, [dispatch, locale, queryClient]);
+
+  useEffect(() => {
+    if (!jwt || !isOffline) return;
+    if (!lessonRootListCacheIsEmpty(queryClient, locale)) return;
+    try {
+      hydrateLessonQueryCacheFromSQLite(queryClient, locale);
+    } catch (err) {
+      console.error('[useOfflineSync] SQLite → Query hydrate failed:', err);
+    }
+  }, [jwt, isOffline, locale, queryClient]);
 
   useEffect(() => {
     if (!jwt || isSyncing || started.current) return;

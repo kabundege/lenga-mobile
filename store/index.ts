@@ -12,6 +12,7 @@ import {
   REGISTER,
   REHYDRATE,
 } from 'redux-persist';
+import { localAssetsSQLiteMirrorMiddleware } from './localAssetsSQLiteMirror';
 import { authReducer, AuthState } from './slices/authSlice';
 import { offlineAssetsReducer, OfflineAssetsState } from './slices/offlineAssetsSlice';
 import { offlineMediaReducer, OfflineMediaState } from './slices/offlineMediaSlice';
@@ -52,12 +53,12 @@ const Reducers = combineReducers({
 
 export const store = configureStore({
   reducer: Reducers,
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
-      },
-    }),
+    middleware: (getDefaultMiddleware) =>
+      getDefaultMiddleware({
+        serializableCheck: {
+          ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+        },
+      }).prepend(localAssetsSQLiteMirrorMiddleware),
 });
 
 export const persistor = persistStore(store);

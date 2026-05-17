@@ -1,12 +1,9 @@
 import type { QueryClient } from '@tanstack/react-query';
 
-import {
-  deleteStrapiEntity,
-  type StrapiCollection,
-  upsertStrapiEntity,
-} from '@/db/repository/strapiEntitiesRepository';
+import type { StrapiCollection } from '@/db/repository/strapiEntitiesRepository';
+import { deleteStrapiEntity, upsertStrapiEntity } from '@/db/repository/strapiEntitiesRepository';
 import { setLastSyncedAt } from '@/db/repository/syncStateRepository';
-import { api_keys } from '@/hooks/useLessons';
+import { LESSON_GRAPH_COLLECTION_JOBS } from '@/db/sync/lessonGraphCollections';
 import { getLessonContentListFromCache } from '@/utils/lessonContentQueryCache';
 
 function readSoftDeleted(payload: unknown): boolean {
@@ -63,18 +60,8 @@ function persistRows(rows: unknown[], collection: StrapiCollection, fallbackLoca
  * Intended to run after a successful network refresh so offline reads can migrate off AsyncStorage-only JSON later.
  */
 export function persistLessonContentQueryCache(queryClient: QueryClient, locale: string): void {
-  const jobs: { collection: StrapiCollection; queryKey: readonly unknown[] }[] = [
-    { collection: 'lessons', queryKey: api_keys.lessons(locale) },
-    { collection: 'lesson-chapters', queryKey: api_keys.chapters(locale) },
-    { collection: 'lesson-videos', queryKey: api_keys.videos(locale) },
-    { collection: 'quizzes', queryKey: api_keys.quizzes(locale) },
-    { collection: 'qas', queryKey: api_keys.qas(locale) },
-    { collection: 'matchings', queryKey: api_keys.matchings(locale) },
-    { collection: 'matching-questions', queryKey: api_keys.matchingQuestions(locale) },
-    { collection: 'matching-answers', queryKey: api_keys.matchingAnswers(locale) },
-  ];
-
-  for (const { collection, queryKey } of jobs) {
+  for (const { collection, queryKeyForLocale } of LESSON_GRAPH_COLLECTION_JOBS) {
+    const queryKey = queryKeyForLocale(locale);
     const rows = getLessonContentListFromCache<unknown>(queryClient, queryKey);
     persistRows(rows, collection, locale);
   }
