@@ -25,19 +25,9 @@ import {
 import { ensureOfflineAsset } from '@/utils/offlineMedia';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import type { QueryClient } from '@tanstack/react-query';
-import type { AxiosResponse } from 'axios';
 import type { RootState } from '@/store';
+import { getLessonContentListFromCache } from '@/utils/lessonContentQueryCache';
 import { setAsset, setLessonSync } from './offlineAssetsSlice';
-
-// ─── Cache helpers ────────────────────────────────────────────────────────────
-
-export function getLessonContentListFromCache<T>(
-  queryClient: QueryClient,
-  queryKey: readonly unknown[],
-): T[] {
-  const cached = queryClient.getQueryData<AxiosResponse<{ data: T[] }>>(queryKey);
-  return Array.isArray(cached?.data?.data) ? cached.data.data : [];
-}
 
 async function runMediaDownloadsForLesson(
   dispatch: (action: unknown) => unknown,

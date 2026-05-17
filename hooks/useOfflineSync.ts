@@ -5,6 +5,7 @@ import { syncLessonMediaAssets } from '@/store/slices/offlineContentSlice';
 import { selectIsAnySyncing, resetSyncedOfflineAssets } from '@/store/slices/offlineAssetsSlice';
 import { resetOfflineMediaDownloads } from '@/store/slices/offlineMediaSlice';
 import * as lessonsService from '@/services/lessons.service';
+import { persistLessonContentQueryCache } from '@/db/sync/persistLessonContentQueryCache';
 import { api_keys } from '@/hooks/useLessons';
 import { clearOfflineMediaDirectory } from '@/utils/offlineMedia';
 
@@ -77,6 +78,12 @@ export function useOfflineSync() {
       ),
     );
 
+    try {
+      persistLessonContentQueryCache(queryClient, locale);
+    } catch (err) {
+      console.error('[useOfflineSync] SQLite persist failed:', err);
+    }
+
     await dispatch(syncLessonMediaAssets({ queryClient, locale })).unwrap();
   }, [dispatch, locale, queryClient]);
 
@@ -99,6 +106,12 @@ export function useOfflineSync() {
       );
     } catch {
       return false;
+    }
+
+    try {
+      persistLessonContentQueryCache(queryClient, locale);
+    } catch (err) {
+      console.error('[useOfflineSync] SQLite persist failed:', err);
     }
 
     dispatch(resetSyncedOfflineAssets());
