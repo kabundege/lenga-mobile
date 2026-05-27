@@ -2,7 +2,7 @@ import IconButton, { IconButtonProps } from "@/components/buttons/iconButton";
 import { useLessonAudio } from "@/hooks/useLessonAudio";
 import colors from "@/utils/theme/colors";
 import { SizeVariants } from "@/utils/types/theme";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import Animated, {
   Easing,
@@ -29,8 +29,13 @@ const PlayAudioButton = ({
   ...iconButtonProps
 }: PlayAudioButtonProps) => {
   const rotation = useSharedValue(0);
-  const { audioLoaded, audioPlaying, playbackState, playbackBlockedOffline, toggleAudio } =
-    useLessonAudio(audioUrl);
+  const {
+    audioLoaded,
+    audioPlaying,
+    playbackState,
+    playbackBlockedOffline,
+    toggleAudio,
+  } = useLessonAudio(audioUrl);
 
   const showIdlePlaybackIcon =
     audioLoaded && !audioPlaying && playbackState === "idle";
@@ -56,6 +61,20 @@ const PlayAudioButton = ({
     opacity: audioLoaded ? 0 : 1,
   }));
 
+  const iconType = useMemo(() => {
+    if (playbackBlockedOffline) return "ionicons";
+    if (audioPlaying) return "ionicons";
+    if (showIdlePlaybackIcon) return "entypo";
+    return "ionicons";
+  }, [playbackBlockedOffline, audioPlaying, showIdlePlaybackIcon]);
+
+  const iconName = useMemo(() => {
+    if (playbackBlockedOffline) return "cloud-offline-outline";
+    if (audioPlaying) return "pause";
+    if (showIdlePlaybackIcon) return "play-outline";
+    return "sound";
+  }, [playbackBlockedOffline, audioPlaying, showIdlePlaybackIcon]);
+
   if (!audioUrl) return null;
 
   return (
@@ -67,20 +86,8 @@ const PlayAudioButton = ({
         iconFill={colors.primary}
         styles={iconButtonProps.styles}
         backgroundColor={backgroundColor}
-        iconType={
-          playbackBlockedOffline || audioPlaying || showIdlePlaybackIcon ? "ionicons" : "entypo"
-        }
-        icon={
-          playbackBlockedOffline
-            ? "cloud-offline-outline"
-            : audioPlaying
-              ? "pause"
-              : showIdlePlaybackIcon
-                ? "play-outline"
-                : audioLoaded
-                  ? "sound"
-                  : "warning"
-        }
+        iconType={iconType}
+        icon={iconName}
       />
       {!audioLoaded && !playbackBlockedOffline ? (
         <Animated.View
