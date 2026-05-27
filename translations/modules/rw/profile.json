@@ -12,5 +12,27 @@
   "offlineStorage": {
     "title": "Ububiko bwakoreshejwe",
     "stats": "{{count}} byabitswe · {{storage}} bikoreshwa"
+  },
+  "appVersion": {
+    "title": "Verisiyo y'porogaramu",
+    "nativeVersion": "Verisiyo ya porogaramu",
+    "runtimeVersion": "Verisiyo ikoreshwa",
+    "bundleType": "Ubwoko bwa porogaramu",
+    "embedded": "Yahuzwe na app (embedded)",
+    "otaUpdate": "Ivugurura rya progaramu (OTA)",
+    "channel": "Umuvuduko",
+    "updateId": "ID y'ivugurura",
+    "publishedAt": "Yasohotse",
+    "updateAvailable": "Hari ivugurura rishya",
+    "upToDate": "Nta mpinduka zihari",
+    "checkFailed": "Ntibyashobotse kureba ivugurura",
+    "installFailed": "Ntibyashobotse gushyira ivugurura",
+    "devMode": "Ivugurura ntibishoboka",
+    "updatesDisabled": "Ivugurura ryahagaritswe",
+    "emergencyLaunch": "Porogaramu yatangiye mu buryo bw'ubutabazi",
+    "checkButton": "Reba ivugurura",
+    "installButton": "Shyira ivugurura",
+    "installing": "Irashyirwa...",
+    "checking": "Irareba..."
   }
 }
