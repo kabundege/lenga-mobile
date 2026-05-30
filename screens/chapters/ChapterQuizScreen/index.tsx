@@ -49,6 +49,8 @@ const ChapterQuizScreen = () => {
     quizAnswered,
     incrementCorrectAnswerCount,
     setAllMatchedForCurrent,
+    canProceedCurrentSlide,
+    advanceFromCurrentSlide,
   } = useChapterQuizScreen();
 
   if (!chapterId)
@@ -121,6 +123,8 @@ const ChapterQuizScreen = () => {
         isLastSlide={isLastSlide}
         onBack={() => pushSlideByIndex(Math.max(0, activeSlideIndex - 1))}
         onNext={() => {
+          if (!canProceedCurrentSlide) return;
+          advanceFromCurrentSlide(isLastSlide);
           if (isLastSlide) {
             router.back();
             return;

@@ -1,5 +1,6 @@
 import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import * as authService from '@/services/auth.service';
+import { resolvePostAuthRoute } from '@/services/analytics.service';
 import { setCredentials, setUser } from '@/store/slices/authSlice';
 import type { UpdateProfilePayload } from '@/types/api';
 import { handleAxiosError } from '@/utils/error.util';
@@ -9,7 +10,7 @@ import i18n from '@/translations/i18n';
 import * as lessonsService from '@/services/lessons.service';
 import { syncLessonMediaAssets } from '@/store/slices/offlineContentSlice';
 import { api_keys } from '@/hooks/useLessons';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 
 /** Query keys for auth; use getMeKeys() for invalidation. */
 export const AUTH_KEYS = {
@@ -82,13 +83,18 @@ export function useLogin() {
 
   return useMutation({
     mutationFn: authService.login,
-    onSuccess: (res) => {
+    onSuccess: async (res) => {
       const { jwt, user } = res.data;
       dispatch(setCredentials({ jwt, user }));
       queryClient.setQueryData(AUTH_KEYS.ME, user);
       warmCacheAndSync(queryClient, dispatch, locale).catch(() => null);
       toast.success(i18n.t('profile.toasts.loginSuccess'));
-      router.replace('/lessons');
+      try {
+        const route = await resolvePostAuthRoute(user.id);
+        router.replace(route as Href);
+      } catch {
+        router.replace('/lessons');
+      }
     },
     onError: handleAxiosError,
   });

@@ -3,7 +3,8 @@ import { EmptyListWithSkeleton } from "@/components/empty-states";
 import ContentThumbnailHeader from "@/components/headers/ContentThumbnailHeader";
 import { ThemedView } from "@/components/themed-view";
 import { TextBody } from "@/components/typography";
-import { useLessonForChapter } from "@/hooks/useLessons";
+import { useLessonForChapter, useMatchingQuestionsByMatchingId } from "@/hooks/useLessons";
+import { useAnalyticsTracking } from "@/hooks/useAnalytics";
 import { flexBetween, globalStyles } from "@/utils/styles";
 import { themeToken } from "@/utils/theme/styles";
 import { router } from "expo-router";
@@ -28,6 +29,7 @@ const ChapterMatchingScreen = () => {
     refetch,
     activeMatching,
     activeMatchingIndex,
+    allMatchedForCurrent,
     setAllMatchedForCurrent,
     scrollRef,
     pushMatchingByIndex,
@@ -43,6 +45,26 @@ const ChapterMatchingScreen = () => {
   } = useChapterMatchingScreen();
 
   const { lesson } = useLessonForChapter(chapterId);
+  const { questions } = useMatchingQuestionsByMatchingId(
+    activeMatching?.documentId ?? "",
+  );
+  const { submitMatchingResult, recordChapterCompleted } = useAnalyticsTracking();
+
+  const handleMatchingAdvance = (exiting: boolean) => {
+    if (!activeMatching || !allMatchedForCurrent) return;
+
+    const totalQuestions = Math.max(questions.length, 1);
+    submitMatchingResult({
+      matchingId: Number(activeMatching.id),
+      score: totalQuestions,
+      totalQuestions,
+      isPassed: true,
+    });
+
+    if (exiting && lesson && chapterId) {
+      recordChapterCompleted(lesson, chapterId);
+    }
+  };
 
   const breadcrumbItems = useMemo(
     () => [
@@ -150,9 +172,11 @@ const ChapterMatchingScreen = () => {
             rightIcon={{ name: "chevron-right", color: nextButton.color }}
             onPress={() => {
               if (isLastMatching) {
+                handleMatchingAdvance(true);
                 router.back();
                 return;
               }
+              handleMatchingAdvance(false);
               pushMatchingByIndex(
                 Math.min(chapterMatchings.length - 1, activeMatchingIndex + 1),
               );

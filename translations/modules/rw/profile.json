@@ -2,7 +2,8 @@
   "toasts": {
     "loginSuccess": "Kwinjira byagenze neza.",
     "registrationSuccess": "Kwiyandikisha byagenze neza.",
-    "profileUpdated": "Umwirondoro wavuguruwe."
+    "profileUpdated": "Umwirondoro wavuguruwe.",
+    "extendedProfileSaved": "Umwirondoro wawe wabitswe."
   },
   "logout": {
     "title": "Gusohoka",

@@ -12,10 +12,11 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useOfflineAssetUri } from '@/hooks/useOfflineAssetUri';
 import { useNetworkStatus } from '@/components/providers/NetworkProvider';
 import { playbackRequiresNetwork } from '@/utils/playbackConnectivity';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { centered, flexBetween, globalStyles } from '@/utils/styles';
 import { useChapterByDocumentId, useChapterVideo, useLessonForChapter } from '@/hooks/useLessons';
+import { useAnalyticsTracking } from '@/hooks/useAnalytics';
 import { useTranslation } from 'react-i18next';
 import ContentThumbnailHeader from '@/components/headers/ContentThumbnailHeader';
 
@@ -25,6 +26,24 @@ const ChapterVideoScreen = () => {
   const params = useLocalSearchParams<{ chapterId: string; lessonId?: string }>();
   const chapterId = typeof params.chapterId === 'string' ? params.chapterId : '';
   const { lesson } = useLessonForChapter(chapterId);
+  const { recordChapterCompleted } = useAnalyticsTracking();
+  const lessonRef = useRef(lesson);
+  const chapterIdRef = useRef(chapterId);
+
+  useEffect(() => {
+    lessonRef.current = lesson;
+    chapterIdRef.current = chapterId;
+  }, [lesson, chapterId]);
+
+  useEffect(() => {
+    return () => {
+      const currentLesson = lessonRef.current;
+      const currentChapterId = chapterIdRef.current;
+      if (currentLesson && currentChapterId) {
+        recordChapterCompleted(currentLesson, currentChapterId);
+      }
+    };
+  }, [recordChapterCompleted]);
   const { chapter, isLoading: isChapterLoading, error: chapterError, refetch: chapterRefetch } = useChapterByDocumentId(chapterId);
   const { chapterVideo, isLoading: isVideoLoading, error: videoError, refetch: videoRefetch } = useChapterVideo(chapterId);
 

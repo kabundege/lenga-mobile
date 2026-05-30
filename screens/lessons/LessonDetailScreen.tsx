@@ -5,6 +5,7 @@ import { LessonCardSkeleton } from '@/components/skeletons';
 import { ThemedView } from '@/components/themed-view';
 import ContentThumbnailHeader from '@/components/headers/ContentThumbnailHeader';
 import { useLessonByDocumentId } from '@/hooks/useLessons';
+import { useAnalyticsTracking } from '@/hooks/useAnalytics';
 import { StrapiLessonChapter } from '@/types/api';
 import { Dimensions, flexBetween, globalStyles } from '@/utils/styles';
 import colors from '@/utils/theme/colors';
@@ -39,6 +40,11 @@ const LessonDetailScreen = () => {
     lessonListPosition,
     lessonsTotal,
   } = useLessonByDocumentId(lessonId);
+  const { recordLessonOpened } = useAnalyticsTracking();
+
+  useEffect(() => {
+    if (lesson) recordLessonOpened(lesson);
+  }, [lesson, recordLessonOpened]);
 
   useEffect(() => {
     const max = Math.max(0, lessonChapters.length - 1);

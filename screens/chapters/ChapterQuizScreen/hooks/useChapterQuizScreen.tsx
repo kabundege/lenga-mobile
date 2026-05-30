@@ -3,8 +3,10 @@ import {
   useChapterMatchings,
   useChapterQuizzes,
   useLessonForChapter,
+  useMatchingQuestionsByMatchingId,
   useQAs,
 } from "@/hooks/useLessons";
+import { useAnalyticsTracking } from "@/hooks/useAnalytics";
 import type { StrapiQA } from "@/types/api";
 import { globalStyles } from "@/utils/styles";
 import colors from "@/utils/theme/colors";
@@ -46,6 +48,11 @@ export const useChapterQuizScreen = () => {
   const matchingId =
     typeof params.matchingId === "string" ? params.matchingId : "";
   const { lesson } = useLessonForChapter(chapterId);
+  const {
+    submitQuizResult,
+    submitMatchingResult,
+    recordChapterCompleted,
+  } = useAnalyticsTracking();
 
   const {
     chapter,
@@ -122,6 +129,9 @@ export const useChapterQuizScreen = () => {
     activeSlide?.kind === "quiz" ? activeSlide.quiz : undefined;
   const activeMatching =
     activeSlide?.kind === "matching" ? activeSlide.matching : undefined;
+  const { questions: matchingQuestions } = useMatchingQuestionsByMatchingId(
+    activeMatching?.documentId ?? "",
+  );
   const qas = useMemo((): StrapiQA[] => {
     if (!activeQuiz) return [];
     const fromQuiz = unwrapStrapiRelationList(
@@ -221,6 +231,51 @@ export const useChapterQuizScreen = () => {
     };
   }, [canProceedCurrentSlide]);
 
+  const submitActiveSlideAssessment = useCallback(() => {
+    if (!canProceedCurrentSlide || !activeSlide) return;
+
+    if (activeSlide.kind === "quiz" && activeQuiz) {
+      submitQuizResult({
+        quizId: Number(activeQuiz.id),
+        score: correctAnswerCount,
+        totalQuestions: Math.max(qas.length, 1),
+        isPassed: true,
+      });
+      return;
+    }
+
+    if (activeSlide.kind === "matching" && activeMatching) {
+      const totalQuestions = Math.max(matchingQuestions.length, 1);
+      submitMatchingResult({
+        matchingId: Number(activeMatching.id),
+        score: totalQuestions,
+        totalQuestions,
+        isPassed: allMatchedForCurrent,
+      });
+    }
+  }, [
+    activeMatching,
+    activeQuiz,
+    activeSlide,
+    allMatchedForCurrent,
+    canProceedCurrentSlide,
+    correctAnswerCount,
+    matchingQuestions.length,
+    qas.length,
+    submitMatchingResult,
+    submitQuizResult,
+  ]);
+
+  const advanceFromCurrentSlide = useCallback(
+    (isExitingChapter: boolean) => {
+      submitActiveSlideAssessment();
+      if (isExitingChapter && lesson && chapterId) {
+        recordChapterCompleted(lesson, chapterId);
+      }
+    },
+    [chapterId, lesson, recordChapterCompleted, submitActiveSlideAssessment],
+  );
+
   const headerTitle =
     activeQuiz?.title ?? activeMatching?.title ?? chapter?.title ?? "Igice";
   const headerSubtitle =
@@ -268,5 +323,7 @@ export const useChapterQuizScreen = () => {
     quizAnswered: activeSlide?.kind === "quiz" && canProceedCurrentSlide,
     incrementCorrectAnswerCount: () => setCorrectAnswerCount((n) => n + 1),
     setAllMatchedForCurrent,
+    canProceedCurrentSlide,
+    advanceFromCurrentSlide,
   };
 };
