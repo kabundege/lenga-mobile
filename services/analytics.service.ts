@@ -21,9 +21,6 @@ export async function findExtendedProfileByUserId(userId: number) {
     },
   });
 
-  console.log({ error_API: res.data.data });
-
-
   return res.data.data[0] ?? null;
 }
 

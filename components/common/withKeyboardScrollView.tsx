@@ -1,37 +1,32 @@
 import React from 'react';
+import { ScrollViewProps } from 'react-native';
 import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  ScrollViewProps,
-  StyleSheet,
-} from 'react-native';
+  KeyboardAwareScrollView,
+  KeyboardAwareScrollViewProps,
+} from 'react-native-keyboard-controller';
 
 type Props = {
   showToolbar?: boolean;
-} & ScrollViewProps;
+} & ScrollViewProps &
+  Pick<KeyboardAwareScrollViewProps, 'bottomOffset' | 'extraKeyboardSpace'>;
 
-const WithKeyboardScrollView = ({ children, showToolbar: _showToolbar = true, ...props }: Props) => {
+const WithKeyboardScrollView = ({
+  children,
+  showToolbar: _showToolbar = true,
+  bottomOffset = 16,
+  ...props
+}: Props) => {
   return (
-    <KeyboardAvoidingView
-      style={styles.flex}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
+    <KeyboardAwareScrollView
+      alwaysBounceVertical={false}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+      bottomOffset={bottomOffset}
+      {...props}
     >
-      <ScrollView
-        alwaysBounceVertical={false}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-        {...props}
-      >
-        {children}
-      </ScrollView>
-    </KeyboardAvoidingView>
+      {children}
+    </KeyboardAwareScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  flex: { flex: 1 },
-});
 
 export default WithKeyboardScrollView;

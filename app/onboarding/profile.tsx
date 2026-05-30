@@ -1,1 +1,1 @@
-export { default } from '@/screens/onboarding/ExtendedProfileScreen';
+export { default } from '@/app/onboarding/ExtendedProfileScreen';
