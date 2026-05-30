@@ -65,7 +65,7 @@ const PlayAudioButton = ({
     if (playbackBlockedOffline) return "ionicons";
     if (audioPlaying) return "ionicons";
     if (showIdlePlaybackIcon) return "entypo";
-    return "ionicons";
+    return "entypo";
   }, [playbackBlockedOffline, audioPlaying, showIdlePlaybackIcon]);
 
   const iconName = useMemo(() => {
