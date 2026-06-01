@@ -1,5 +1,5 @@
-import { BooleanSelectField } from "@/app/onboarding/components/BooleanSelectField";
-import { ProfileFormSection } from "@/app/onboarding/components/ProfileFormSection";
+import { BooleanSelectField } from "@/screens/onboarding/components/BooleanSelectField";
+import { ProfileFormSection } from "@/screens/onboarding/components/ProfileFormSection";
 import { ControlledInput } from "@/components/inputs/ControlledInput";
 import type { ExtendedProfileFormValues } from "@/utils/validations/extendedProfile";
 import { Control, FieldErrors } from "react-hook-form";

@@ -1,5 +1,5 @@
-import { FormSelectField } from '@/app/onboarding/components/FormSelectField';
-import { yesNoOptions } from '@/app/onboarding/utils/profileOptions';
+import { FormSelectField } from '@/screens/onboarding/components/FormSelectField';
+import { yesNoOptions } from '@/screens/onboarding/utils/profileOptions';
 import type { ExtendedProfileFormValues } from '@/utils/validations/extendedProfile';
 import { Control, Controller } from 'react-hook-form';
 

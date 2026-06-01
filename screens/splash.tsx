@@ -2,13 +2,15 @@ import { useEffect } from "react";
 import { StyleSheet } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { router, type Href } from "expo-router";
-import { useAppSelector } from "@/hooks/useRedux";
+import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import { themeToken } from "@/utils/theme/styles";
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { TextBody } from "@/components/typography/textBody";
 import globalStyles from "@/utils/styles/globalstyles.style";
 import { resolvePostAuthRoute } from "@/services/analytics.service";
+import { logout } from "@/store/slices/authSlice";
+import { isValidToken } from "@/utils/functions/jwt";
 import Animated, {
   BounceIn,
   BounceOut,
@@ -23,6 +25,7 @@ const RedirectionDelay = 1400;
 const TextEnteringDelay = 700;
 
 const SplashScreen = () => {
+  const dispatch = useAppDispatch();
   const jwt = useAppSelector((s) => s.auth.jwt);
   const user = useAppSelector((s) => s.auth.user);
 
@@ -32,13 +35,23 @@ const SplashScreen = () => {
         router.replace("/login");
         return;
       }
+      const isTokenValid = isValidToken(jwt);
+      if (!isTokenValid) {
+        dispatch(logout());
+        router.replace("/login");
+        return;
+      }
 
       resolvePostAuthRoute(user.id)
         .then((route) => router.replace(route as Href))
-        .catch(() => router.replace("/onboarding/profile"));
+        .catch((error) => {
+          console.log({ error });
+
+          router.replace("/onboarding/profile");
+        });
     }, RedirectionDelay);
     return () => clearTimeout(t);
-  }, [jwt, user]);
+  }, [dispatch, jwt, user]);
 
   return (
     <ThemedView style={styles.container}>

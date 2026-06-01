@@ -1,6 +1,6 @@
-import { GenderSelectField } from '@/app/onboarding/components/GenderSelectField';
-import { LocationSelectFields } from '@/app/onboarding/components/LocationSelectFields';
-import { ProfileFormSection } from '@/app/onboarding/components/ProfileFormSection';
+import { GenderSelectField } from '@/screens/onboarding/components/GenderSelectField';
+import { LocationSelectFields } from '@/screens/onboarding/components/LocationSelectFields';
+import { ProfileFormSection } from '@/screens/onboarding/components/ProfileFormSection';
 import { ControlledInput } from '@/components/inputs/ControlledInput';
 import type { ExtendedProfileFormValues } from '@/utils/validations/extendedProfile';
 import {

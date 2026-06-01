@@ -1,8 +1,8 @@
-import { FormSelectField } from '@/app/onboarding/components/FormSelectField';
+import { FormSelectField } from '@/screens/onboarding/components/FormSelectField';
 import {
   useRwandaDistricts,
   useRwandaSectors,
-} from '@/app/onboarding/hooks/useRwandaLocations';
+} from '@/screens/onboarding/hooks/useRwandaLocations';
 import type { ExtendedProfileFormValues } from '@/utils/validations/extendedProfile';
 import { useEffect, useMemo } from 'react';
 import {
