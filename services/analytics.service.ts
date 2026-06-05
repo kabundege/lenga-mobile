@@ -28,6 +28,7 @@ export async function createExtendedProfile(userId: number, input: ExtendedProfi
   const res = await api.post<StrapiResponse<StrapiExtendedProfile>>('/api/extended-profiles', {
     data: {
       user: userId,
+      full_name: input.full_name ?? null,
       gender: input.gender,
       age: input.age,
       is_pwd: input.is_pwd,
@@ -49,6 +50,7 @@ export async function updateExtendedProfile(
     `/api/extended-profiles/${documentId}`,
     {
       data: {
+        full_name: input.full_name ?? null,
         gender: input.gender,
         age: input.age,
         is_pwd: input.is_pwd,

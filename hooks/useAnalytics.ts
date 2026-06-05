@@ -1,4 +1,5 @@
-import { useAppSelector } from '@/hooks/useRedux';
+import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
+import { clearPendingFullName } from '@/store/slices/authSlice';
 import * as analyticsService from '@/services/analytics.service';
 import type { ExtendedProfileInput } from '@/types/analytics';
 import type { StrapiLesson } from '@/types/api';
@@ -27,21 +28,29 @@ export function useExtendedProfile(enabled = true) {
 }
 
 export function useSaveExtendedProfile(options?: { onSuccess?: () => void }) {
+  const dispatch = useAppDispatch();
   const queryClient = useQueryClient();
   const userId = useAppSelector((s) => s.auth.user?.id);
+  const pendingFullName = useAppSelector((s) => s.auth.pendingFullName);
 
   return useMutation({
     mutationFn: async (input: ExtendedProfileInput) => {
       if (userId == null) throw new Error('Not authenticated');
 
+      const payload: ExtendedProfileInput = {
+        ...input,
+        full_name: input.full_name?.trim() || pendingFullName?.trim() || undefined,
+      };
+
       const current = await analyticsService.findExtendedProfileByUserId(userId);
       if (current) {
-        return analyticsService.updateExtendedProfile(current.documentId, input);
+        return analyticsService.updateExtendedProfile(current.documentId, payload);
       }
-      return analyticsService.createExtendedProfile(userId, input);
+      return analyticsService.createExtendedProfile(userId, payload);
     },
     onSuccess: (profile) => {
       queryClient.setQueryData(ANALYTICS_KEYS.extendedProfile(userId), profile);
+      dispatch(clearPendingFullName());
       options?.onSuccess?.();
     },
   });

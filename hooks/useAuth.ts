@@ -1,7 +1,7 @@
 import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import * as authService from '@/services/auth.service';
 import { resolvePostAuthRoute } from '@/services/analytics.service';
-import { setCredentials, setUser } from '@/store/slices/authSlice';
+import { setCredentials, setPendingFullName, setUser } from '@/store/slices/authSlice';
 import type { UpdateProfilePayload } from '@/types/api';
 import { handleAxiosError } from '@/utils/error.util';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -100,10 +100,21 @@ export function useLogin() {
   });
 }
 
+export type RegisterInput = {
+  username: string;
+  email: string;
+  password: string;
+  fullName: string;
+};
+
 export function useRegister() {
+  const dispatch = useAppDispatch();
+
   return useMutation({
-    mutationFn: authService.register,
-    onSuccess: () => {
+    mutationFn: ({ fullName: _fullName, ...payload }: RegisterInput) =>
+      authService.register(payload),
+    onSuccess: (_res, variables) => {
+      dispatch(setPendingFullName(variables.fullName));
       router.replace('/login');
       toast.success(i18n.t('profile.toasts.registrationSuccess'));
     },

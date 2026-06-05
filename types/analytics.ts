@@ -8,6 +8,7 @@ export type ModuleAttendanceStatus = 'started' | 'completed';
 export type StrapiExtendedProfile = {
   id: number;
   documentId: string;
+  full_name?: string | null;
   gender?: Gender | null;
   age?: number | null;
   is_pwd?: boolean;
@@ -26,6 +27,7 @@ export type StrapiModuleAttendance = {
 };
 
 export type ExtendedProfileInput = {
+  full_name?: string;
   gender: Gender;
   age: number;
   is_pwd: boolean;

@@ -40,6 +40,7 @@ export default function RegisterScreen() {
       username: data.phone,
       email: formattedEmail,
       password: data.password,
+      fullName: data.username.trim(),
     });
   });
 
