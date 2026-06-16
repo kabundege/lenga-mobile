@@ -6,6 +6,7 @@ import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import { TextBody } from "@/components/typography";
 import { useLogin } from "@/hooks/useAuth";
+import { Dimensions } from "@/utils/styles";
 import globalStyles from "@/utils/styles/globalstyles.style";
 import { centered } from "@/utils/styles/reusable.style";
 import colors from "@/utils/theme/colors";
@@ -15,7 +16,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useForm } from "react-hook-form";
-import { StyleSheet, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 
 export default function LoginScreen() {
   const loginMutation = useLogin();
@@ -33,19 +34,11 @@ export default function LoginScreen() {
   return (
     <ThemedView style={globalStyles.flex_1}>
       <StatusBar style="dark" />
+      <Image
+        style={styles.logo}
+        source={require("@/assets/logos/uncdf_logo.png")}
+      />
       <WithKeyboardScrollView style={styles.container}>
-        <View style={[centered, globalStyles.mb_xl]}>
-          <ThemedText
-            type="title"
-            style={[globalStyles.text_primary, globalStyles.line_height_4xl]}
-          >
-            Injira
-          </ThemedText>
-          <TextBody variant="body1" color="tertiary" center>
-            Kwinjira muri konti yawe urasabwa kwinjira Nomero yawe na PIN
-            (ijambobanga)
-          </TextBody>
-        </View>
         <View style={globalStyles.gap_xl}>
           <View style={globalStyles.gap_xs}>
             <ControlledInput<LoginFormValues>
@@ -131,6 +124,16 @@ const styles = StyleSheet.create({
     flex: 1,
     ...globalStyles.pt_5xl,
     padding: themeToken.paddingLg,
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    objectFit: "contain",
+    alignSelf: "flex-end",
+    transform: [
+      { translateY: Dimensions.SCREEN_WIDTH * 0.2 },
+      { translateX: -Dimensions.SCREEN_WIDTH * 0.05 },
+    ],
   },
   form: {
     gap: 0,

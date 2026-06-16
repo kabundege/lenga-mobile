@@ -43,7 +43,13 @@ type VersionDetailRowProps = {
 
 function VersionDetailRow({ label, value }: VersionDetailRowProps) {
   return (
-    <View style={[globalStyles.flex_row, globalStyles.justify_between, styles.versionRow]}>
+    <View
+      style={[
+        globalStyles.flex_row,
+        globalStyles.justify_between,
+        styles.versionRow,
+      ]}
+    >
       <TextBody variant="body2" color="secondary">
         {label}
       </TextBody>
@@ -60,7 +66,6 @@ const LogoutModal = forwardRef<LogoutModalRef, LogoutModalProps>(
     const dispatch = useAppDispatch();
     const { dismiss } = useBottomSheetModal();
     const { t } = useTranslation();
-    const savedEntries = useAppSelector(selectSavedOfflineMediaEntries);
     const {
       nativeVersion,
       runtimeVersion,
@@ -78,11 +83,6 @@ const LogoutModal = forwardRef<LogoutModalRef, LogoutModalProps>(
       checkForUpdate,
       installUpdate,
     } = useAppUpdates();
-    const savedCount = savedEntries.length;
-    const totalStorageBytes = useMemo(
-      () => savedEntries.reduce((sum, e) => sum + (e.fileSize ?? 0), 0),
-      [savedEntries],
-    );
     const bundleTypeLabel = isEmbeddedLaunch
       ? t("profile.appVersion.embedded")
       : t("profile.appVersion.otaUpdate");
@@ -139,20 +139,6 @@ const LogoutModal = forwardRef<LogoutModalRef, LogoutModalProps>(
             />
           </View>
 
-          <View style={styles.storageSection}>
-            <View style={[globalStyles.w_full]}>
-              <TextHeading variant="subTitle" color="primary">
-                {t("profile.offlineStorage.title")}
-              </TextHeading>
-              <TextBody variant="body2" color="secondary">
-                {t("profile.offlineStorage.stats", {
-                  count: savedCount,
-                  storage: formatBytes(totalStorageBytes),
-                })}
-              </TextBody>
-            </View>
-          </View>
-
           <View style={styles.versionSection}>
             <TextHeading variant="subTitle" color="primary">
               {t("profile.appVersion.title")}
@@ -192,29 +178,45 @@ const LogoutModal = forwardRef<LogoutModalRef, LogoutModalProps>(
             ) : null}
 
             {isDevBuild ? (
-              <TextBody variant="caption" color="tertiary" style={styles.versionHint}>
+              <TextBody
+                variant="caption"
+                color="tertiary"
+                style={styles.versionHint}
+              >
                 {t("profile.appVersion.devMode")}
               </TextBody>
             ) : null}
             {!isUpdatesEnabled && !isDevBuild ? (
-              <TextBody variant="caption" color="tertiary" style={styles.versionHint}>
+              <TextBody
+                variant="caption"
+                color="tertiary"
+                style={styles.versionHint}
+              >
                 {t("profile.appVersion.updatesDisabled")}
               </TextBody>
             ) : null}
             {isEmergencyLaunch ? (
-              <TextBody variant="caption" color="tertiary" style={styles.versionHint}>
+              <TextBody
+                variant="caption"
+                color="tertiary"
+                style={styles.versionHint}
+              >
                 {t("profile.appVersion.emergencyLaunch")}
               </TextBody>
             ) : null}
             {isUpdateAvailable ? (
-              <TextBody variant="body2" color="primary" style={styles.versionHint}>
+              <TextBody
+                variant="body2"
+                color="primary"
+                style={styles.versionHint}
+              >
                 {t("profile.appVersion.updateAvailable")}
               </TextBody>
             ) : null}
 
             <View style={styles.versionActions}>
               <Button
-                type="outlined"
+                type="light"
                 size="sm"
                 isBlock
                 loading={isChecking}
